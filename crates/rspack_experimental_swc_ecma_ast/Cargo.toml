@@ -1,6 +1,9 @@
 [package]
-name = "rspack_experimental_swc_ecma_ast"
-version = "0.1.0"
 edition = "2024"
+name    = "rspack_experimental_swc_ecma_ast"
+version = "0.1.0"
 
 [dependencies]
+oxc_index  = { workspace = true }
+swc_atoms  = { workspace = true }
+swc_common = { workspace = true }
