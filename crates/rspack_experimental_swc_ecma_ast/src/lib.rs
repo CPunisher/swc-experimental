@@ -31,7 +31,7 @@ pub struct AstNode {
 pub union NodeData {
     empty: (),
     bool: bool,
-    sub_range: SubRange,
+    extra_data_start: ExtraDataId,
 }
 
 pub union ExtraData {
