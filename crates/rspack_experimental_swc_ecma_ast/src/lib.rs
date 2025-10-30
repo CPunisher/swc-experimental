@@ -1,3 +1,4 @@
+mod assert_layout;
 mod ast;
 mod node_id;
 mod generated {
