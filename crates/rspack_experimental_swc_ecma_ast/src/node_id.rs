@@ -39,8 +39,6 @@ oxc_index::define_index_type! {
     pub struct AtomId = u32;
 }
 
-define_optional_index_type!(OptionalAtomId, AtomId);
-
 const STR_REF_ATOM_LO: BytePos = BytePos(0x80000000);
 
 #[derive(Debug, Clone, Copy)]
@@ -48,6 +46,8 @@ pub struct AtomRef {
     pub lo: BytePos,
     pub hi: BytePos,
 }
+
+define_optional_index_type!(OptionalAtomRef, AtomRef);
 
 impl AtomRef {
     pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {

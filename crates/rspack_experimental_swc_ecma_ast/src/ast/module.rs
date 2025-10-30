@@ -1,6 +1,6 @@
 use swc_common::Span;
 
-use crate::node_id::{NodeId, OptionalAtomId};
+use crate::node_id::{NodeId, OptionalAtomRef};
 
 pub enum Program {
     Module(Module),
@@ -10,13 +10,13 @@ pub enum Program {
 pub struct Module {
     span: Span,
     body: NodeId,
-    shebang: OptionalAtomId,
+    shebang: OptionalAtomRef,
 }
 
 pub struct Script {
     span: Span,
     body: NodeId,
-    shebang: OptionalAtomId,
+    shebang: OptionalAtomRef,
 }
 
 pub enum ModuleItem {

@@ -10,7 +10,7 @@ use swc_atoms::Atom;
 use swc_common::Span;
 
 use crate::node_id::{
-    AtomId, AtomRef, ExtraDataId, NodeId, OptionalAtomId, OptionalNodeId, SubRange,
+    AtomId, AtomRef, ExtraDataId, NodeId, OptionalAtomRef, OptionalNodeId, SubRange,
 };
 
 pub struct Ast {
@@ -29,7 +29,7 @@ pub union ExtraData {
     node: NodeId,
     atom: AtomRef,
     optional_node: OptionalNodeId,
-    optional_atom: OptionalAtomId,
+    optional_atom: OptionalAtomRef,
 }
 
 pub enum NodeKind {
