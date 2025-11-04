@@ -1,10 +1,8 @@
 use rspack_experimental_swc_ast_macros::ast;
-use swc_common::Span;
 
 use crate::{
-    Ast,
-    ast::{TypedSubRange, module_decl::ModuleDecl, stmt::Stmt},
-    node_id::{NodeId, OptionalAtomRef},
+    ast::{module_decl::ModuleDecl, stmt::Stmt},
+    node_id::{OptionalAtomRef, TypedSubRange},
 };
 
 #[ast]

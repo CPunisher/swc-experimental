@@ -1,11 +1,24 @@
-use swc_common::Span;
+use rspack_experimental_swc_ast_macros::ast;
 
-use crate::node_id::AtomRef;
+use crate::node_id::{AtomRef, TypedNodeId};
 
+#[ast]
 pub struct Ident {
-    pub span: Span,
-    pub sym: AtomRef,
-    pub optional: bool,
+    sym: AtomRef,
+    optional: bool,
 }
 
-pub struct BindingIdent {}
+#[ast]
+pub struct IdentName {
+    sym: AtomRef,
+}
+
+#[ast]
+pub struct Privatename {
+    name: AtomRef,
+}
+
+#[ast]
+pub struct BindingIdent {
+    id: TypedNodeId<Ident>,
+}

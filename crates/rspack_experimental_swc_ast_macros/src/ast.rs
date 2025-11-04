@@ -46,11 +46,18 @@ fn expand_struct(item: ItemStruct) -> TokenStream {
 
         let getter_name = field_name.clone();
         let setter_name = format_ident!("set_{}", field_name);
+
+        let cast_expr = match extra_data_name.as_str() {
+            "sub_range" | "node" | "optional_node" => quote! { unsafe { ret.cast_to_typed() } },
+            _ => quote! { ret.into() },
+        };
+
+        let extra_data_name = Ident::new(&extra_data_name, Span::call_site());
         field_getters.extend(quote! {
             pub fn #getter_name(&self, ast: &crate::Ast) -> #field_ty {
                 let offset = unsafe { ast.nodes[self.0].data.extra_data_start } + #offset;
                 let ret = unsafe { ast.extra_data[offset].#extra_data_name };
-                ret.into()
+                #cast_expr
             }
         });
 
@@ -82,7 +89,7 @@ fn expand_enum(item: ItemEnum) -> TokenStream {
     }
 }
 
-fn get_extra_data_name_from_field(ty: &Type) -> Option<Ident> {
+fn get_extra_data_name_from_field(ty: &Type) -> Option<String> {
     let Type::Path(ty) = ty else {
         return None;
     };
@@ -93,9 +100,8 @@ fn get_extra_data_name_from_field(ty: &Type) -> Option<Ident> {
     }?;
     let name = match ty_name.as_str() {
         "AtomRef" => "atom",
-        "BigIntId" => "bigint",
-        "OptionalNodeId" => "optional_node",
         "OptionalAtomRef" => "optional_atom",
+        "BigIntId" => "bigint",
         "bool" => "bool",
         "f64" => "number",
 
@@ -105,5 +111,5 @@ fn get_extra_data_name_from_field(ty: &Type) -> Option<Ident> {
         _ => return None,
     };
 
-    Some(Ident::new(name, Span::call_site()))
+    Some(name.to_string())
 }
