@@ -14,11 +14,11 @@ fn expand_struct(item: ItemStruct) -> TokenStream {
     let name = item.ident.clone();
 
     let decl = quote! {
-        pub struct #name(NodeId);
+        pub struct #name(crate::NodeId);
     };
 
     let node_id_getter = quote! {
-        pub fn node_id(&self) -> NodeId {
+        pub fn node_id(&self) -> crate::NodeId {
             self.0
         }
     };
@@ -27,13 +27,13 @@ fn expand_struct(item: ItemStruct) -> TokenStream {
     let mut field_setters = TokenStream::new();
 
     field_getters.extend(quote! {
-        pub fn span(&self, ast: &Ast) -> Span {
+        pub fn span(&self, ast: &crate::Ast) -> crate::Span {
             ast.nodes[self.0].span
         }
     });
 
     field_setters.extend(quote! {
-        pub fn set_span(&self, ast: &mut Ast, span: Span) {
+        pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
             ast.nodes[self.0].span = span;
         }
     });
@@ -45,17 +45,17 @@ fn expand_struct(item: ItemStruct) -> TokenStream {
             get_extra_data_name_from_field(&field_ty).expect("Unsupported field type");
 
         let getter_name = field_name.clone();
+        let setter_name = format_ident!("set_{}", field_name);
         field_getters.extend(quote! {
-            pub fn #getter_name(&self, ast: &Ast) -> #field_ty {
+            pub fn #getter_name(&self, ast: &crate::Ast) -> #field_ty {
                 let offset = unsafe { ast.nodes[self.0].data.extra_data_start } + #offset;
                 let ret = unsafe { ast.extra_data[offset].#extra_data_name };
                 ret.into()
             }
         });
 
-        let setter_name = format_ident!("set_{}", field_name);
         field_setters.extend(quote! {
-            pub fn #setter_name(&self, ast: &mut Ast, #field_name: #field_ty) {
+            pub fn #setter_name(&self, ast: &mut crate::Ast, #field_name: #field_ty) {
                 let offset = unsafe { ast.nodes[self.0].data.extra_data_start } + #offset;
                 ast.extra_data[offset].#extra_data_name = #field_name.into();
             }
@@ -75,7 +75,11 @@ fn expand_struct(item: ItemStruct) -> TokenStream {
 }
 
 fn expand_enum(item: ItemEnum) -> TokenStream {
-    quote! { #item }
+    let fn_cast = quote! {};
+    quote! {
+        #item
+        #fn_cast
+    }
 }
 
 fn get_extra_data_name_from_field(ty: &Type) -> Option<Ident> {
@@ -88,13 +92,16 @@ fn get_extra_data_name_from_field(ty: &Type) -> Option<Ident> {
         None => ty.path.segments.first().map(|s| s.ident.to_string()),
     }?;
     let name = match ty_name.as_str() {
-        "NodeId" => "node",
         "AtomRef" => "atom",
         "BigIntId" => "bigint",
         "OptionalNodeId" => "optional_node",
         "OptionalAtomRef" => "optional_atom",
+        "bool" => "bool",
         "f64" => "number",
+
         "TypedSubRange" => "sub_range",
+        "TypedNodeId" => "node",
+        "TypedOptionalNodeId" => "optional_node",
         _ => return None,
     };
 

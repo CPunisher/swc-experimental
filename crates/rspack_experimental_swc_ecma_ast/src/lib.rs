@@ -31,7 +31,6 @@ pub struct AstNode {
 
 pub union NodeData {
     empty: (),
-    bool: bool,
     extra_data_start: ExtraDataId,
 }
 
@@ -42,10 +41,12 @@ pub union ExtraData {
     optional_node: OptionalNodeId,
     optional_atom: OptionalAtomRef,
 
+    bool: bool,
     number: f64,
     sub_range: SubRange,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum NodeKind {
     // module.rs
     Module,
@@ -274,6 +275,8 @@ pub enum NodeKind {
     TsSatisfiesExpr,
     TsConstAssertion,
     TsInstantiation,
+
+    __LAST,
 }
 
 impl Ast {
