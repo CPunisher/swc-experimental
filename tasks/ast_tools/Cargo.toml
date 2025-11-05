@@ -1,0 +1,13 @@
+[package]
+edition = "2024"
+name    = "ast_tools"
+version = "0.1.0"
+
+[dependencies]
+prettyplease = { workspace = true }
+proc-macro2  = { workspace = true }
+quote        = { workspace = true }
+syn          = { workspace = true, features = ["full", "parsing", "printing", "proc-macro", "clone-impls"] }
+
+indexmap  = { workspace = true }
+oxc_index = { workspace = true }

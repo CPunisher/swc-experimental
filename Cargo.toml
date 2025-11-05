@@ -1,14 +1,16 @@
 [workspace]
-members  = ["crates/*"]
+members  = ["crates/*", "tasks/ast_tools"]
 resolver = "2"
 
 [workspace.dependencies]
 num-bigint = "0.4.6"
 oxc_index  = "4.1.0"
 
-proc-macro2 = "1"
-quote       = "1"
-syn         = { version = "2", default-features = false }
+indexmap     = "2.12.0"
+prettyplease = "0.2"
+proc-macro2  = "1"
+quote        = "1"
+syn          = { version = "2", default-features = false }
 
 swc_atoms  = "7.0.0"
 swc_common = "15.0.0"

@@ -1,7 +1,8 @@
-use swc_common::Span;
+use rspack_experimental_swc_ast_macros::ast;
 
 use crate::node_id::{AtomRef, BigIntId, OptionalAtomRef};
 
+#[ast]
 pub enum Lit {
     Str(Str),
     Bool(Bool),
@@ -12,41 +13,40 @@ pub enum Lit {
     JSXText(JSXText),
 }
 
+#[ast]
 pub struct Str {
-    pub span: Span,
-    pub value: AtomRef,
-    pub raw: OptionalAtomRef,
+    value: AtomRef,
+    raw: OptionalAtomRef,
 }
 
+#[ast]
 pub struct Bool {
-    pub span: Span,
-    pub value: bool,
+    value: bool,
 }
 
-pub struct Null {
-    pub span: Span,
-}
+#[ast]
+pub struct Null {}
 
+#[ast]
 pub struct Number {
-    pub span: Span,
-    pub value: f64,
-    pub raw: OptionalAtomRef,
+    value: f64,
+    raw: OptionalAtomRef,
 }
 
+#[ast]
 pub struct BigInt {
-    pub span: Span,
-    pub value: BigIntId,
-    pub raw: OptionalAtomRef,
+    value: BigIntId,
+    raw: OptionalAtomRef,
 }
 
+#[ast]
 pub struct Regex {
-    pub span: Span,
-    pub exp: AtomRef,
-    pub flags: AtomRef,
+    exp: AtomRef,
+    flags: AtomRef,
 }
 
+#[ast]
 pub struct JSXText {
-    pub span: Span,
-    pub value: AtomRef,
-    pub raw: AtomRef,
+    value: AtomRef,
+    raw: AtomRef,
 }

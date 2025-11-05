@@ -1,0 +1,356 @@
+use std::{collections::HashSet, fs};
+
+use indexmap::IndexSet;
+use oxc_index::IndexVec;
+use quote::ToTokens;
+use syn::{
+    Attribute, Field, GenericArgument, Ident, Item, ItemEnum, ItemStruct, Meta, PathArguments,
+    Type, Variant, punctuated::Punctuated, token::Comma,
+};
+
+use crate::schema::{
+    AstAttrs, AstEnum, AstEnumVariant, AstFile, AstPrimitive, AstStruct, AstStructField, AstType,
+    AstTypedId, FileId, Schema, TypeId,
+};
+
+struct Parser {
+    /// Mapping all type names to their type ids
+    type_names: IndexSet<String>,
+    /// Types exclude top level structs and enums
+    extra_types: IndexVec<TypeId, AstType>,
+}
+
+pub fn parse_files(file_paths: &[&str]) -> Schema {
+    struct PrototypeStruct {
+        type_id: TypeId,
+        file_id: FileId,
+        item: ItemStruct,
+        attrs: AstAttrs,
+    }
+
+    struct PrototypeEnum {
+        type_id: TypeId,
+        file_id: FileId,
+        item: ItemEnum,
+        attrs: AstAttrs,
+    }
+
+    enum PrototypeStructOrEnum {
+        Struct(PrototypeStruct),
+        Enum(PrototypeEnum),
+    }
+
+    // Collect declared enums and structs ahead of time and create their types
+    let mut files = IndexVec::with_capacity(file_paths.len());
+    let mut type_names = IndexSet::new();
+    let mut prototypes = Vec::new();
+    for source in file_paths {
+        let file_id = FileId::from_usize(files.len());
+        files.push(AstFile::new(&source));
+
+        let content = fs::read_to_string(source).expect(&format!("Cannot not find {}", source));
+        let file = syn::parse_file(&content).unwrap();
+        for item in file.items {
+            match item {
+                Item::Struct(item) => {
+                    // Filter structs with #[ast]
+                    let Some(attrs) = parse_attrs(&item.attrs) else {
+                        continue;
+                    };
+
+                    let name = item.ident.to_string();
+                    let type_id = TypeId::from_usize(type_names.len());
+                    type_names.insert(name);
+                    prototypes.push(PrototypeStructOrEnum::Struct(PrototypeStruct {
+                        type_id,
+                        file_id,
+                        item,
+                        attrs,
+                    }));
+                }
+                Item::Enum(item) => {
+                    // Filter enums with #[ast]
+                    let Some(attrs) = parse_attrs(&item.attrs) else {
+                        continue;
+                    };
+
+                    let name = item.ident.to_string();
+                    let type_id = TypeId::from_usize(type_names.len());
+                    type_names.insert(name);
+                    prototypes.push(PrototypeStructOrEnum::Enum(PrototypeEnum {
+                        type_id,
+                        file_id,
+                        item,
+                        attrs,
+                    }));
+                }
+                _ => continue,
+            }
+        }
+    }
+
+    let mut parser = Parser {
+        type_names,
+        extra_types: IndexVec::default(),
+    };
+
+    // Collect inner types like struct fields and enum variants
+    let mut types = IndexVec::new();
+    for prototype in prototypes {
+        match prototype {
+            PrototypeStructOrEnum::Struct(prototype_struct) => {
+                types.push(parser.parse_struct(
+                    prototype_struct.type_id,
+                    prototype_struct.file_id,
+                    prototype_struct.attrs,
+                    prototype_struct.item,
+                ));
+            }
+            PrototypeStructOrEnum::Enum(prototype_enum) => {
+                types.push(parser.parse_enum(
+                    prototype_enum.type_id,
+                    prototype_enum.file_id,
+                    prototype_enum.attrs,
+                    prototype_enum.item,
+                ));
+            }
+        }
+    }
+
+    types.extend(parser.extra_types);
+    Schema { files, types }
+}
+
+impl Parser {
+    fn create_new_type(&mut self, mut item: AstType) -> TypeId {
+        let type_id = TypeId::from_usize(self.type_names.len());
+        match &mut item {
+            AstType::Struct(ast_struct) => ast_struct.type_id = type_id,
+            AstType::Enum(ast_enum) => ast_enum.type_id = type_id,
+            AstType::TypedId(ast_typed_id) => ast_typed_id.type_id = type_id,
+            AstType::Primitive(ast_primitive) => ast_primitive.type_id = type_id,
+        }
+
+        let not_contained = self.type_names.insert(item.name().to_string());
+        assert!(not_contained, "{} is duplicated", item.name());
+
+        self.extra_types.push(item);
+        type_id
+    }
+
+    /// Get type id of the simple type which is not wrapped by `Option`, `Box` or `Vec`
+    fn simple_type_id(&mut self, name: &str) -> TypeId {
+        if let Some(type_id) = self.type_names.get_index_of(name) {
+            return TypeId::from_usize(type_id);
+        }
+
+        let primitive = |name| {
+            AstType::Primitive(AstPrimitive {
+                type_id: TypeId::DUMMY,
+                name,
+            })
+        };
+
+        let type_def = match name {
+            "bool" => primitive("bool"),
+            "u8" => primitive("u8"),
+            "u16" => primitive("u16"),
+            "u32" => primitive("u32"),
+            "u64" => primitive("u64"),
+            "u128" => primitive("u128"),
+            "usize" => primitive("usize"),
+            "i8" => primitive("i8"),
+            "i16" => primitive("i16"),
+            "i32" => primitive("i32"),
+            "i64" => primitive("i64"),
+            "i128" => primitive("i128"),
+            "isize" => primitive("isize"),
+            "f32" => primitive("f32"),
+            "f64" => primitive("f64"),
+            "AtomRef" => primitive("AtomRef"),
+            "OptionalAtomRef" => primitive("OptionalAtomRef"),
+            "BigIntId" => primitive("BigIntId"),
+            _ => panic!("Unkown primitive {}", name),
+        };
+        self.create_new_type(type_def)
+    }
+}
+
+fn parse_attrs(attrs: &[Attribute]) -> Option<AstAttrs> {
+    let mut has_ast_attr = false;
+    let mut ast_attrs = HashSet::new();
+    let mut generate_derives = HashSet::new();
+
+    // Find #[ast] and #[generate_derive]
+    for attr in attrs {
+        match &attr.meta {
+            Meta::Path(path) => {
+                if path.is_ident("ast") {
+                    has_ast_attr = true;
+                }
+            }
+            Meta::List(meta_list) => {
+                if meta_list.path.is_ident("ast") {
+                    has_ast_attr = true;
+                    let args = meta_list
+                        .parse_args_with(Punctuated::<Ident, Comma>::parse_terminated)
+                        .expect("Unable to parse `#[ast]`");
+                    ast_attrs.extend(args.into_iter().map(|arg| arg.to_string()));
+                }
+                if meta_list.path.is_ident("generate_derive") {
+                    let args = meta_list
+                        .parse_args_with(Punctuated::<Ident, Comma>::parse_terminated)
+                        .expect("Unable to parse `#[generate_derive]`");
+                    generate_derives.extend(args.into_iter().map(|arg| arg.to_string()));
+                }
+            }
+            _ => continue,
+        };
+    }
+
+    if !has_ast_attr {
+        return None;
+    }
+
+    Some(AstAttrs {
+        ast_attrs,
+        generate_derives,
+    })
+}
+
+impl Parser {
+    fn parse_struct(
+        &mut self,
+        type_id: TypeId,
+        file_id: FileId,
+        attrs: AstAttrs,
+        item: ItemStruct,
+    ) -> AstType {
+        let name = item.ident.to_string();
+        let has_lifetime = item.generics.lifetimes().count() > 0;
+        let fields = item
+            .fields
+            .into_iter()
+            .map(|field| self.parse_struct_field(field))
+            .collect();
+        AstType::Struct(AstStruct {
+            type_id,
+            file_id,
+            name,
+            has_lifetime,
+            fields,
+            attrs,
+        })
+    }
+
+    fn parse_struct_field(&mut self, field: Field) -> AstStructField {
+        let name = field.ident.unwrap().to_string();
+        let type_id = self
+            .parse_type_name(&field.ty)
+            .unwrap_or_else(|| panic!("Cannot parse type {}", field.ty.to_token_stream()));
+        AstStructField { type_id, name }
+    }
+
+    fn parse_enum(
+        &mut self,
+        type_id: TypeId,
+        file_id: FileId,
+        attrs: AstAttrs,
+        item: ItemEnum,
+    ) -> AstType {
+        let name = item.ident.to_string();
+        let has_lifetime = item.generics.lifetimes().count() > 0;
+        let variants = item
+            .variants
+            .into_iter()
+            .map(|variant| self.parse_enum_variant(variant))
+            .collect();
+        AstType::Enum(AstEnum {
+            type_id,
+            file_id,
+            name,
+            has_lifetime,
+            variants,
+            attrs,
+        })
+    }
+
+    fn parse_enum_variant(&mut self, variant: Variant) -> AstEnumVariant {
+        let name = variant.ident.to_string();
+
+        let type_id = if variant.fields.is_empty() {
+            None
+        } else {
+            assert!(
+                variant.fields.len() == 1,
+                "Only variants with single field are supported"
+            );
+            let field = variant.fields.iter().next().unwrap();
+            let type_id = self
+                .parse_type_name(&field.ty)
+                .unwrap_or_else(|| panic!("Cannot parse type {}", field.ty.to_token_stream()));
+            Some(type_id)
+        };
+
+        AstEnumVariant { type_id, name }
+    }
+
+    fn parse_type_name(&mut self, ty: &Type) -> Option<TypeId> {
+        let Type::Path(ty) = ty else {
+            return None;
+        };
+
+        if ty.qself.is_some() || ty.path.leading_colon.is_some() || ty.path.segments.len() != 1 {
+            return None;
+        }
+
+        let segment = ty.path.segments.first().unwrap();
+        let name = segment.ident.to_string();
+        match &segment.arguments {
+            PathArguments::None => Some(self.simple_type_id(&name)),
+            PathArguments::Parenthesized(_) => None,
+            PathArguments::AngleBracketed(angle) => {
+                let mut args = angle.args.iter();
+                let arg = match args.next().unwrap() {
+                    GenericArgument::Lifetime(_) => args.next(),
+                    arg => Some(arg),
+                };
+
+                if let Some(arg) = arg {
+                    self.parse_wrapped_type(&name, arg)
+                } else {
+                    Some(self.simple_type_id(&name))
+                }
+            }
+        }
+    }
+
+    fn parse_wrapped_type(&mut self, wrapper_name: &str, arg: &GenericArgument) -> Option<TypeId> {
+        let GenericArgument::Type(ty_arg) = arg else {
+            return None;
+        };
+
+        let inner_type_id = self.parse_type_name(ty_arg)?;
+        let type_id = match wrapper_name {
+            "TypedSubRange" | "TypedNodeId" | "TypedOptionalNodeId" => {
+                let name = format!(
+                    "{}<{}>",
+                    wrapper_name,
+                    self.type_names[inner_type_id.index()]
+                );
+                if let Some(type_id) = self.type_names.get_index_of(&name) {
+                    return Some(TypeId::from(type_id));
+                }
+
+                let ast_type = AstType::TypedId(AstTypedId {
+                    type_id: TypeId::DUMMY,
+                    name,
+                    inner_type_id,
+                });
+                self.create_new_type(ast_type)
+            }
+            _ => return None,
+        };
+        Some(type_id)
+    }
+}
