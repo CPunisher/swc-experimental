@@ -17,7 +17,7 @@ pub enum Pat {
 pub struct ArrayPat {
     elems: Vec<Option<Pat>>,
     optional: bool,
-    type_ann: Option<TsTypeAnn>,
+    // type_ann: Option<TsTypeAnn>,
 }
 
 #[ast]
@@ -35,7 +35,7 @@ pub struct AssignPat {
 
 #[ast]
 pub struct RestPat {
-    // dot3_token: Span,
+    dot3_token: Span,
     arg: Pat,
     // type_ann: Option<Box<TsTypeAnn>>,
 }

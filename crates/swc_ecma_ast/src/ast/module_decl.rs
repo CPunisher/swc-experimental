@@ -24,6 +24,12 @@ pub struct ImportDecl {
     phase: ImportPhase,
 }
 
+pub enum ImportPhase {
+    Evaluation,
+    Source,
+    Defer,
+}
+
 #[ast]
 pub enum ImportSpecifier {
     Named(ImportNamedSpecifier),

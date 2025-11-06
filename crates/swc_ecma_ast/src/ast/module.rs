@@ -10,13 +10,13 @@ pub enum Program {
 
 #[ast]
 pub struct Module {
-    body: TypedSubRange<ModuleItem>,
+    body: ModuleItem,
     shebang: OptionalAtomRef,
 }
 
 #[ast]
 pub struct Script {
-    body: TypedSubRange<Stmt>,
+    body: Stmt,
     shebang: OptionalAtomRef,
 }
 

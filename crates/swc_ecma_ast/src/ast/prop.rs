@@ -1,6 +1,6 @@
 use rspack_experimental_swc_ast_macros::ast;
 
-use crate::ast::{BigInt, Expr, Ident, IdentName, Num, Str};
+use crate::ast::{BigInt, Ident, IdentName, Num, Str};
 
 #[ast]
 pub enum Prop {
@@ -18,6 +18,7 @@ pub struct KeyValueProp {
     value: Expr,
 }
 
+#[ast]
 pub struct AssignProp {
     key: Ident,
     value: Expr,

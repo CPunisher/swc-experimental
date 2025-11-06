@@ -6,7 +6,7 @@ use crate::{
     AST_CRATE_PATH,
     output::{RawOutput, RustOutput, output_path},
     schema::{AstEnum, AstStruct, AstType, Schema},
-    util::map_field_type_to_extra_field,
+    util::{safe_ident, map_field_type_to_extra_field},
 };
 
 pub fn ast_builder(schema: &Schema) -> RawOutput {
@@ -53,23 +53,21 @@ pub fn ast_builder(schema: &Schema) -> RawOutput {
 }
 
 fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> TokenStream {
-    let fn_name = format_ident!("{}", ast.name.to_case(Case::Snake));
-    let ret_ty = ast.full_ident(schema);
+    let fn_name = safe_ident(&ast.name.to_case(Case::Snake));
+    let ret_ty = format_ident!("{}", ast.name);
     let fn_params = generate_fn_params_decl(ast, schema);
 
     let mut add_extra_data = TokenStream::new();
-    let node_kind = ast.full_ident(schema);
-
     for (index, field) in ast.fields.iter().enumerate() {
         let extra_data_id = format_ident!("_f{}", index);
         let field_name = format_ident!("{}", field.name);
 
-        let field_ty = schema.types[field.type_id].wrapper_name();
-        let field_value = match &schema.types[field.type_id] {
-            AstType::Node(ast) if ast.is_optional => {
+        let field_ty = &schema.types[field.type_id];
+        let field_value = match field_ty {
+            AstType::Option(_) => {
                 quote!( #field_name.optional_node_id().into() )
             }
-            AstType::Node(ast) if !ast.is_optional => {
+            AstType::Struct(_) | AstType::Enum(_) => {
                 quote!( #field_name.node_id().into() )
             }
             _ => quote!( #field_name.into() ),
@@ -93,7 +91,7 @@ fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> Token
             #ret_ty(
                 self.add_node(AstNode {
                     span,
-                    kind: NodeKind::#node_kind,
+                    kind: NodeKind::#ret_ty,
                     data: NodeData {
                         #node_data
                     },
@@ -142,14 +140,14 @@ fn generate_build_function_for_enum(
                         fn_name.push_str(name);
                     }
                     fn_name.push_str(&ast_struct.name);
-                    format_ident!("{}", fn_name.to_case(Case::Snake))
+                    safe_ident(&fn_name.to_case(Case::Snake))
                 };
 
                 let args = generate_fn_args(ast_struct);
-                let constructor = format_ident!("{}", ast_struct.name.to_case(Case::Snake));
+                let constructor = safe_ident(&ast_struct.name.to_case(Case::Snake));
                 let body = recursive_context.constructor.iter().rev().fold(
-                    quote!(self.#constructor(span, #args).into()),
-                    |acc, construcotr| quote!(#construcotr(#acc)),
+                    quote!( self.#constructor(span, #args).into() ),
+                    |acc, constructor| quote!(#constructor(#acc)),
                 );
 
                 let fn_params = generate_fn_params_decl(ast_struct, schema);
@@ -181,14 +179,7 @@ fn generate_fn_params_decl(ast: &AstStruct, schema: &Schema) -> TokenStream {
     let mut fields = Vec::default();
     for field in ast.fields.iter() {
         let field_name = format_ident!("{}", field.name);
-        let field_ty = &schema.types[field.type_id];
-        let field_ty = match field_ty {
-            AstType::Node(ast_typed_id) if ast_typed_id.is_optional => {
-                let inner = field_ty.repr_ident(schema);
-                quote!( Option<#inner> )
-            }
-            _ => field_ty.repr_ident(schema),
-        };
+        let field_ty = schema.types[field.type_id].repr_ident(schema);
         fields.push(quote!(#field_name: #field_ty));
     }
 

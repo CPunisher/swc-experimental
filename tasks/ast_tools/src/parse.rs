@@ -9,7 +9,7 @@ use syn::{
 };
 
 use crate::schema::{
-    AstAttrs, AstEnum, AstEnumVariant, AstNode, AstPrimitive, AstStruct, AstStructField, AstType,
+    AstAttrs, AstEnum, AstEnumVariant, AstOption, AstPrimitive, AstStruct, AstStructField, AstType,
     AstVec, Schema, TypeId,
 };
 
@@ -118,7 +118,7 @@ impl Parser {
             AstType::Struct(ast) => ast.type_id = type_id,
             AstType::Enum(ast) => ast.type_id = type_id,
             AstType::Vec(ast) => ast.type_id = type_id,
-            AstType::Node(ast) => ast.type_id = type_id,
+            AstType::Option(ast) => ast.type_id = type_id,
             AstType::Primitive(ast) => ast.type_id = type_id,
         }
 
@@ -158,10 +158,21 @@ impl Parser {
             "isize" => primitive("isize"),
             "f32" => primitive("f32"),
             "f64" => primitive("f64"),
+
+            // Custom enum
+            "Span" => primitive("Span"),
             "AtomRef" => primitive("AtomRef"),
             "OptionalAtomRef" => primitive("OptionalAtomRef"),
             "BigIntId" => primitive("BigIntId"),
-            _ => panic!("Unkown primitive {}", name),
+            "ImportPhase" => primitive("ImportPhase"),
+            "VarDeclKind" => primitive("VarDeclKind"),
+            "UnaryOp" => primitive("UnaryOp"),
+            "BinaryOp" => primitive("BinaryOp"),
+            "AssignOp" => primitive("AssignOp"),
+            "UpdateOp" => primitive("UpdateOp"),
+            "MetaPropKind" => primitive("MetaPropKind"),
+            "MethodKind" => primitive("MethodKind"),
+            _ => panic!("Unknown primitive {name}"),
         };
         self.create_new_type(type_def)
     }
@@ -305,7 +316,7 @@ impl Parser {
 
         let inner_type_id = self.parse_type_name(ty_arg)?;
         let type_id = match wrapper_name {
-            "TypedSubRange" => {
+            "Vec" => {
                 let name = format!(
                     "{}<{}>",
                     wrapper_name,
@@ -318,12 +329,11 @@ impl Parser {
                 let ast_type = AstType::Vec(AstVec {
                     type_id: TypeId::DUMMY,
                     name,
-                    wrapper_name: wrapper_name.to_string(),
                     inner_type_id,
                 });
                 self.create_new_type(ast_type)
             }
-            "TypedNode" | "TypedOptionalNode" => {
+            "Option" => {
                 let name = format!(
                     "{}<{}>",
                     wrapper_name,
@@ -333,12 +343,10 @@ impl Parser {
                     return Some(TypeId::from(type_id));
                 }
 
-                let ast_type = AstType::Node(AstNode {
+                let ast_type = AstType::Option(AstOption {
                     type_id: TypeId::DUMMY,
                     name,
-                    wrapper_name: wrapper_name.to_string(),
                     inner_type_id,
-                    is_optional: wrapper_name.contains("Optional"),
                 });
                 self.create_new_type(ast_type)
             }

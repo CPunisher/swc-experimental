@@ -4,7 +4,7 @@ use crate::ast::*;
 
 #[ast]
 pub struct Class {
-    decorators: Vec<Decorator>,
+    // decorators: Vec<Decorator>,
     body: Vec<ClassMember>,
     super_class: Option<Expr>,
     is_abstract: bool,

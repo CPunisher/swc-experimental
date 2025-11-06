@@ -1,23 +1,54 @@
 use std::collections::BTreeMap;
 
+use phf::{Set as PhfSet, phf_set};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::Ident;
 
-use crate::schema::{self, AstEnum, Schema};
+use crate::schema::{self, AstEnum, AstType, Schema};
 
-pub fn map_field_type_to_extra_field(field_type: &str) -> &str {
-    match field_type {
-        "AtomRef" => "atom",
-        "OptionalAtomRef" => "optional_atom",
-        "BigIntId" => "bigint",
-        "bool" => "bool",
-        "f64" => "number",
+/// Reserved word in Rust.
+/// From <https://doc.rust-lang.org/reference/keywords.html>.
+pub(crate) static RESERVED_NAMES: PhfSet<&'static str> = phf_set! {
+    // Strict keywords
+    "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn", "for", "if",
+    "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self",
+    "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where", "while", "async",
+    "await", "dyn",
+    // Reserved keywords
+    "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized",
+    "virtual", "yield", "try",
+    // Weak keywords
+    "macro_rules", "union", // "dyn" also listed as a weak keyword, but is already on strict list
+};
 
-        "TypedSubRange" => "sub_range",
-        "TypedNode" => "node",
-        "TypedOptionalNode" => "optional_node",
-        _ => panic!("Unsupport field type {field_type}"),
+/// Returns `true` if `name` is a reserved word in Rust.
+pub fn is_reserved_name(name: &str) -> bool {
+    RESERVED_NAMES.contains(name)
+}
+
+pub fn safe_ident(name: &str) -> Ident {
+    if is_reserved_name(name) {
+        format_ident!("{name}_")
+    } else {
+        format_ident!("{name}")
+    }
+}
+
+pub fn map_field_type_to_extra_field(ast: &AstType) -> &str {
+    match ast {
+        AstType::Struct(_) | AstType::Enum(_) => "node",
+        AstType::Vec(_) => "sub_range",
+        AstType::Option(_) => "optional_node",
+        AstType::Primitive(ast_primitive) => match ast_primitive.name {
+            "Span" => "span",
+            "AtomRef" => "atom",
+            "OptionalAtomRef" => "optional_atom",
+            "BigIntId" => "bigint",
+            "bool" => "bool",
+            "f64" => "number",
+            _ => "other",
+        },
     }
 }
 

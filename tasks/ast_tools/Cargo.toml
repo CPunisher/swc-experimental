@@ -4,6 +4,7 @@ name    = "ast_tools"
 version = "0.1.0"
 
 [dependencies]
+phf          = { workspace = true, features = ["macros"] }
 prettyplease = { workspace = true }
 proc-macro2  = { workspace = true }
 quote        = { workspace = true }

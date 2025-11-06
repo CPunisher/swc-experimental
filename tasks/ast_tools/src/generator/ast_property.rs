@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -5,7 +6,7 @@ use crate::{
     AST_CRATE_PATH,
     output::{RawOutput, RustOutput, output_path},
     schema::{AstEnum, AstStruct, AstType, Schema},
-    util::map_field_type_to_extra_field,
+    util::{map_field_type_to_extra_field, safe_ident},
 };
 
 pub fn ast_property(schema: &Schema) -> RawOutput {
@@ -62,26 +63,26 @@ fn generate_property_for_struct(ast: &AstStruct, schema: &Schema) -> TokenStream
                 field_ty.repr_ident(schema),
                 quote!(unsafe { ret.cast_to_typed() }),
             ),
-            AstType::Node(ast) if !ast.is_optional => {
+            AstType::Option(ast) => {
+                let option_field_ident = field_ty.repr_ident(schema);
+                let field_inner_ident = schema.types[ast.inner_type_id].repr_ident(schema);
+                (
+                    option_field_ident,
+                    quote!( ret.map(|id| #field_inner_ident::from_node_id(id, ast)) ),
+                )
+            }
+            AstType::Struct(_) | AstType::Enum(_) => {
                 let field_inner_ty = field_ty.repr_ident(schema);
                 (
                     field_inner_ty.clone(),
                     quote!( #field_inner_ty::from_node_id(ret, ast) ),
                 )
             }
-            AstType::Node(ast) if ast.is_optional => {
-                let field_inner_ty = field_ty.repr_ident(schema);
-                (
-                    quote!( Option<#field_inner_ty> ),
-                    quote!( ret.map(|id| #field_inner_ty::from_node_id(id, ast)) ),
-                )
-            }
             _ => (field_ty.repr_ident(schema), quote!(ret.into())),
         };
-        let extra_data_name =
-            format_ident!("{}", map_field_type_to_extra_field(field_ty.wrapper_name()));
+        let extra_data_name = format_ident!("{}", map_field_type_to_extra_field(field_ty));
 
-        let getter_name = format_ident!("{}", field.name);
+        let getter_name = safe_ident(&field.name.to_case(Case::Snake));
         field_getters.extend(quote! {
             #[inline]
             pub fn #getter_name(&self, ast: &crate::Ast) -> #ret_ty {
@@ -92,10 +93,10 @@ fn generate_property_for_struct(ast: &AstStruct, schema: &Schema) -> TokenStream
         });
 
         let extra_data_value = match &field_ty {
-            AstType::Node(ast) if ast.is_optional => {
+            AstType::Option(_) => {
                 quote!(#field_name.optional_node_id().into())
             }
-            AstType::Node(ast) if !ast.is_optional => quote!(#field_name.node_id().into()),
+            AstType::Struct(_) | AstType::Enum(_) => quote!(#field_name.node_id().into()),
             _ => quote!(#field_name.into()),
         };
         let setter_name = format_ident!("set_{}", field_name);

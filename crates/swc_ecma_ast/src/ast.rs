@@ -22,9 +22,5 @@ pub use module_decl::*;
 pub use operator::*;
 pub use pat::*;
 pub use prop::*;
-use rspack_experimental_swc_ast_macros::ast;
 pub use stmt::*;
-
-/// Represents a invalid node.
-#[ast]
-pub struct Invalid {}
+pub use swc_common::Span;

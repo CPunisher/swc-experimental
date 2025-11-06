@@ -49,7 +49,7 @@ pub struct ThisExpr {}
 
 #[ast]
 pub struct ArrayLit {
-    elems: Vec<Option<ExprOrSpread>>,
+    elems: Vec<ExprOrSpread>,
 }
 
 #[ast]
@@ -58,25 +58,14 @@ pub struct ObjectLit {
 }
 
 #[ast]
-pub struct ImportWith {
-    values: Vec<ImportWithItem>,
-}
-
-#[ast]
-pub struct ImportWithItem {
-    key: IdentName,
-    value: Str,
-}
-
-#[ast]
 pub enum PropOrSpread {
-    Spread(SpreadElement),
+    SpreadElement(SpreadElement),
     Prop(Prop),
 }
 
 #[ast]
 pub struct SpreadElement {
-    // dot3_token: Span,
+    dot3_token: Span,
     expr: Expr,
 }
 
@@ -161,7 +150,7 @@ pub struct CallExpr {
 #[ast]
 pub struct NewExpr {
     callee: Expr,
-    args: Option<Vec<ExprOrSpread>>,
+    args: Vec<ExprOrSpread>,
     // type_args: Option<Box<TsTypeParamInstantiation>>,
     // pub type_params: Option<TsTypeParamInstantiation>,
 }
@@ -220,8 +209,8 @@ pub struct TaggedTpl {
 #[ast]
 pub struct TplElement {
     tail: bool,
-    cooked: Option<Wtf8Atom>,
-    raw: Atom,
+    cooked: OptionalAtomRef,
+    raw: AtomRef,
 }
 
 #[ast]
@@ -245,9 +234,9 @@ pub struct Import {
 }
 
 #[ast]
-pub struct ExprOrSpread {
-    // spread: Option<Span>,
-    expr: Expr,
+pub enum ExprOrSpread {
+    SpreadElement(SpreadElement),
+    Expr(Expr),
 }
 
 #[ast]
@@ -303,3 +292,6 @@ pub struct OptCall {
     // type_args: Option<Box<TsTypeParamInstantiation>>,
     // pub type_params: Option<TsTypeParamInstantiation>,
 }
+
+#[ast]
+pub struct Invalid {}
