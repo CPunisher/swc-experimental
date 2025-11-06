@@ -45,6 +45,9 @@ pub union ExtraData {
     bool: bool,
     number: f64,
     sub_range: SubRange,
+
+    /// Any other data (usually enum) that can be representated within 8 bytes
+    other: u64,
 }
 
 #[derive(Debug, Clone, Copy)]

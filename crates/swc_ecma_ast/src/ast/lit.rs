@@ -8,7 +8,7 @@ pub enum Lit {
     Num(Num),
     BigInt(BigInt),
     Regex(Regex),
-    JSXText(JSXText),
+    // JSXText(JSXText),
 }
 
 #[ast]
@@ -43,8 +43,8 @@ pub struct Regex {
     flags: AtomRef,
 }
 
-#[ast]
-pub struct JSXText {
-    value: AtomRef,
-    raw: AtomRef,
-}
+// #[ast]
+// pub struct JSXText {
+//     value: AtomRef,
+//     raw: AtomRef,
+// }

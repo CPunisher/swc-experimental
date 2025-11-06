@@ -22,12 +22,20 @@ impl SubRange {
     }
 }
 
+#[allow(dead_code)]
 pub struct TypedNode<T> {
     inner: NodeId,
     _phantom: PhantomData<T>,
 }
 
+#[allow(dead_code)]
 pub struct TypedOptionalNode<T> {
     inner: OptionalNodeId,
+    _phantom: PhantomData<T>,
+}
+
+#[allow(dead_code)]
+pub struct AnyExtraData<T> {
+    inner: u64,
     _phantom: PhantomData<T>,
 }

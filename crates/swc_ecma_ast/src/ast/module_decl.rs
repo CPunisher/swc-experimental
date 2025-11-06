@@ -17,11 +17,11 @@ pub enum ModuleDecl {
 
 #[ast]
 pub struct ImportDecl {
-    specifiers: TypedSubRange<ImportSpecifier>,
-    src: TypedNode<Str>,
+    specifiers: Vec<ImportSpecifier>,
+    src: Str,
     type_only: bool,
-    with: TypedOptionalNode<ObjectLit>,
-    // phase: ImportPhase,
+    with: Option<ObjectLit>,
+    phase: ImportPhase,
 }
 
 #[ast]
@@ -33,32 +33,32 @@ pub enum ImportSpecifier {
 
 #[ast]
 pub struct ImportNamedSpecifier {
-    local: TypedNode<Ident>,
-    imported: TypedOptionalNode<ModuleExportName>,
+    local: Ident,
+    imported: Option<ModuleExportName>,
     is_type_only: bool,
 }
 
 #[ast]
 pub struct ImportDefaultSpecifier {
-    local: TypedNode<Ident>,
+    local: Ident,
 }
 
 #[ast]
 pub struct ImportStarAsSpecifier {
-    local: TypedNode<Ident>,
+    local: Ident,
 }
 
 #[ast]
 pub struct ExportDecl {
-    decl: TypedNode<Decl>,
+    decl: Decl,
 }
 
 #[ast]
 pub struct NamedExport {
-    specifiers: TypedSubRange<ExportSpecifier>,
-    src: TypedOptionalNode<Str>,
+    specifiers: Vec<ExportSpecifier>,
+    src: Option<Str>,
     type_only: bool,
-    with: TypedOptionalNode<ObjectLit>,
+    with: Option<ObjectLit>,
 }
 
 #[ast]
@@ -70,7 +70,7 @@ pub enum ExportSpecifier {
 
 #[ast]
 pub struct ExportNamespaceSpecifier {
-    name: TypedNode<ModuleExportName>,
+    name: ModuleExportName,
 }
 
 #[ast]
@@ -81,19 +81,19 @@ pub enum ModuleExportName {
 
 #[ast]
 pub struct ExportDefaultSpecifier {
-    exported: TypedNode<Ident>,
+    exported: Ident,
 }
 
 #[ast]
 pub struct ExportNamedSpecifier {
-    orig: TypedNode<ModuleExportName>,
-    exported: TypedOptionalNode<ModuleExportName>,
+    orig: ModuleExportName,
+    exported: Option<ModuleExportName>,
     is_type_only: bool,
 }
 
 #[ast]
 pub struct ExportDefaultDecl {
-    decl: TypedNode<DefaultDecl>,
+    decl: DefaultDecl,
 }
 
 #[ast]
@@ -105,12 +105,12 @@ pub enum DefaultDecl {
 
 #[ast]
 pub struct ExportDefaultExpr {
-    expr: TypedNode<Expr>,
+    expr: Expr,
 }
 
 #[ast]
 pub struct ExportAll {
-    src: TypedNode<Str>,
+    src: Str,
     type_only: bool,
-    with: TypedOptionalNode<ObjectLit>,
+    with: Option<ObjectLit>,
 }

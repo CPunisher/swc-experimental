@@ -18,5 +18,5 @@ pub struct PrivateName {
 
 #[ast]
 pub struct BindingIdent {
-    id: TypedNode<Ident>,
+    id: Ident,
 }
