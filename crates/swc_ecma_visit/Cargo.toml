@@ -1,0 +1,12 @@
+[package]
+edition = "2024"
+name    = "rspack_experimental_swc_ecma_visit"
+version = "0.1.0"
+
+[dependencies]
+swc_common = { workspace = true }
+
+rspack_experimental_swc_ecma_ast = { workspace = true }
+
+[dev-dependencies]
+rspack_experimental_swc_ecma_parser = { workspace = true }

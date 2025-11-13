@@ -537,6 +537,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rspack_experimental_swc_ecma_visit"
+version = "0.1.0"
+dependencies = [
+ "rspack_experimental_swc_ecma_ast",
+ "rspack_experimental_swc_ecma_parser",
+ "swc_common",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

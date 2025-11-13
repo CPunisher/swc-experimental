@@ -1,6 +1,6 @@
 use crate::{
     derive::{ast_clone_in::ast_clone_in, ast_node_id::ast_node_id},
-    generator::{ast_builder::ast_builder, ast_property::ast_property},
+    generator::{ast_builder::ast_builder, ast_property::ast_property, ast_visitor::ast_visitor},
     parse::parse_files,
 };
 
@@ -28,6 +28,7 @@ const SOURCE_PATHS: &[&str] = &[
 ];
 
 const AST_CRATE_PATH: &str = "swc_ecma_ast";
+const VISIT_CRATE_PATH: &str = "swc_ecma_visit";
 
 fn main() {
     let schema = parse_files(SOURCE_PATHS);
@@ -43,4 +44,7 @@ fn main() {
 
     let ast_clone_in = ast_clone_in(&schema);
     ast_clone_in.write_to_file().unwrap();
+
+    let ast_visitor = ast_visitor(&schema);
+    ast_visitor.write_to_file().unwrap();
 }
