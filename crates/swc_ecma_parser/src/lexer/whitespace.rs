@@ -1,4 +1,4 @@
-use crate::{byte_search, lexer::search::SafeByteMatchTable, safe_byte_match_table, Lexer};
+use crate::{Lexer, byte_search, lexer::search::SafeByteMatchTable, safe_byte_match_table};
 
 /// U+000B VERTICAL TAB, abbreviated `<VT>`.
 const B_VT: u8 = 0x0b;
@@ -146,7 +146,6 @@ impl<'a> Lexer<'a> {
     /// Skip comments or whitespaces.
     ///
     /// See https://tc39.github.io/ecma262/#sec-white-space
-    #[inline(never)]
     pub fn skip_space(&mut self) {
         loop {
             let byte = match self.input.as_str().as_bytes().first() {
