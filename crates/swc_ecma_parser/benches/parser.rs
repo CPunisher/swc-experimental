@@ -1,0 +1,62 @@
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+use criterion::{Bencher, Criterion, criterion_group, criterion_main};
+
+fn bench_legacy(b: &mut Bencher, src: &'static str) {
+    use swc_ecma_parser::{Parser, StringInput, Syntax, lexer::Lexer};
+    b.iter(|| {
+        let input = StringInput::new(src, Default::default(), Default::default());
+        let lexer = Lexer::new(
+            Syntax::Es(Default::default()),
+            Default::default(),
+            input,
+            None,
+        );
+        let mut parser = Parser::new_from(lexer);
+        parser.parse_module().unwrap();
+    });
+}
+
+fn bench_new(b: &mut Bencher, src: &'static str) {
+    use rspack_experimental_swc_ecma_parser::{Lexer, Parser, StringInput};
+    b.iter(|| {
+        let input = StringInput::new(src, Default::default(), Default::default());
+        let lexer = Lexer::new(
+            rspack_experimental_swc_ecma_parser::Syntax::Es(Default::default()),
+            Default::default(),
+            input,
+            None,
+        );
+        let mut parser = Parser::new_from(lexer);
+        parser.parse_module().unwrap();
+    });
+}
+
+fn bench_files(c: &mut Criterion) {
+    let bench_cases = &[
+        ("colors", include_str!("./files/colors.js")),
+        ("angular", include_str!("./files/angular-1.2.5.js")),
+        ("backbone", include_str!("./files/backbone-1.1.0.js")),
+        ("jquery", include_str!("./files/jquery-1.9.1.js")),
+        (
+            "jquery.mobile",
+            include_str!("./files/jquery.mobile-1.4.2.js"),
+        ),
+        ("mootools", include_str!("./files/mootools-1.4.5.js")),
+        ("underscore", include_str!("./files/underscore-1.5.2.js")),
+        ("three", include_str!("./files/three-0.138.3.js")),
+        ("yui", include_str!("./files/yui-3.12.0.js")),
+        ("typescript", include_str!("./files/typescript.js")),
+    ];
+
+    for (name, source) in bench_cases {
+        c.bench_function(&format!("{name}/parser/legacy"), |b| {
+            bench_legacy(b, &source)
+        });
+        c.bench_function(&format!("{name}/parser/new"), |b| bench_new(b, &source));
+    }
+}
+
+criterion_group!(benches, bench_files);
+criterion_main!(benches);
