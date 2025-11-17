@@ -232,7 +232,7 @@ impl<I: Tokens> Parser<I> {
 
             let arg = self.parse_unary_expr()?;
             let span = Span::new_with_checked(start, arg.span_hi(&self.ast));
-            self.check_assign_target(&arg, false);
+            self.check_assign_target(arg, false);
 
             return Ok(self.ast.expr_update_expr(span, op, true, arg));
         } else if cur == Token::Delete
@@ -305,7 +305,7 @@ impl<I: Tokens> Parser<I> {
                 UpdateOp::MinusMinus
             };
 
-            self.check_assign_target(&expr, false);
+            self.check_assign_target(expr, false);
             self.bump();
 
             return Ok(self.ast.expr_update_expr(
@@ -453,7 +453,7 @@ impl<I: Tokens> Parser<I> {
             let args = self.ast.add_typed_sub_range(&args);
 
             let call_expr = match callee {
-                Callee::Expr(e) if unwrap_ts_non_null(&e).is_opt_chain() => {
+                Callee::Expr(e) if unwrap_ts_non_null(e).is_opt_chain() => {
                     let base = self.ast.opt_chain_base_opt_call(self.span(start), e, args);
                     self.ast.expr_opt_chain_expr(self.span(start), false, base)
                 }
@@ -514,7 +514,7 @@ impl<I: Tokens> Parser<I> {
     }
 
     #[allow(unused)]
-    fn at_possible_async(&mut self, expr: &Expr) -> bool {
+    fn at_possible_async(&mut self, expr: Expr) -> bool {
         // TODO(kdy1): !this.state.containsEsc &&
         self.state().potential_arrow_start == Some(expr.span_lo(&self.ast))
             && expr.is_ident_ref_to(&self.ast, "async")
@@ -1180,7 +1180,7 @@ impl<I: Tokens> Parser<I> {
             //     None
             // };
 
-            let is_opt_chain = unwrap_ts_non_null(&callee).is_opt_chain();
+            let is_opt_chain = unwrap_ts_non_null(callee).is_opt_chain();
             let expr = self
                 .ast
                 .member_expr(span, callee, MemberProp::Computed(prop));
@@ -1219,7 +1219,7 @@ impl<I: Tokens> Parser<I> {
             let args = self.ast.add_typed_sub_range(&args);
 
             let span = self.span(start);
-            return if question_dot || unwrap_ts_non_null(&callee).is_opt_chain() {
+            return if question_dot || unwrap_ts_non_null(callee).is_opt_chain() {
                 let base = self
                     .ast
                     .opt_chain_base_opt_call(self.span(start), callee, args);
@@ -1252,7 +1252,7 @@ impl<I: Tokens> Parser<I> {
             // };
 
             let expr = self.ast.member_expr(span, callee, prop);
-            let expr = if unwrap_ts_non_null(&expr.obj(&self.ast)).is_opt_chain() || question_dot {
+            let expr = if unwrap_ts_non_null(expr.obj(&self.ast)).is_opt_chain() || question_dot {
                 self.ast.expr_opt_chain_expr(
                     self.span(start),
                     question_dot,
@@ -1622,7 +1622,7 @@ impl<I: Tokens> Parser<I> {
         loop {
             let (next_left, next_prec) = self.parse_bin_op_recursively_inner(left, min_prec)?;
 
-            match &next_left {
+            match next_left {
                 Expr::Bin(bin) => {
                     if matches!(
                         bin.op(&self.ast),
@@ -2600,7 +2600,7 @@ impl<I: Tokens> Parser<I> {
     }
 }
 
-fn unwrap_ts_non_null(expr: &Expr) -> &Expr {
+fn unwrap_ts_non_null(expr: Expr) -> Expr {
     // while let Expr::TsNonNull(ts_non_null) = expr {
     //     expr = &ts_non_null.expr;
     // }

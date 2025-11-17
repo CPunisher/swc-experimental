@@ -327,7 +327,7 @@ impl<I: Tokens> Parser<I> {
                                     |p| {
                                         let params = p.parse_formal_params()?;
 
-                                        if params.iter().any(|param| is_not_this(&p.ast, param)) {
+                                        if params.iter().any(|param| is_not_this(&p.ast, *param)) {
                                             p.emit_err(key_span, SyntaxError::GetterParam);
                                         }
 
@@ -359,7 +359,7 @@ impl<I: Tokens> Parser<I> {
 
                                         if params
                                             .iter()
-                                            .filter(|param| is_not_this(&p.ast, param))
+                                            .filter(|param| is_not_this(&p.ast, **param))
                                             .count()
                                             != 1
                                         {

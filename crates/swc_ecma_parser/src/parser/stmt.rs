@@ -518,12 +518,12 @@ impl<I: Tokens> Parser<I> {
     ///
     /// THis function is recursive, but it is very cheap so stack overflow will
     /// not occur.
-    fn adjust_if_else_clause(&mut self, cur: &mut IfStmt, alt: Stmt) {
+    fn adjust_if_else_clause(&mut self, cur: IfStmt, alt: Stmt) {
         let span = self.span(cur.span_lo(&self.ast));
         cur.set_span(&mut self.ast, span);
 
-        if let Some(Stmt::If(mut prev_alt)) = cur.alt(&self.ast) {
-            self.adjust_if_else_clause(&mut prev_alt, alt)
+        if let Some(Stmt::If(prev_alt)) = cur.alt(&self.ast) {
+            self.adjust_if_else_clause(prev_alt, alt)
         } else {
             debug_assert!(cur.alt(&self.ast).is_none());
             cur.set_alt(&mut self.ast, Some(alt));
@@ -596,7 +596,7 @@ impl<I: Tokens> Parser<I> {
                 let alt =
                     self.do_inside_of_context(Context::IgnoreElseClause, Self::parse_if_stmt)?;
 
-                match &mut cur {
+                match cur {
                     Some(cur) => {
                         self.adjust_if_else_clause(cur, Stmt::If(alt));
                     }
@@ -607,9 +607,9 @@ impl<I: Tokens> Parser<I> {
             };
 
             match cur {
-                Some(mut cur) => {
+                Some(cur) => {
                     if let Some(last) = last {
-                        self.adjust_if_else_clause(&mut cur, last);
+                        self.adjust_if_else_clause(cur, last);
                     }
                     Some(Stmt::If(cur))
                 }

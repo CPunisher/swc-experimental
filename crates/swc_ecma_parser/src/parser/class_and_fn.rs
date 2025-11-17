@@ -266,7 +266,7 @@ impl<I: Tokens> Parser<I> {
                 for param in &params {
                     // TODO: Search deeply for assignment pattern using a Visitor
 
-                    let span = match &param.pat(&p.ast) {
+                    let span = match param.pat(&p.ast) {
                         Pat::Assign(pat) => Some(pat.span(&p.ast)),
                         _ => None,
                     };
@@ -535,7 +535,7 @@ impl<I: Tokens> Parser<I> {
                 if p.input().is(Token::LBrace) {
                     p.parse_block(false).map(|block_stmt| {
                         if !is_simple_parameter_list {
-                            if let Some(span) = has_use_strict(&p.ast, &block_stmt) {
+                            if let Some(span) = has_use_strict(&p.ast, block_stmt) {
                                 p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                             }
                         }
@@ -627,7 +627,7 @@ impl<I: Tokens> Parser<I> {
                 }
                 p.allow_in_expr(|p| p.parse_block(true)).map(|block_stmt| {
                     if !is_simple_parameter_list {
-                        if let Some(span) = has_use_strict(&p.ast, &block_stmt) {
+                        if let Some(span) = has_use_strict(&p.ast, block_stmt) {
                             p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                         }
                     }
@@ -651,7 +651,7 @@ impl<I: Tokens> Parser<I> {
         is_abstract: bool,
         _is_override: bool,
     ) -> PResult<ClassMember> {
-        if is_constructor(&self.ast, &key) {
+        if is_constructor(&self.ast, key) {
             syntax_error!(
                 self,
                 key.span(&self.ast),
@@ -864,7 +864,7 @@ impl<I: Tokens> Parser<I> {
             if readonly.is_some() {
                 self.emit_err(self.span(start), SyntaxError::ReadOnlyMethod);
             }
-            if is_constructor(&self.ast, &key) {
+            if is_constructor(&self.ast, key) {
                 self.emit_err(self.span(start), SyntaxError::GeneratorConstructor);
             }
 
@@ -909,7 +909,7 @@ impl<I: Tokens> Parser<I> {
             if readonly.is_some() {
                 syntax_error!(self, self.span(start), SyntaxError::ReadOnlyMethod);
             }
-            let is_constructor = is_constructor(&self.ast, &key);
+            let is_constructor = is_constructor(&self.ast, key);
 
             if is_constructor {
                 if self.syntax().typescript() && is_override {
@@ -1076,7 +1076,7 @@ impl<I: Tokens> Parser<I> {
 
             let is_generator = self.input_mut().eat(Token::Asterisk);
             let key = self.parse_class_prop_name()?;
-            if is_constructor(&self.ast, &key) {
+            if is_constructor(&self.ast, key) {
                 syntax_error!(self, key.span(&self.ast), SyntaxError::AsyncConstructor)
             }
             if readonly.is_some() {
@@ -1114,7 +1114,7 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(key_span, SyntaxError::GetterSetterCannotBeReadonly);
             }
 
-            if is_constructor(&self.ast, &key) {
+            if is_constructor(&self.ast, key) {
                 self.emit_err(key_span, SyntaxError::ConstructorAccessor);
             }
 
@@ -1123,7 +1123,7 @@ impl<I: Tokens> Parser<I> {
                     |p| {
                         let params = p.parse_formal_params()?;
 
-                        if params.iter().any(|param| is_not_this(&p.ast, param)) {
+                        if params.iter().any(|param| is_not_this(&p.ast, *param)) {
                             p.emit_err(key_span, SyntaxError::GetterParam);
                         }
 
@@ -1149,7 +1149,7 @@ impl<I: Tokens> Parser<I> {
 
                         if params
                             .iter()
-                            .filter(|param| is_not_this(&p.ast, param))
+                            .filter(|param| is_not_this(&p.ast, **param))
                             .count()
                             != 1
                         {
@@ -1673,7 +1673,7 @@ impl OutputType for Decl {
     }
 }
 
-fn has_use_strict(ast: &Ast, block: &BlockStmt) -> Option<Span> {
+fn has_use_strict(ast: &Ast, block: BlockStmt) -> Option<Span> {
     block
         .stmts(ast)
         .iter()
@@ -1688,7 +1688,7 @@ fn has_use_strict(ast: &Ast, block: &BlockStmt) -> Option<Span> {
         })
 }
 
-fn is_constructor(ast: &Ast, key: &Key) -> bool {
+fn is_constructor(ast: &Ast, key: Key) -> bool {
     if let Key::Public(PropName::Ident(ident_name)) = key {
         ast.get_atom(ident_name.sym(ast)).eq("constructor")
     } else if let Key::Public(PropName::Str(s)) = key {
@@ -1698,7 +1698,7 @@ fn is_constructor(ast: &Ast, key: &Key) -> bool {
     }
 }
 
-pub(crate) fn is_not_this(ast: &Ast, p: &Param) -> bool {
+pub(crate) fn is_not_this(ast: &Ast, p: Param) -> bool {
     let Pat::Ident(ident) = p.pat(ast) else {
         return false;
     };

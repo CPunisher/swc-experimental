@@ -102,7 +102,7 @@ impl<I: Tokens> Parser<I> {
                     // be reparsed as an AssignmentPattern.
                 }
                 _ => {
-                    self.check_assign_target(&expr, true);
+                    self.check_assign_target(expr, true);
                 }
             }
         }

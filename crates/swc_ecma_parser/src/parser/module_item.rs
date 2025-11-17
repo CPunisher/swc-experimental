@@ -679,7 +679,7 @@ impl<I: Tokens> Parser<I> {
                             );
                         }
                         ExportSpecifier::Namespace(namespace) => {
-                            let export_name = match &namespace.name(&self.ast) {
+                            let export_name = match namespace.name(&self.ast) {
                                 ModuleExportName::Ident(i) => {
                                     self.ast.get_atom(i.sym(&self.ast)).clone()
                                 }
@@ -696,7 +696,7 @@ impl<I: Tokens> Parser<I> {
                                 SyntaxError::ExportExpectFrom(export_name),
                             );
                         }
-                        ExportSpecifier::Named(named) => match &named.orig(&self.ast) {
+                        ExportSpecifier::Named(named) => match named.orig(&self.ast) {
                             ModuleExportName::Ident(id) if id.is_reserved(&self.ast) => {
                                 self.emit_err(
                                     id.span(&self.ast),
