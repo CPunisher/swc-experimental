@@ -30,7 +30,7 @@ impl SubRange {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct TypedSubRange<T> {
     pub(crate) inner: SubRange,
     pub(crate) _phantom: PhantomData<T>,
@@ -46,6 +46,17 @@ impl<T> TypedSubRange<T> {
 
     pub fn len(&self) -> usize {
         self.end.index() - self.start.index()
+    }
+
+    pub fn first(&self) -> Option<NodeExtraDataId<T>> {
+        if self.is_empty() {
+            return None;
+        }
+
+        Some(NodeExtraDataId {
+            inner: self.start,
+            _phantom: PhantomData::default(),
+        })
     }
 
     pub fn iter<'a>(&self) -> TypedSubRangeIterator<T> {

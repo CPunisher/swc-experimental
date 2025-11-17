@@ -15,7 +15,7 @@ pub struct Error {
 }
 
 impl Error {
-    pub(crate) fn span(&self) -> Span {
+    pub fn span(&self) -> Span {
         (*self.error).0
     }
 }

@@ -144,9 +144,9 @@ pub mod unstable {
     };
 }
 
-// use error::Error;
-// use swc_common::{SourceFile, comments::Comments, input::SourceFileInput};
-// use swc_ecma_ast::*;
+use error::Error;
+use rspack_experimental_swc_ecma_ast::*;
+use swc_common::{SourceFile, comments::Comments, input::SourceFileInput};
 
 mod context;
 pub mod error;
@@ -160,55 +160,55 @@ pub use parser::*;
 pub use swc_common::input::{Input, StringInput};
 pub use syntax::{EsSyntax, Syntax, SyntaxFlags, TsSyntax};
 
-// pub fn with_file_parser<T>(
-//     fm: &SourceFile,
-//     syntax: Syntax,
-//     target: EsVersion,
-//     comments: Option<&dyn Comments>,
-//     recovered_errors: &mut Vec<Error>,
-//     op: impl for<'aa> FnOnce(&mut Parser<self::Lexer>) -> PResult<T>,
-// ) -> PResult<T> {
-//     let lexer = self::Lexer::new(syntax, target, SourceFileInput::from(fm), comments);
-//     let mut p = Parser::new_from(lexer);
-//     let ret = op(&mut p);
+pub fn with_file_parser<T>(
+    fm: &SourceFile,
+    syntax: Syntax,
+    target: EsVersion,
+    comments: Option<&dyn Comments>,
+    recovered_errors: &mut Vec<Error>,
+    op: impl for<'aa> FnOnce(&mut Parser<self::Lexer>) -> PResult<T>,
+) -> PResult<T> {
+    let lexer = self::Lexer::new(syntax, target, SourceFileInput::from(fm), comments);
+    let mut p = Parser::new_from(lexer);
+    let ret = op(&mut p);
 
-//     recovered_errors.append(&mut p.take_errors());
+    recovered_errors.append(&mut p.take_errors());
 
-//     ret
-// }
+    ret
+}
 
-// macro_rules! expose {
-//     (
-//         $name:ident,
-//         $T:ty,
-//         $($t:tt)*
-//     ) => {
-//         /// Note: This is recommended way to parse a file.
-//         ///
-//         /// This is an alias for [Parser], [Lexer] and [SourceFileInput], but
-//         /// instantiation of generics occur in `swc_ecma_parser` crate.
-//         pub fn $name(
-//             fm: &SourceFile,
-//             syntax: Syntax,
-//             target: EsVersion,
-//             comments: Option<&dyn Comments>,
-//             recovered_errors: &mut Vec<Error>,
-//         ) -> PResult<$T> {
-//             with_file_parser(fm, syntax, target, comments, recovered_errors, $($t)*)
-//         }
-//     };
-// }
+macro_rules! expose {
+    (
+        $name:ident,
+        $T:ty,
+        $($t:tt)*
+    ) => {
+        /// Note: This is recommended way to parse a file.
+        ///
+        /// This is an alias for [Parser], [Lexer] and [SourceFileInput], but
+        /// instantiation of generics occur in `swc_ecma_parser` crate.
+        pub fn $name(
+            fm: &SourceFile,
+            syntax: Syntax,
+            target: EsVersion,
+            comments: Option<&dyn Comments>,
+            recovered_errors: &mut Vec<Error>,
+        ) -> PResult<$T> {
+            with_file_parser(fm, syntax, target, comments, recovered_errors, $($t)*)
+        }
+    };
+}
 
-// expose!(parse_file_as_expr, Box<Expr>, |p| {
-//     // This allow to parse `import.meta`
-//     let ctx = p.ctx();
-//     p.set_ctx(ctx.union(Context::CanBeModule));
-//     p.parse_expr()
-// });
-// expose!(parse_file_as_module, Module, |p| { p.parse_module() });
-// expose!(parse_file_as_script, Script, |p| { p.parse_script() });
-// expose!(parse_file_as_commonjs, Script, |p| { p.parse_commonjs() });
-// expose!(parse_file_as_program, Program, |p| { p.parse_program() });
+expose!(parse_file_as_expr, Expr, |p| {
+    // This allow to parse `import.meta`
+    let ctx = p.ctx();
+    p.set_ctx(ctx.union(Context::CanBeModule));
+    p.parse_expr()
+});
+expose!(parse_file_as_module, Module, |p| { p.parse_module() });
+expose!(parse_file_as_script, Script, |p| { p.parse_script() });
+expose!(parse_file_as_commonjs, Script, |p| { p.parse_commonjs() });
+expose!(parse_file_as_program, Program, |p| { p.parse_program() });
 
 // #[inline(always)]
 // #[cfg(any(
