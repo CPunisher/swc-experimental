@@ -1,4 +1,4 @@
-use rspack_experimental_swc_ecma_ast::EsVersion;
+use swc_experimental_ecma_ast::EsVersion;
 use swc_atoms::{Atom, Wtf8Atom};
 use swc_common::{BytePos, Span};
 

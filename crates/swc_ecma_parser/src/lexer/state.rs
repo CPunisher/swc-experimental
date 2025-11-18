@@ -1,6 +1,6 @@
 use std::mem::take;
 
-use rspack_experimental_swc_ecma_ast::EsVersion;
+use swc_experimental_ecma_ast::EsVersion;
 use swc_atoms::wtf8::CodePoint;
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;

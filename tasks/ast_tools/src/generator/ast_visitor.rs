@@ -271,7 +271,7 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
             #![allow(unused)]
             use swc_common::Span;
 
-            use rspack_experimental_swc_ecma_ast::*;
+            use swc_experimental_ecma_ast::*;
 
             pub trait Visit {
                 #visit_functions

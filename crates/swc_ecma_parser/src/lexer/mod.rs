@@ -4,7 +4,7 @@ use std::{borrow::Cow, char, iter::FusedIterator, rc::Rc};
 
 use either::Either::{self, Left, Right};
 use num_bigint::BigInt as BigIntValue;
-use rspack_experimental_swc_ecma_ast::{
+use swc_experimental_ecma_ast::{
     EsVersion, is_valid_ascii_continue, is_valid_ascii_start, is_valid_non_ascii_continue,
     is_valid_non_ascii_start,
 };

@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name    = "rspack_experimental_swc_ecma_semantic"
+name    = "swc_experimental_ecma_semantic"
 version = "0.1.0"
 
 [dependencies]
@@ -12,5 +12,5 @@ rustc-hash = { workspace = true }
 swc_atoms  = { workspace = true }
 swc_common = { workspace = true }
 
-rspack_experimental_swc_ecma_ast   = { workspace = true }
-rspack_experimental_swc_ecma_visit = { workspace = true }
+swc_experimental_ecma_ast   = { workspace = true }
+swc_experimental_ecma_visit = { workspace = true }

@@ -1,4 +1,4 @@
-use rspack_experimental_swc_ecma_parser::{EsSyntax, Parser, StringInput, Syntax};
+use swc_experimental_ecma_parser::{EsSyntax, Parser, StringInput, Syntax};
 
 fn main() {
     let source = include_str!("../benches/files/typescript.js");

@@ -1,5 +1,5 @@
-use rspack_experimental_swc_ecma_ast::{Ast, Expr, Ident, PropName};
-use rspack_experimental_swc_ecma_visit::{Visit, VisitWith};
+use swc_experimental_ecma_ast::{Ast, Expr, Ident, PropName};
+use swc_experimental_ecma_visit::{Visit, VisitWith};
 use swc_atoms::Atom;
 
 pub struct DestructuringFinder {

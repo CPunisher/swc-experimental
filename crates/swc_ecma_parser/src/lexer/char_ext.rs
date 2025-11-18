@@ -1,4 +1,4 @@
-use rspack_experimental_swc_ecma_ast::{is_valid_continue, is_valid_start};
+use swc_experimental_ecma_ast::{is_valid_continue, is_valid_start};
 
 /// Implemented for `char`.
 pub trait CharExt: Copy {

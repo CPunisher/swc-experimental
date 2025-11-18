@@ -145,7 +145,7 @@ pub mod unstable {
 }
 
 use error::Error;
-use rspack_experimental_swc_ecma_ast::*;
+use swc_experimental_ecma_ast::*;
 use swc_common::{SourceFile, comments::Comments, input::SourceFileInput};
 
 mod context;

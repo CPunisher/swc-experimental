@@ -1,7 +1,7 @@
 #![allow(clippy::let_unit_value)]
 #![deny(non_snake_case)]
 
-use rspack_experimental_swc_ecma_ast::*;
+use swc_experimental_ecma_ast::*;
 use rustc_hash::FxHashMap;
 use swc_common::{BytePos, Span, comments::Comments, input::StringInput};
 

@@ -19,11 +19,11 @@ fn bench_legacy(b: &mut Bencher, src: &'static str) {
 }
 
 fn bench_new(b: &mut Bencher, src: &'static str) {
-    use rspack_experimental_swc_ecma_parser::{Lexer, Parser, StringInput};
+    use swc_experimental_ecma_parser::{Lexer, Parser, StringInput};
     b.iter(|| {
         let input = StringInput::new(src, Default::default(), Default::default());
         let lexer = Lexer::new(
-            rspack_experimental_swc_ecma_parser::Syntax::Es(Default::default()),
+            swc_experimental_ecma_parser::Syntax::Es(Default::default()),
             Default::default(),
             input,
             None,

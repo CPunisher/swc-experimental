@@ -1,4 +1,4 @@
-use rspack_experimental_swc_ecma_ast::VarDeclKind;
+use swc_experimental_ecma_ast::VarDeclKind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ScopeKind {

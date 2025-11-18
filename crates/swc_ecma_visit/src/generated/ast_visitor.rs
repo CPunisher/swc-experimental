@@ -1,6 +1,6 @@
 #![allow(unused)]
-use rspack_experimental_swc_ecma_ast::*;
 use swc_common::Span;
+use swc_experimental_ecma_ast::*;
 pub trait Visit {
     #[inline]
     fn visit_program(&mut self, node: Program, ast: &Ast) {

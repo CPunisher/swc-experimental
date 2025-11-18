@@ -1,6 +1,6 @@
 use oxc_index::IndexVec;
-use rspack_experimental_swc_ecma_ast::*;
-use rspack_experimental_swc_ecma_visit::{Visit, VisitMut, VisitMutWith, VisitWith};
+use swc_experimental_ecma_ast::*;
+use swc_experimental_ecma_visit::{Visit, VisitMut, VisitMutWith, VisitWith};
 use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::Atom;
 // use swc_ecma_utils::{find_pat_ids, stack_size::maybe_grow_default};

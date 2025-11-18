@@ -1,5 +1,5 @@
 use num_bigint::BigInt;
-use rspack_experimental_swc_ecma_ast::AssignOp;
+use swc_experimental_ecma_ast::AssignOp;
 use swc_atoms::{Atom, Wtf8Atom, atom};
 use swc_common::Span;
 
@@ -921,36 +921,36 @@ impl Token {
             || (t >= Token::Plus as u8 && t <= Token::Ampersand as u8)
     }
 
-    pub const fn as_bin_op(self) -> Option<rspack_experimental_swc_ecma_ast::BinaryOp> {
+    pub const fn as_bin_op(self) -> Option<swc_experimental_ecma_ast::BinaryOp> {
         match self {
-            Token::EqEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::EqEq),
-            Token::NotEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::NotEq),
-            Token::EqEqEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::EqEqEq),
-            Token::NotEqEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::NotEqEq),
-            Token::Lt => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Lt),
-            Token::LtEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::LtEq),
-            Token::Gt => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Gt),
-            Token::GtEq => Some(rspack_experimental_swc_ecma_ast::BinaryOp::GtEq),
-            Token::LShift => Some(rspack_experimental_swc_ecma_ast::BinaryOp::LShift),
-            Token::RShift => Some(rspack_experimental_swc_ecma_ast::BinaryOp::RShift),
+            Token::EqEq => Some(swc_experimental_ecma_ast::BinaryOp::EqEq),
+            Token::NotEq => Some(swc_experimental_ecma_ast::BinaryOp::NotEq),
+            Token::EqEqEq => Some(swc_experimental_ecma_ast::BinaryOp::EqEqEq),
+            Token::NotEqEq => Some(swc_experimental_ecma_ast::BinaryOp::NotEqEq),
+            Token::Lt => Some(swc_experimental_ecma_ast::BinaryOp::Lt),
+            Token::LtEq => Some(swc_experimental_ecma_ast::BinaryOp::LtEq),
+            Token::Gt => Some(swc_experimental_ecma_ast::BinaryOp::Gt),
+            Token::GtEq => Some(swc_experimental_ecma_ast::BinaryOp::GtEq),
+            Token::LShift => Some(swc_experimental_ecma_ast::BinaryOp::LShift),
+            Token::RShift => Some(swc_experimental_ecma_ast::BinaryOp::RShift),
             Token::ZeroFillRShift => {
-                Some(rspack_experimental_swc_ecma_ast::BinaryOp::ZeroFillRShift)
+                Some(swc_experimental_ecma_ast::BinaryOp::ZeroFillRShift)
             }
-            Token::Plus => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Add),
-            Token::Minus => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Sub),
-            Token::Asterisk => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Mul),
-            Token::Slash => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Div),
-            Token::Percent => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Mod),
-            Token::Pipe => Some(rspack_experimental_swc_ecma_ast::BinaryOp::BitOr),
-            Token::Caret => Some(rspack_experimental_swc_ecma_ast::BinaryOp::BitXor),
-            Token::Ampersand => Some(rspack_experimental_swc_ecma_ast::BinaryOp::BitAnd),
-            Token::LogicalOr => Some(rspack_experimental_swc_ecma_ast::BinaryOp::LogicalOr),
-            Token::LogicalAnd => Some(rspack_experimental_swc_ecma_ast::BinaryOp::LogicalAnd),
-            // Token::In => Some(rspack_experimental_swc_ecma_ast::BinaryOp::In),
-            // Token::InstanceOf => Some(rspack_experimental_swc_ecma_ast::BinaryOp::InstanceOf),
-            Token::Exp => Some(rspack_experimental_swc_ecma_ast::BinaryOp::Exp),
+            Token::Plus => Some(swc_experimental_ecma_ast::BinaryOp::Add),
+            Token::Minus => Some(swc_experimental_ecma_ast::BinaryOp::Sub),
+            Token::Asterisk => Some(swc_experimental_ecma_ast::BinaryOp::Mul),
+            Token::Slash => Some(swc_experimental_ecma_ast::BinaryOp::Div),
+            Token::Percent => Some(swc_experimental_ecma_ast::BinaryOp::Mod),
+            Token::Pipe => Some(swc_experimental_ecma_ast::BinaryOp::BitOr),
+            Token::Caret => Some(swc_experimental_ecma_ast::BinaryOp::BitXor),
+            Token::Ampersand => Some(swc_experimental_ecma_ast::BinaryOp::BitAnd),
+            Token::LogicalOr => Some(swc_experimental_ecma_ast::BinaryOp::LogicalOr),
+            Token::LogicalAnd => Some(swc_experimental_ecma_ast::BinaryOp::LogicalAnd),
+            // Token::In => Some(swc_experimental_ecma_ast::BinaryOp::In),
+            // Token::InstanceOf => Some(swc_experimental_ecma_ast::BinaryOp::InstanceOf),
+            Token::Exp => Some(swc_experimental_ecma_ast::BinaryOp::Exp),
             Token::NullishCoalescing => {
-                Some(rspack_experimental_swc_ecma_ast::BinaryOp::NullishCoalescing)
+                Some(swc_experimental_ecma_ast::BinaryOp::NullishCoalescing)
             }
             _ => None,
         }
@@ -962,7 +962,7 @@ impl Token {
         matches!(self, Token::Eq) || (t >= Token::PlusEq as u8 && t <= Token::NullishEq as u8)
     }
 
-    pub fn as_assign_op(self) -> Option<rspack_experimental_swc_ecma_ast::AssignOp> {
+    pub fn as_assign_op(self) -> Option<swc_experimental_ecma_ast::AssignOp> {
         match self {
             Self::Eq => Some(AssignOp::Assign),
             Self::PlusEq => Some(AssignOp::AddAssign),

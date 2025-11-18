@@ -1,4 +1,4 @@
-use rspack_experimental_swc_ast_macros::ast;
+use swc_experimental_ast_macros::ast;
 use swc_atoms::Atom;
 
 use crate::Ast;

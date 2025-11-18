@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name    = "rspack_experimental_swc_ecma_ast"
+name    = "swc_experimental_ecma_ast"
 version = "0.1.0"
 
 [dependencies]
@@ -10,4 +10,4 @@ swc_atoms        = { workspace = true }
 swc_common       = { workspace = true }
 unicode-id-start = { workspace = true }
 
-rspack_experimental_swc_ast_macros = { workspace = true }
+swc_experimental_ast_macros = { workspace = true }

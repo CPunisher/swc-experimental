@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use rspack_experimental_swc_ecma_ast::*;
+use swc_experimental_ecma_ast::*;
 use swc_common::Span;
 
 use crate::{Parser, input::Tokens};

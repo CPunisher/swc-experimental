@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use rspack_experimental_swc_ecma_ast::NodeId;
+use swc_experimental_ecma_ast::NodeId;
 
 oxc_index::define_index_type! {
     pub struct ScopeId = u32;

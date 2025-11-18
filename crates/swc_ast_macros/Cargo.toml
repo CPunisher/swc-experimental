@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name    = "rspack_experimental_swc_ast_macros"
+name    = "swc_experimental_ast_macros"
 version = "0.1.0"
 
 [lib]

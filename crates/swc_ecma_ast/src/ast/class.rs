@@ -1,6 +1,6 @@
 use std::mem;
 
-use rspack_experimental_swc_ast_macros::ast;
+use swc_experimental_ast_macros::ast;
 
 use crate::{ast::*, node_id::ExtraDataCompact};
 

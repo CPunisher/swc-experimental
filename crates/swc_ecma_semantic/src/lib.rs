@@ -2,8 +2,8 @@
 
 /// crates/swc_ecma_transforms_base/src/resolver/mod.rs
 use oxc_index::IndexVec;
-use rspack_experimental_swc_ecma_ast::*;
-use rspack_experimental_swc_ecma_visit::{Visit, VisitWith};
+use swc_experimental_ecma_ast::*;
+use swc_experimental_ecma_visit::{Visit, VisitWith};
 use rustc_hash::FxHashMap;
 
 use crate::{

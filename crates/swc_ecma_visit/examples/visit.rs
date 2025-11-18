@@ -1,6 +1,6 @@
-use rspack_experimental_swc_ecma_ast::{Ast, Ident};
-use rspack_experimental_swc_ecma_parser::{EsSyntax, Parser, StringInput, Syntax};
-use rspack_experimental_swc_ecma_visit::{Visit, VisitWith};
+use swc_experimental_ecma_ast::{Ast, Ident};
+use swc_experimental_ecma_parser::{EsSyntax, Parser, StringInput, Syntax};
+use swc_experimental_ecma_visit::{Visit, VisitWith};
 
 fn main() {
     let source = include_str!("../../swc_ecma_parser/benches/files/typescript.js");
