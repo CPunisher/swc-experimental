@@ -9,7 +9,7 @@ This project is an experimental version of [SWC](https://github.com/swc-project/
 
 ## Performance
 
-The parser of SWC (experimental), although doesn't support parsing TypeScript and JSX, is 1.2-1.3x faster than SWC. Here's a table of running the command `cargo bench --bench parser` with (9e6fc)(https://github.com/CPunisher/swc-experimental/commit/9e6fc).
+The parser of SWC (experimental), although doesn't support parsing TypeScript and JSX, is 1.2-1.3x faster than SWC. Here's a table of running the command `cargo bench --bench parser` with [9e6fc](https://github.com/CPunisher/swc-experimental/commit/9e6fc).
 
 | Bench Case             | SWC (experimental) | SWC                |
 | ---------------------- | ------------------ | ------------------ |
@@ -29,8 +29,8 @@ The parser of SWC (experimental), although doesn't support parsing TypeScript an
 There's a long way to go, but luckly it could be progressive.
 
 - [x] Flattening AST design
-- [ ] Port SWC parser. Support parsing JavaScript, but not TypeScript and JSX.
 - [ ] Port tests.
+- [ ] Port SWC parser. Currently support parsing JavaScript, but not TypeScript and JSX.
 - [ ] Port SWC minifier.
 - [ ] Port SWC transformation.
 
