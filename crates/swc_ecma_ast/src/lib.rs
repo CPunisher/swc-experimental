@@ -337,7 +337,7 @@ impl Ast {
 
     #[inline]
     pub fn get_optional_atom(&self, id: OptionalAtomRef) -> Option<&Atom> {
-        let id = id.unwrap()?;
+        let id = id.to_option()?;
         Some(self.get_atom(id))
     }
 

@@ -50,7 +50,7 @@ impl OptionalAtomRef {
         }
     }
 
-    pub const fn unwrap(self) -> Option<AtomRef> {
+    pub const fn to_option(self) -> Option<AtomRef> {
         if self.hi.0 == u32::MAX {
             return None;
         }
