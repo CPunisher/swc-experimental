@@ -78,14 +78,16 @@ impl<I: Tokens> Parser<I> {
                     )
                 })
                 .map(|expr| {
-                    self.ast.expr_or_spread_spread_element(
+                    let spread = self.ast.spread_dot_3_token(spread_span);
+                    self.ast.expr_or_spread(
                         expr.span(&self.ast).with_lo(spread_span.lo()),
-                        spread_span,
+                        Some(spread),
                         expr,
                     )
                 })
         } else {
-            self.parse_assignment_expr().map(ExprOrSpread::Expr)
+            self.parse_assignment_expr()
+                .map(|expr| self.ast.expr_or_spread(expr.span(&self.ast), None, expr))
         }
     }
 
@@ -484,21 +486,17 @@ impl<I: Tokens> Parser<I> {
 
         self.assert_and_bump(Token::LBracket);
 
-        let mut elems = self.scratch_start();
+        let mut elems = Vec::with_capacity(8);
 
         while !self.input().is(Token::RBracket) {
             if self.input().is(Token::Comma) {
                 expect!(self, Token::Comma);
-                let elem = self
-                    .ast
-                    .expr_or_spread_elision(self.span(self.input.prev_span().hi));
-
-                elems.push(self, elem);
+                elems.push(None);
                 continue;
             }
 
             let elem = self.allow_in_expr(|p| p.parse_expr_or_spread())?;
-            elems.push(self, elem);
+            elems.push(Some(elem));
 
             if !self.input().is(Token::RBracket) {
                 expect!(self, Token::Comma);
@@ -512,7 +510,7 @@ impl<I: Tokens> Parser<I> {
         expect!(self, Token::RBracket);
 
         let span = self.span(start);
-        let elems = elems.end(self);
+        let elems = self.ast.add_typed_opt_sub_range(&elems);
         Ok(self.ast.expr_array_lit(span, elems))
     }
 
@@ -875,7 +873,7 @@ impl<I: Tokens> Parser<I> {
             let (value, raw) = self.input_mut().expect_number_token_and_bump();
 
             let raw = self.ast.add_atom_ref(raw).into();
-            self.ast.lit_num(self.span(start), value, raw)
+            self.ast.lit_number(self.span(start), value, raw)
         } else if cur == Token::BigInt {
             let (value, raw) = self.input_mut().expect_bigint_token_and_bump();
 
@@ -1933,8 +1931,7 @@ impl<I: Tokens> Parser<I> {
                         expr
                     };
 
-                    // ExprOrSpread { spread, expr }
-                    ExprOrSpread::Expr(expr)
+                    self.ast.expr_or_spread(expr.span(&self.ast), None, expr)
                 } else {
                     self.allow_in_expr(|p| p.parse_expr_or_spread())?
                 }
@@ -2079,9 +2076,8 @@ impl<I: Tokens> Parser<I> {
             if self.input_mut().eat(Token::Arrow) && {
                 debug_assert_eq!(items.len(), 1);
                 match &items[0] {
-                    AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Expr(expr)) => expr.is_ident(),
-                    AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Spread(spread)) => {
-                        spread.expr(&self.ast).is_ident()
+                    AssignTargetOrSpread::ExprOrSpread(expr_or_spread) => {
+                        expr_or_spread.expr(&self.ast).is_ident()
                     }
                     AssignTargetOrSpread::Pat(Pat::Expr(expr)) => expr.is_ident(),
                     AssignTargetOrSpread::Pat(Pat::Ident(..)) => true,
@@ -2101,9 +2097,10 @@ impl<I: Tokens> Parser<I> {
                 )?;
                 let span = self.span(start);
 
-                let expr = self
+                let arrow = self
                     .ast
-                    .expr_or_spread_expr_arrow_expr(span, params, body, is_async, false);
+                    .expr_arrow_expr(span, params, body, is_async, false);
+                let expr = self.ast.expr_or_spread(span, None, arrow);
                 items.push(AssignTargetOrSpread::ExprOrSpread(expr));
             }
 
@@ -2263,7 +2260,7 @@ impl<I: Tokens> Parser<I> {
             // like (a, {b = 1});
             for expr_or_spread in paren_items.iter() {
                 if let AssignTargetOrSpread::ExprOrSpread(e) = expr_or_spread {
-                    if let Some(Expr::Object(o)) = e.as_expr() {
+                    if let Expr::Object(o) = e.expr(&self.ast) {
                         let mut errors = Vec::new();
                         for prop in o.props(&self.ast).iter() {
                             let prop = self.ast.get_node(prop);
@@ -2318,16 +2315,12 @@ impl<I: Tokens> Parser<I> {
 
         // ParenthesizedExpression cannot contain spread.
         if expr_or_spreads.len() == 1 {
-            let expr = match self.ast.get_node(expr_or_spreads.iter().next().unwrap()) {
-                ExprOrSpread::Spread(spread) => {
-                    syntax_error!(
-                        self,
-                        spread.expr(&self.ast).span(&self.ast),
-                        SyntaxError::SpreadInParenExpr
-                    )
+            let expr = self.ast.get_node(expr_or_spreads.iter().next().unwrap());
+            let expr = match expr.spread(&self.ast) {
+                Some(_) => {
+                    syntax_error!(self, expr.span(&self.ast), SyntaxError::SpreadInParenExpr)
                 }
-                ExprOrSpread::Expr(expr) => expr,
-                _ => unreachable!(),
+                None => expr.expr(&self.ast),
             };
             Ok(self.ast.expr_paren_expr(self.span(expr_start), expr))
         } else {
@@ -2336,12 +2329,11 @@ impl<I: Tokens> Parser<I> {
             let mut exprs = self.scratch_start();
             for expr in expr_or_spreads.iter() {
                 let expr = self.ast.get_node(expr);
-                match expr {
-                    ExprOrSpread::Spread(spread) => {
-                        syntax_error!(self, spread.span(&self.ast), SyntaxError::SpreadInParenExpr)
+                match expr.spread(&self.ast) {
+                    Some(_) => {
+                        syntax_error!(self, expr.span(&self.ast), SyntaxError::SpreadInParenExpr)
                     }
-                    ExprOrSpread::Expr(expr) => exprs.push(self, expr),
-                    _ => unreachable!(),
+                    None => exprs.push(self, expr.expr(&self.ast)),
                 }
             }
             let exprs = exprs.end(self);

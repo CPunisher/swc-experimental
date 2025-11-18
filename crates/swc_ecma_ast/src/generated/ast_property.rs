@@ -4872,7 +4872,7 @@ impl ArrayLit {
         self.span(ast).hi
     }
     #[inline]
-    pub fn elems(&self, ast: &crate::Ast) -> TypedSubRange<ExprOrSpread> {
+    pub fn elems(&self, ast: &crate::Ast) -> TypedSubRange<Option<ExprOrSpread>> {
         debug_assert!(self.0 < ast.nodes.len());
         let offset = unsafe {
             ast.nodes
@@ -4895,7 +4895,7 @@ impl ArrayLit {
         ast.nodes[self.0].span = span;
     }
     #[inline]
-    pub fn set_elems(&self, ast: &mut crate::Ast, elems: TypedSubRange<ExprOrSpread>) {
+    pub fn set_elems(&self, ast: &mut crate::Ast, elems: TypedSubRange<Option<ExprOrSpread>>) {
         debug_assert!(self.0 < ast.nodes.len());
         let offset = unsafe {
             ast.nodes
@@ -7297,11 +7297,7 @@ impl Import {
 impl ExprOrSpread {
     #[inline]
     pub fn span(&self, ast: &crate::Ast) -> crate::Span {
-        match self {
-            Self::Spread(it) => it.span(ast),
-            Self::Expr(it) => it.span(ast),
-            Self::Elision(it) => it.span(ast),
-        }
+        ast.nodes[self.0].span
     }
     #[inline]
     pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
@@ -7312,48 +7308,85 @@ impl ExprOrSpread {
         self.span(ast).hi
     }
     #[inline]
+    pub fn spread(&self, ast: &crate::Ast) -> Option<SpreadDot3Token> {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .optional_node
+        };
+        ret.map(|id| SpreadDot3Token::from_node_id(id, ast))
+    }
+    #[inline]
+    pub fn expr(&self, ast: &crate::Ast) -> Expr {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        Expr::from_node_id(ret, ast)
+    }
+    #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
-        match self {
-            Self::Spread(it) => it.set_span(ast, span),
-            Self::Expr(it) => it.set_span(ast, span),
-            Self::Elision(it) => it.set_span(ast, span),
-        }
+        ast.nodes[self.0].span = span;
     }
     #[inline]
-    pub fn is_spread(&self) -> bool {
-        matches!(self, Self::Spread(_))
+    pub fn set_spread(&self, ast: &mut crate::Ast, spread: Option<SpreadDot3Token>) {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .optional_node = spread.optional_node_id().into()
+        };
     }
     #[inline]
-    pub fn is_expr(&self) -> bool {
-        matches!(self, Self::Expr(_))
-    }
-    #[inline]
-    pub fn is_elision(&self) -> bool {
-        matches!(self, Self::Elision(_))
-    }
-    #[inline]
-    pub fn as_spread(&self) -> Option<&SpreadElement> {
-        match self {
-            Self::Spread(it) => Some(it),
-            _ => None,
-        }
-    }
-    #[inline]
-    pub fn as_expr(&self) -> Option<&Expr> {
-        match self {
-            Self::Expr(it) => Some(it),
-            _ => None,
-        }
-    }
-    #[inline]
-    pub fn as_elision(&self) -> Option<&Elision> {
-        match self {
-            Self::Elision(it) => Some(it),
-            _ => None,
-        }
+    pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = expr.node_id().into()
+        };
     }
 }
-impl Elision {
+impl SpreadDot3Token {
     #[inline]
     pub fn span(&self, ast: &crate::Ast) -> crate::Span {
         ast.nodes[self.0].span
@@ -9786,7 +9819,7 @@ impl SetterProp {
         PropName::from_node_id(ret, ast)
     }
     #[inline]
-    pub fn param(&self, ast: &crate::Ast) -> Pat {
+    pub fn this_param(&self, ast: &crate::Ast) -> Option<Pat> {
         debug_assert!(self.0 < ast.nodes.len());
         let offset = unsafe {
             ast.nodes
@@ -9795,6 +9828,25 @@ impl SetterProp {
                 .data
                 .extra_data_start
         } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .optional_node
+        };
+        ret.map(|id| Pat::from_node_id(id, ast))
+    }
+    #[inline]
+    pub fn param(&self, ast: &crate::Ast) -> Pat {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 2usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
             ast.extra_data
@@ -9813,7 +9865,7 @@ impl SetterProp {
                 .get_unchecked(self.0.index())
                 .data
                 .extra_data_start
-        } + 2usize;
+        } + 3usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
             ast.extra_data
@@ -9846,7 +9898,7 @@ impl SetterProp {
         };
     }
     #[inline]
-    pub fn set_param(&self, ast: &mut crate::Ast, param: Pat) {
+    pub fn set_this_param(&self, ast: &mut crate::Ast, this_param: Option<Pat>) {
         debug_assert!(self.0 < ast.nodes.len());
         let offset = unsafe {
             ast.nodes
@@ -9855,6 +9907,24 @@ impl SetterProp {
                 .data
                 .extra_data_start
         } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .optional_node = this_param.optional_node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_param(&self, ast: &mut crate::Ast, param: Pat) {
+        debug_assert!(self.0 < ast.nodes.len());
+        let offset = unsafe {
+            ast.nodes
+                .as_raw_slice()
+                .get_unchecked(self.0.index())
+                .data
+                .extra_data_start
+        } + 2usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
             ast.extra_data
@@ -9872,7 +9942,7 @@ impl SetterProp {
                 .get_unchecked(self.0.index())
                 .data
                 .extra_data_start
-        } + 2usize;
+        } + 3usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
             ast.extra_data
@@ -10038,7 +10108,7 @@ impl PropName {
         }
     }
     #[inline]
-    pub fn as_num(&self) -> Option<&Num> {
+    pub fn as_num(&self) -> Option<&Number> {
         match self {
             Self::Num(it) => Some(it),
             _ => None,
@@ -11170,7 +11240,7 @@ impl Lit {
         }
     }
     #[inline]
-    pub fn as_num(&self) -> Option<&Num> {
+    pub fn as_num(&self) -> Option<&Number> {
         match self {
             Self::Num(it) => Some(it),
             _ => None,
@@ -11356,7 +11426,7 @@ impl Null {
         ast.nodes[self.0].span = span;
     }
 }
-impl Num {
+impl Number {
     #[inline]
     pub fn span(&self, ast: &crate::Ast) -> crate::Span {
         ast.nodes[self.0].span

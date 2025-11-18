@@ -331,8 +331,8 @@ pub trait Visit {
         <ExprOrSpread as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
-    fn visit_elision(&mut self, node: Elision, ast: &Ast) {
-        <Elision as VisitWith<Self>>::visit_children_with(node, self, ast)
+    fn visit_spread_dot_3_token(&mut self, node: SpreadDot3Token, ast: &Ast) {
+        <SpreadDot3Token as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
     fn visit_block_stmt_or_expr(&mut self, node: BlockStmtOrExpr, ast: &Ast) {
@@ -519,8 +519,8 @@ pub trait Visit {
         <Null as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
-    fn visit_num(&mut self, node: Num, ast: &Ast) {
-        <Num as VisitWith<Self>>::visit_children_with(node, self, ast)
+    fn visit_number(&mut self, node: Number, ast: &Ast) {
+        <Number as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
     fn visit_big_int(&mut self, node: BigInt, ast: &Ast) {
@@ -595,12 +595,22 @@ pub trait Visit {
         <TypedSubRange<VarDeclarator> as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
-    fn visit_expr_or_spreads(&mut self, node: TypedSubRange<ExprOrSpread>, ast: &Ast) {
-        <TypedSubRange<ExprOrSpread> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    fn visit_opt_expr_or_spread(&mut self, node: Option<ExprOrSpread>, ast: &Ast) {
+        <Option<ExprOrSpread> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_opt_expr_or_spreads(&mut self, node: TypedSubRange<Option<ExprOrSpread>>, ast: &Ast) {
+        <TypedSubRange<Option<ExprOrSpread>> as VisitWith<Self>>::visit_children_with(
+            node, self, ast,
+        )
     }
     #[inline]
     fn visit_prop_or_spreads(&mut self, node: TypedSubRange<PropOrSpread>, ast: &Ast) {
         <TypedSubRange<PropOrSpread> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_expr_or_spreads(&mut self, node: TypedSubRange<ExprOrSpread>, ast: &Ast) {
+        <TypedSubRange<ExprOrSpread> as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
     fn visit_exprs(&mut self, node: TypedSubRange<Expr>, ast: &Ast) {
@@ -613,6 +623,10 @@ pub trait Visit {
     #[inline]
     fn visit_tpl_elements(&mut self, node: TypedSubRange<TplElement>, ast: &Ast) {
         <TypedSubRange<TplElement> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_opt_spread_dot_3_token(&mut self, node: Option<SpreadDot3Token>, ast: &Ast) {
+        <Option<SpreadDot3Token> as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
     #[inline]
     fn visit_params(&mut self, node: TypedSubRange<Param>, ast: &Ast) {
@@ -1207,7 +1221,11 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrayLit {
         <V as Visit>::visit_array_lit(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        <TypedSubRange<ExprOrSpread> as VisitWith<V>>::visit_with(self.elems(ast), visitor, ast);
+        <TypedSubRange<Option<ExprOrSpread>> as VisitWith<V>>::visit_with(
+            self.elems(ast),
+            visitor,
+            ast,
+        );
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ObjectLit {
@@ -1477,16 +1495,13 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExprOrSpread {
         <V as Visit>::visit_expr_or_spread(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        match self {
-            Self::Spread(it) => <SpreadElement as VisitWith<V>>::visit_with(it, visitor, ast),
-            Self::Expr(it) => <Expr as VisitWith<V>>::visit_with(it, visitor, ast),
-            Self::Elision(it) => <Elision as VisitWith<V>>::visit_with(it, visitor, ast),
-        }
+        <Option<SpreadDot3Token> as VisitWith<V>>::visit_with(self.spread(ast), visitor, ast);
+        <Expr as VisitWith<V>>::visit_with(self.expr(ast), visitor, ast);
     }
 }
-impl<V: ?Sized + Visit> VisitWith<V> for Elision {
+impl<V: ?Sized + Visit> VisitWith<V> for SpreadDot3Token {
     fn visit_with(self, visitor: &mut V, ast: &Ast) {
-        <V as Visit>::visit_elision(visitor, self, ast)
+        <V as Visit>::visit_spread_dot_3_token(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {}
 }
@@ -1773,6 +1788,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SetterProp {
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
         <PropName as VisitWith<V>>::visit_with(self.key(ast), visitor, ast);
+        <Option<Pat> as VisitWith<V>>::visit_with(self.this_param(ast), visitor, ast);
         <Pat as VisitWith<V>>::visit_with(self.param(ast), visitor, ast);
         <Option<BlockStmt> as VisitWith<V>>::visit_with(self.body(ast), visitor, ast);
     }
@@ -1794,7 +1810,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for PropName {
         match self {
             Self::Ident(it) => <IdentName as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Str(it) => <Str as VisitWith<V>>::visit_with(it, visitor, ast),
-            Self::Num(it) => <Num as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::Num(it) => <Number as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Computed(it) => <ComputedPropName as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::BigInt(it) => <BigInt as VisitWith<V>>::visit_with(it, visitor, ast),
         }
@@ -1932,7 +1948,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Lit {
             Self::Str(it) => <Str as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Bool(it) => <Bool as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Null(it) => <Null as VisitWith<V>>::visit_with(it, visitor, ast),
-            Self::Num(it) => <Num as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::Num(it) => <Number as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::BigInt(it) => <BigInt as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Regex(it) => <Regex as VisitWith<V>>::visit_with(it, visitor, ast),
         }
@@ -1961,9 +1977,9 @@ impl<V: ?Sized + Visit> VisitWith<V> for Null {
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {}
 }
-impl<V: ?Sized + Visit> VisitWith<V> for Num {
+impl<V: ?Sized + Visit> VisitWith<V> for Number {
     fn visit_with(self, visitor: &mut V, ast: &Ast) {
-        <V as Visit>::visit_num(visitor, self, ast)
+        <V as Visit>::visit_number(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
         <f64 as VisitWith<V>>::visit_with(self.value(ast), visitor, ast);
@@ -2164,9 +2180,31 @@ impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<VarDeclarator> {
         }
     }
 }
-impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ExprOrSpread> {
+impl<V: ?Sized + Visit> VisitWith<V> for Option<ExprOrSpread> {
     fn visit_with(self, visitor: &mut V, ast: &Ast) {
-        <V as Visit>::visit_expr_or_spreads(visitor, self, ast)
+        <V as Visit>::visit_opt_expr_or_spread(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Some(it) => it.visit_with(visitor, ast),
+            None => {}
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<Option<ExprOrSpread>> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_opt_expr_or_spreads(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        for child in self.iter() {
+            let child = ast.get_opt_node(child);
+            child.visit_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<PropOrSpread> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_prop_or_spreads(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
         for child in self.iter() {
@@ -2175,9 +2213,9 @@ impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ExprOrSpread> {
         }
     }
 }
-impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<PropOrSpread> {
+impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ExprOrSpread> {
     fn visit_with(self, visitor: &mut V, ast: &Ast) {
-        <V as Visit>::visit_prop_or_spreads(visitor, self, ast)
+        <V as Visit>::visit_expr_or_spreads(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
         for child in self.iter() {
@@ -2216,6 +2254,17 @@ impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<TplElement> {
         for child in self.iter() {
             let child = ast.get_node(child);
             child.visit_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for Option<SpreadDot3Token> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_opt_spread_dot_3_token(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Some(it) => it.visit_with(visitor, ast),
+            None => {}
         }
     }
 }
@@ -2608,8 +2657,8 @@ pub trait VisitMut {
         <ExprOrSpread as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
     #[inline]
-    fn visit_mut_elision(&mut self, node: Elision, ast: &mut Ast) {
-        <Elision as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    fn visit_mut_spread_dot_3_token(&mut self, node: SpreadDot3Token, ast: &mut Ast) {
+        <SpreadDot3Token as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
     #[inline]
     fn visit_mut_block_stmt_or_expr(&mut self, node: BlockStmtOrExpr, ast: &mut Ast) {
@@ -2796,8 +2845,8 @@ pub trait VisitMut {
         <Null as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
     #[inline]
-    fn visit_mut_num(&mut self, node: Num, ast: &mut Ast) {
-        <Num as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    fn visit_mut_number(&mut self, node: Number, ast: &mut Ast) {
+        <Number as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
     #[inline]
     fn visit_mut_big_int(&mut self, node: BigInt, ast: &mut Ast) {
@@ -2878,14 +2927,28 @@ pub trait VisitMut {
         )
     }
     #[inline]
-    fn visit_mut_expr_or_spreads(&mut self, node: TypedSubRange<ExprOrSpread>, ast: &mut Ast) {
-        <TypedSubRange<ExprOrSpread> as VisitMutWith<Self>>::visit_mut_children_with(
+    fn visit_mut_opt_expr_or_spread(&mut self, node: Option<ExprOrSpread>, ast: &mut Ast) {
+        <Option<ExprOrSpread> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_opt_expr_or_spreads(
+        &mut self,
+        node: TypedSubRange<Option<ExprOrSpread>>,
+        ast: &mut Ast,
+    ) {
+        <TypedSubRange<Option<ExprOrSpread>> as VisitMutWith<Self>>::visit_mut_children_with(
             node, self, ast,
         )
     }
     #[inline]
     fn visit_mut_prop_or_spreads(&mut self, node: TypedSubRange<PropOrSpread>, ast: &mut Ast) {
         <TypedSubRange<PropOrSpread> as VisitMutWith<Self>>::visit_mut_children_with(
+            node, self, ast,
+        )
+    }
+    #[inline]
+    fn visit_mut_expr_or_spreads(&mut self, node: TypedSubRange<ExprOrSpread>, ast: &mut Ast) {
+        <TypedSubRange<ExprOrSpread> as VisitMutWith<Self>>::visit_mut_children_with(
             node, self, ast,
         )
     }
@@ -2900,6 +2963,10 @@ pub trait VisitMut {
     #[inline]
     fn visit_mut_tpl_elements(&mut self, node: TypedSubRange<TplElement>, ast: &mut Ast) {
         <TypedSubRange<TplElement> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_opt_spread_dot_3_token(&mut self, node: Option<SpreadDot3Token>, ast: &mut Ast) {
+        <Option<SpreadDot3Token> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
     #[inline]
     fn visit_mut_params(&mut self, node: TypedSubRange<Param>, ast: &mut Ast) {
@@ -3544,7 +3611,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayLit {
         <V as VisitMut>::visit_mut_array_lit(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        <TypedSubRange<ExprOrSpread> as VisitMutWith<V>>::visit_mut_with(
+        <TypedSubRange<Option<ExprOrSpread>> as VisitMutWith<V>>::visit_mut_with(
             self.elems(ast),
             visitor,
             ast,
@@ -3840,18 +3907,17 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprOrSpread {
         <V as VisitMut>::visit_mut_expr_or_spread(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        match self {
-            Self::Spread(it) => {
-                <SpreadElement as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
-            }
-            Self::Expr(it) => <Expr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
-            Self::Elision(it) => <Elision as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
-        }
+        <Option<SpreadDot3Token> as VisitMutWith<V>>::visit_mut_with(
+            self.spread(ast),
+            visitor,
+            ast,
+        );
+        <Expr as VisitMutWith<V>>::visit_mut_with(self.expr(ast), visitor, ast);
     }
 }
-impl<V: ?Sized + VisitMut> VisitMutWith<V> for Elision {
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for SpreadDot3Token {
     fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
-        <V as VisitMut>::visit_mut_elision(visitor, self, ast)
+        <V as VisitMut>::visit_mut_spread_dot_3_token(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {}
 }
@@ -4162,6 +4228,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SetterProp {
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
         <PropName as VisitMutWith<V>>::visit_mut_with(self.key(ast), visitor, ast);
+        <Option<Pat> as VisitMutWith<V>>::visit_mut_with(self.this_param(ast), visitor, ast);
         <Pat as VisitMutWith<V>>::visit_mut_with(self.param(ast), visitor, ast);
         <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(self.body(ast), visitor, ast);
     }
@@ -4183,7 +4250,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PropName {
         match self {
             Self::Ident(it) => <IdentName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Str(it) => <Str as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
-            Self::Num(it) => <Num as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::Num(it) => <Number as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Computed(it) => {
                 <ComputedPropName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
             }
@@ -4335,7 +4402,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Lit {
             Self::Str(it) => <Str as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Bool(it) => <Bool as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Null(it) => <Null as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
-            Self::Num(it) => <Num as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::Num(it) => <Number as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::BigInt(it) => <BigInt as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Regex(it) => <Regex as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
         }
@@ -4364,9 +4431,9 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Null {
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {}
 }
-impl<V: ?Sized + VisitMut> VisitMutWith<V> for Num {
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for Number {
     fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
-        <V as VisitMut>::visit_mut_num(visitor, self, ast)
+        <V as VisitMut>::visit_mut_number(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
         <f64 as VisitMutWith<V>>::visit_mut_with(self.value(ast), visitor, ast);
@@ -4567,9 +4634,31 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<VarDeclarator> {
         }
     }
 }
-impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ExprOrSpread> {
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for Option<ExprOrSpread> {
     fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
-        <V as VisitMut>::visit_mut_expr_or_spreads(visitor, self, ast)
+        <V as VisitMut>::visit_mut_opt_expr_or_spread(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Some(it) => it.visit_mut_with(visitor, ast),
+            None => {}
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<Option<ExprOrSpread>> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_opt_expr_or_spreads(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        for child in self.iter() {
+            let child = ast.get_opt_node(child);
+            child.visit_mut_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<PropOrSpread> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_prop_or_spreads(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
         for child in self.iter() {
@@ -4578,9 +4667,9 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ExprOrSpread> {
         }
     }
 }
-impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<PropOrSpread> {
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ExprOrSpread> {
     fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
-        <V as VisitMut>::visit_mut_prop_or_spreads(visitor, self, ast)
+        <V as VisitMut>::visit_mut_expr_or_spreads(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
         for child in self.iter() {
@@ -4619,6 +4708,17 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<TplElement> {
         for child in self.iter() {
             let child = ast.get_node(child);
             child.visit_mut_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for Option<SpreadDot3Token> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_opt_spread_dot_3_token(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Some(it) => it.visit_mut_with(visitor, ast),
+            None => {}
         }
     }
 }

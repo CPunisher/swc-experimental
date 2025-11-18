@@ -673,15 +673,11 @@ impl CloneIn for ExprOrSpread {
     type Cloned = ExprOrSpread;
     #[inline]
     fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
-        match self {
-            Self::Spread(it) => Self::Spread(it.clone_in(ast)),
-            Self::Expr(it) => Self::Expr(it.clone_in(ast)),
-            Self::Elision(it) => Self::Elision(it.clone_in(ast)),
-        }
+        todo!()
     }
 }
-impl CloneIn for Elision {
-    type Cloned = Elision;
+impl CloneIn for SpreadDot3Token {
+    type Cloned = SpreadDot3Token;
     #[inline]
     fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
         todo!()
@@ -1075,8 +1071,8 @@ impl CloneIn for Null {
         todo!()
     }
 }
-impl CloneIn for Num {
-    type Cloned = Num;
+impl CloneIn for Number {
+    type Cloned = Number;
     #[inline]
     fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
         todo!()

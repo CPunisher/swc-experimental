@@ -563,7 +563,7 @@ impl<I: Tokens> Parser<I> {
             } else if cur == Token::Num {
                 let (value, raw) = p.input_mut().expect_number_token_and_bump();
                 let raw = p.ast.add_atom_ref(raw);
-                p.ast.prop_name_num(p.span(start), value, raw.into())
+                p.ast.prop_name_number(p.span(start), value, raw.into())
             } else if cur == Token::BigInt {
                 let (value, raw) = p.input_mut().expect_bigint_token_and_bump();
                 let value = p.ast.add_bigint(*value);

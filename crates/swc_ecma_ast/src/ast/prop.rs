@@ -1,6 +1,9 @@
 use rspack_experimental_swc_ast_macros::ast;
 
-use crate::ast::{BigInt, Ident, IdentName, Num, Str};
+use crate::{
+    Number,
+    ast::{BigInt, Ident, IdentName, Str},
+};
 
 #[ast]
 pub enum Prop {
@@ -33,7 +36,7 @@ pub struct GetterProp {
 #[ast]
 pub struct SetterProp {
     key: PropName,
-    // this_param: Option<Pat>,
+    this_param: Option<Pat>,
     param: Pat,
     body: Option<BlockStmt>,
 }
@@ -47,7 +50,7 @@ pub struct MethodProp {
 pub enum PropName {
     Ident(IdentName),
     Str(Str),
-    Num(Num),
+    Num(Number),
     Computed(ComputedPropName),
     BigInt(BigInt),
 }

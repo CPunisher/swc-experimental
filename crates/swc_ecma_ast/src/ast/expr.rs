@@ -51,7 +51,7 @@ pub struct ThisExpr {}
 
 #[ast]
 pub struct ArrayLit {
-    elems: Vec<ExprOrSpread>,
+    elems: Vec<Option<ExprOrSpread>>,
 }
 
 #[ast]
@@ -247,14 +247,13 @@ pub struct Import {
 }
 
 #[ast]
-pub enum ExprOrSpread {
-    Spread(SpreadElement),
-    Expr(Expr),
-    Elision(Elision),
+pub struct ExprOrSpread {
+    spread: Option<SpreadDot3Token>,
+    expr: Expr,
 }
 
 #[ast]
-pub struct Elision {}
+pub struct SpreadDot3Token {}
 
 #[ast]
 pub enum BlockStmtOrExpr {

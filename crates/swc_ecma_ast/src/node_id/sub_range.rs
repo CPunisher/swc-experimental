@@ -48,6 +48,16 @@ impl<T> TypedSubRange<T> {
         self.end.index() - self.start.index()
     }
 
+    pub fn remove_first(&mut self) -> NodeExtraDataId<T> {
+        assert!(self.len() >= 1);
+        let start = self.start;
+        self.inner.start = self.inner.start + 1;
+        NodeExtraDataId {
+            inner: start,
+            _phantom: PhantomData::default(),
+        }
+    }
+
     pub fn get(&self, index: usize) -> NodeExtraDataId<T> {
         assert!(index < self.len());
         let id = self.start + index;
@@ -221,13 +231,13 @@ impl Ast {
         T::from_node_id(node_id, self)
     }
 
-    pub fn get_raw_node<T>(&self, id: NodeExtraDataId<T>) -> &AstNode {
-        let node_id = unsafe { self.extra_data[id.inner].node };
-        &self.nodes[node_id]
-    }
-
     pub fn get_opt_node<T: FromNodeId>(&self, id: NodeExtraDataId<Option<T>>) -> Option<T> {
         let opt_node_id = unsafe { self.extra_data[id.inner].optional_node };
         opt_node_id.map(|node_id| T::from_node_id(node_id, self))
+    }
+
+    pub fn get_raw_node<T>(&self, id: NodeExtraDataId<T>) -> &AstNode {
+        let node_id = unsafe { self.extra_data[id.inner].node };
+        &self.nodes[node_id]
     }
 }

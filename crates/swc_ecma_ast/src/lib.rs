@@ -90,7 +90,7 @@ pub enum NodeKind {
     ObjectLit,
     SpreadElement,
     ExprOrSpread,
-    Elision,
+    SpreadDot3Token,
     UnaryExpr,
     BinExpr,
     UpdateExpr,
@@ -175,7 +175,7 @@ pub enum NodeKind {
     Bool,
     Null,
     Regex,
-    Num,
+    Number,
 
     // pat.rs
     ArrayPat,

@@ -400,8 +400,13 @@ impl<I: Tokens> Parser<I> {
                                     false,
                                 )
                                 .map(|function| {
-                                    // let mut this = None;
-                                    let params = function.params(&p.ast);
+                                    let mut this = None;
+                                    let mut params = function.params(&p.ast);
+                                    if params.len() >= 2 {
+                                        this =
+                                            Some(p.ast.get_node(params.remove_first()).pat(&p.ast));
+                                    }
+
                                     if params.len() != 1 {
                                         p.emit_err(key_span, SyntaxError::SetterParam);
                                     }
@@ -411,6 +416,7 @@ impl<I: Tokens> Parser<I> {
                                     p.ast.prop_or_spread_prop_setter_prop(
                                         p.span(start),
                                         key,
+                                        this,
                                         param,
                                         function.body(&p.ast),
                                     )

@@ -1129,9 +1129,9 @@ impl FromNodeId for ForHead {
             NodeKind::Null => {
                 ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast)))))
             }
-            NodeKind::Num => {
-                ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))))
-            }
+            NodeKind::Number => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num(Number::from_node_id(
+                id, ast,
+            ))))),
             NodeKind::ObjectLit => {
                 ForHead::Pat(Pat::Expr(Expr::Object(ObjectLit::from_node_id(id, ast))))
             }
@@ -1235,7 +1235,9 @@ impl FromNodeId for VarDeclOrExpr {
             NodeKind::Null => {
                 VarDeclOrExpr::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast))))
             }
-            NodeKind::Num => VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))),
+            NodeKind::Number => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(Number::from_node_id(id, ast))))
+            }
             NodeKind::ObjectLit => {
                 VarDeclOrExpr::Expr(Expr::Object(ObjectLit::from_node_id(id, ast)))
             }
@@ -1476,7 +1478,7 @@ impl FromNodeId for Expr {
             NodeKind::MetaPropExpr => Expr::MetaProp(MetaPropExpr::from_node_id(id, ast)),
             NodeKind::NewExpr => Expr::New(NewExpr::from_node_id(id, ast)),
             NodeKind::Null => Expr::Lit(Lit::Null(Null::from_node_id(id, ast))),
-            NodeKind::Num => Expr::Lit(Lit::Num(Num::from_node_id(id, ast))),
+            NodeKind::Number => Expr::Lit(Lit::Num(Number::from_node_id(id, ast))),
             NodeKind::ObjectLit => Expr::Object(ObjectLit::from_node_id(id, ast)),
             NodeKind::OptChainExpr => Expr::OptChain(OptChainExpr::from_node_id(id, ast)),
             NodeKind::ParenExpr => Expr::Paren(ParenExpr::from_node_id(id, ast)),
@@ -2149,7 +2151,7 @@ impl FromNodeId for Callee {
             }
             NodeKind::NewExpr => Callee::Expr(Expr::New(NewExpr::from_node_id(id, ast))),
             NodeKind::Null => Callee::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast)))),
-            NodeKind::Num => Callee::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))),
+            NodeKind::Number => Callee::Expr(Expr::Lit(Lit::Num(Number::from_node_id(id, ast)))),
             NodeKind::ObjectLit => Callee::Expr(Expr::Object(ObjectLit::from_node_id(id, ast))),
             NodeKind::OptChainExpr => {
                 Callee::Expr(Expr::OptChain(OptChainExpr::from_node_id(id, ast)))
@@ -2220,11 +2222,7 @@ impl FromNodeId for Import {
 impl GetNodeId for ExprOrSpread {
     #[inline]
     fn node_id(&self) -> NodeId {
-        match self {
-            Self::Spread(it) => it.node_id(),
-            Self::Expr(it) => it.node_id(),
-            Self::Elision(it) => it.node_id(),
-        }
+        self.0
     }
 }
 impl GetOptionalNodeId for Option<ExprOrSpread> {
@@ -2238,87 +2236,17 @@ impl GetOptionalNodeId for Option<ExprOrSpread> {
 }
 impl FromNodeId for ExprOrSpread {
     #[inline]
-    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
-        match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => ExprOrSpread::Expr(Expr::Array(ArrayLit::from_node_id(id, ast))),
-            NodeKind::ArrowExpr => {
-                ExprOrSpread::Expr(Expr::Arrow(ArrowExpr::from_node_id(id, ast)))
-            }
-            NodeKind::AssignExpr => {
-                ExprOrSpread::Expr(Expr::Assign(AssignExpr::from_node_id(id, ast)))
-            }
-            NodeKind::AwaitExpr => {
-                ExprOrSpread::Expr(Expr::Await(AwaitExpr::from_node_id(id, ast)))
-            }
-            NodeKind::BigInt => {
-                ExprOrSpread::Expr(Expr::Lit(Lit::BigInt(BigInt::from_node_id(id, ast))))
-            }
-            NodeKind::BinExpr => ExprOrSpread::Expr(Expr::Bin(BinExpr::from_node_id(id, ast))),
-            NodeKind::Bool => ExprOrSpread::Expr(Expr::Lit(Lit::Bool(Bool::from_node_id(id, ast)))),
-            NodeKind::CallExpr => ExprOrSpread::Expr(Expr::Call(CallExpr::from_node_id(id, ast))),
-            NodeKind::ClassExpr => {
-                ExprOrSpread::Expr(Expr::Class(ClassExpr::from_node_id(id, ast)))
-            }
-            NodeKind::CondExpr => ExprOrSpread::Expr(Expr::Cond(CondExpr::from_node_id(id, ast))),
-            NodeKind::Elision => ExprOrSpread::Elision(Elision::from_node_id(id, ast)),
-            NodeKind::FnExpr => ExprOrSpread::Expr(Expr::Fn(FnExpr::from_node_id(id, ast))),
-            NodeKind::Ident => ExprOrSpread::Expr(Expr::Ident(Ident::from_node_id(id, ast))),
-            NodeKind::Invalid => ExprOrSpread::Expr(Expr::Invalid(Invalid::from_node_id(id, ast))),
-            NodeKind::MemberExpr => {
-                ExprOrSpread::Expr(Expr::Member(MemberExpr::from_node_id(id, ast)))
-            }
-            NodeKind::MetaPropExpr => {
-                ExprOrSpread::Expr(Expr::MetaProp(MetaPropExpr::from_node_id(id, ast)))
-            }
-            NodeKind::NewExpr => ExprOrSpread::Expr(Expr::New(NewExpr::from_node_id(id, ast))),
-            NodeKind::Null => ExprOrSpread::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast)))),
-            NodeKind::Num => ExprOrSpread::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))),
-            NodeKind::ObjectLit => {
-                ExprOrSpread::Expr(Expr::Object(ObjectLit::from_node_id(id, ast)))
-            }
-            NodeKind::OptChainExpr => {
-                ExprOrSpread::Expr(Expr::OptChain(OptChainExpr::from_node_id(id, ast)))
-            }
-            NodeKind::ParenExpr => {
-                ExprOrSpread::Expr(Expr::Paren(ParenExpr::from_node_id(id, ast)))
-            }
-            NodeKind::PrivateName => {
-                ExprOrSpread::Expr(Expr::PrivateName(PrivateName::from_node_id(id, ast)))
-            }
-            NodeKind::Regex => {
-                ExprOrSpread::Expr(Expr::Lit(Lit::Regex(Regex::from_node_id(id, ast))))
-            }
-            NodeKind::SeqExpr => ExprOrSpread::Expr(Expr::Seq(SeqExpr::from_node_id(id, ast))),
-            NodeKind::SpreadElement => ExprOrSpread::Spread(SpreadElement::from_node_id(id, ast)),
-            NodeKind::Str => ExprOrSpread::Expr(Expr::Lit(Lit::Str(Str::from_node_id(id, ast)))),
-            NodeKind::SuperPropExpr => {
-                ExprOrSpread::Expr(Expr::SuperProp(SuperPropExpr::from_node_id(id, ast)))
-            }
-            NodeKind::TaggedTpl => {
-                ExprOrSpread::Expr(Expr::TaggedTpl(TaggedTpl::from_node_id(id, ast)))
-            }
-            NodeKind::ThisExpr => ExprOrSpread::Expr(Expr::This(ThisExpr::from_node_id(id, ast))),
-            NodeKind::Tpl => ExprOrSpread::Expr(Expr::Tpl(Tpl::from_node_id(id, ast))),
-            NodeKind::UnaryExpr => {
-                ExprOrSpread::Expr(Expr::Unary(UnaryExpr::from_node_id(id, ast)))
-            }
-            NodeKind::UpdateExpr => {
-                ExprOrSpread::Expr(Expr::Update(UpdateExpr::from_node_id(id, ast)))
-            }
-            NodeKind::YieldExpr => {
-                ExprOrSpread::Expr(Expr::Yield(YieldExpr::from_node_id(id, ast)))
-            }
-            _ => unreachable!(),
-        }
+    fn from_node_id(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
     }
 }
-impl GetNodeId for Elision {
+impl GetNodeId for SpreadDot3Token {
     #[inline]
     fn node_id(&self) -> NodeId {
         self.0
     }
 }
-impl GetOptionalNodeId for Option<Elision> {
+impl GetOptionalNodeId for Option<SpreadDot3Token> {
     #[inline]
     fn optional_node_id(&self) -> OptionalNodeId {
         match self {
@@ -2327,7 +2255,7 @@ impl GetOptionalNodeId for Option<Elision> {
         }
     }
 }
-impl FromNodeId for Elision {
+impl FromNodeId for SpreadDot3Token {
     #[inline]
     fn from_node_id(node_id: NodeId, _ast: &Ast) -> Self {
         Self(node_id)
@@ -2399,7 +2327,9 @@ impl FromNodeId for BlockStmtOrExpr {
             NodeKind::Null => {
                 BlockStmtOrExpr::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast))))
             }
-            NodeKind::Num => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))),
+            NodeKind::Number => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(Number::from_node_id(id, ast))))
+            }
             NodeKind::ObjectLit => {
                 BlockStmtOrExpr::Expr(Expr::Object(ObjectLit::from_node_id(id, ast)))
             }
@@ -2960,7 +2890,7 @@ impl FromNodeId for Key {
                 Key::Public(PropName::Computed(ComputedPropName::from_node_id(id, ast)))
             }
             NodeKind::IdentName => Key::Public(PropName::Ident(IdentName::from_node_id(id, ast))),
-            NodeKind::Num => Key::Public(PropName::Num(Num::from_node_id(id, ast))),
+            NodeKind::Number => Key::Public(PropName::Num(Number::from_node_id(id, ast))),
             NodeKind::PrivateName => Key::Private(PrivateName::from_node_id(id, ast)),
             NodeKind::Str => Key::Public(PropName::Str(Str::from_node_id(id, ast))),
             _ => unreachable!(),
@@ -3159,7 +3089,7 @@ impl FromNodeId for PropName {
                 PropName::Computed(ComputedPropName::from_node_id(id, ast))
             }
             NodeKind::IdentName => PropName::Ident(IdentName::from_node_id(id, ast)),
-            NodeKind::Num => PropName::Num(Num::from_node_id(id, ast)),
+            NodeKind::Number => PropName::Num(Number::from_node_id(id, ast)),
             NodeKind::Str => PropName::Str(Str::from_node_id(id, ast)),
             _ => unreachable!(),
         }
@@ -3235,7 +3165,7 @@ impl FromNodeId for Pat {
             }
             NodeKind::NewExpr => Pat::Expr(Expr::New(NewExpr::from_node_id(id, ast))),
             NodeKind::Null => Pat::Expr(Expr::Lit(Lit::Null(Null::from_node_id(id, ast)))),
-            NodeKind::Num => Pat::Expr(Expr::Lit(Lit::Num(Num::from_node_id(id, ast)))),
+            NodeKind::Number => Pat::Expr(Expr::Lit(Lit::Num(Number::from_node_id(id, ast)))),
             NodeKind::ObjectLit => Pat::Expr(Expr::Object(ObjectLit::from_node_id(id, ast))),
             NodeKind::ObjectPat => Pat::Object(ObjectPat::from_node_id(id, ast)),
             NodeKind::OptChainExpr => {
@@ -3533,7 +3463,7 @@ impl FromNodeId for Lit {
             NodeKind::BigInt => Lit::BigInt(BigInt::from_node_id(id, ast)),
             NodeKind::Bool => Lit::Bool(Bool::from_node_id(id, ast)),
             NodeKind::Null => Lit::Null(Null::from_node_id(id, ast)),
-            NodeKind::Num => Lit::Num(Num::from_node_id(id, ast)),
+            NodeKind::Number => Lit::Num(Number::from_node_id(id, ast)),
             NodeKind::Regex => Lit::Regex(Regex::from_node_id(id, ast)),
             NodeKind::Str => Lit::Str(Str::from_node_id(id, ast)),
             _ => unreachable!(),
@@ -3603,13 +3533,13 @@ impl FromNodeId for Null {
         Self(node_id)
     }
 }
-impl GetNodeId for Num {
+impl GetNodeId for Number {
     #[inline]
     fn node_id(&self) -> NodeId {
         self.0
     }
 }
-impl GetOptionalNodeId for Option<Num> {
+impl GetOptionalNodeId for Option<Number> {
     #[inline]
     fn optional_node_id(&self) -> OptionalNodeId {
         match self {
@@ -3618,7 +3548,7 @@ impl GetOptionalNodeId for Option<Num> {
         }
     }
 }
-impl FromNodeId for Num {
+impl FromNodeId for Number {
     #[inline]
     fn from_node_id(node_id: NodeId, _ast: &Ast) -> Self {
         Self(node_id)

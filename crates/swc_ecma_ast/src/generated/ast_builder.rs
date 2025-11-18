@@ -1235,7 +1235,7 @@ impl Ast {
     pub fn for_head_pat_expr_array_lit(
         &mut self,
         span: Span,
-        elems: TypedSubRange<ExprOrSpread>,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Array(self.array_lit(span, elems).into())))
     }
@@ -1392,14 +1392,14 @@ impl Ast {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Null(self.null(span).into()))))
     }
     #[inline]
-    pub fn for_head_pat_expr_lit_num(
+    pub fn for_head_pat_expr_lit_number(
         &mut self,
         span: Span,
         value: f64,
         raw: OptionalAtomRef,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num(
-            self.num(span, value, raw).into(),
+            self.number(span, value, raw).into(),
         ))))
     }
     #[inline]
@@ -1528,7 +1528,7 @@ impl Ast {
     pub fn var_decl_or_expr_expr_array_lit(
         &mut self,
         span: Span,
-        elems: TypedSubRange<ExprOrSpread>,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Array(self.array_lit(span, elems).into()))
     }
@@ -1671,13 +1671,13 @@ impl Ast {
         VarDeclOrExpr::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
     }
     #[inline]
-    pub fn var_decl_or_expr_expr_lit_num(
+    pub fn var_decl_or_expr_expr_lit_number(
         &mut self,
         span: Span,
         value: f64,
         raw: OptionalAtomRef,
     ) -> VarDeclOrExpr {
-        VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(self.num(span, value, raw).into())))
+        VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
     #[inline]
     pub fn var_decl_or_expr_expr_lit_big_int(
@@ -1944,7 +1944,11 @@ impl Ast {
         Expr::This(self.this_expr(span).into())
     }
     #[inline]
-    pub fn expr_array_lit(&mut self, span: Span, elems: TypedSubRange<ExprOrSpread>) -> Expr {
+    pub fn expr_array_lit(
+        &mut self,
+        span: Span,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
+    ) -> Expr {
         Expr::Array(self.array_lit(span, elems).into())
     }
     #[inline]
@@ -2028,8 +2032,8 @@ impl Ast {
         Expr::Lit(Lit::Null(self.null(span).into()))
     }
     #[inline]
-    pub fn expr_lit_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Expr {
-        Expr::Lit(Lit::Num(self.num(span, value, raw).into()))
+    pub fn expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Expr {
+        Expr::Lit(Lit::Num(self.number(span, value, raw).into()))
     }
     #[inline]
     pub fn expr_lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalAtomRef) -> Expr {
@@ -2107,7 +2111,11 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn array_lit(&mut self, span: Span, elems: TypedSubRange<ExprOrSpread>) -> ArrayLit {
+    pub fn array_lit(
+        &mut self,
+        span: Span,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
+    ) -> ArrayLit {
         let _f0 = self.add_extra(ExtraData {
             sub_range: elems.into(),
         });
@@ -2182,11 +2190,12 @@ impl Ast {
         &mut self,
         span: Span,
         key: PropName,
+        this_param: Option<Pat>,
         param: Pat,
         body: Option<BlockStmt>,
     ) -> PropOrSpread {
         PropOrSpread::Prop(Prop::Setter(
-            self.setter_prop(span, key, param, body).into(),
+            self.setter_prop(span, key, this_param, param, body).into(),
         ))
     }
     #[inline]
@@ -2609,7 +2618,7 @@ impl Ast {
     pub fn callee_expr_array_lit(
         &mut self,
         span: Span,
-        elems: TypedSubRange<ExprOrSpread>,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
     ) -> Callee {
         Callee::Expr(Expr::Array(self.array_lit(span, elems).into()))
     }
@@ -2733,8 +2742,13 @@ impl Ast {
         Callee::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
     }
     #[inline]
-    pub fn callee_expr_lit_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Callee {
-        Callee::Expr(Expr::Lit(Lit::Num(self.num(span, value, raw).into())))
+    pub fn callee_expr_lit_number(
+        &mut self,
+        span: Span,
+        value: f64,
+        raw: OptionalAtomRef,
+    ) -> Callee {
+        Callee::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
     #[inline]
     pub fn callee_expr_lit_big_int(
@@ -2849,287 +2863,31 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn expr_or_spread_spread_element(
+    pub fn expr_or_spread(
         &mut self,
         span: Span,
-        dot3_token: Span,
+        spread: Option<SpreadDot3Token>,
         expr: Expr,
     ) -> ExprOrSpread {
-        ExprOrSpread::Spread(self.spread_element(span, dot3_token, expr).into())
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_this_expr(&mut self, span: Span) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::This(self.this_expr(span).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_array_lit(
-        &mut self,
-        span: Span,
-        elems: TypedSubRange<ExprOrSpread>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Array(self.array_lit(span, elems).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_object_lit(
-        &mut self,
-        span: Span,
-        props: TypedSubRange<PropOrSpread>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Object(self.object_lit(span, props).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_fn_expr(
-        &mut self,
-        span: Span,
-        ident: Option<Ident>,
-        function: Function,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Fn(self.fn_expr(span, ident, function).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_unary_expr(
-        &mut self,
-        span: Span,
-        op: UnaryOp,
-        arg: Expr,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Unary(self.unary_expr(span, op, arg).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_update_expr(
-        &mut self,
-        span: Span,
-        op: UpdateOp,
-        prefix: bool,
-        arg: Expr,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Update(self.update_expr(span, op, prefix, arg).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_bin_expr(
-        &mut self,
-        span: Span,
-        op: BinaryOp,
-        left: Expr,
-        right: Expr,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Bin(self.bin_expr(span, op, left, right).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_assign_expr(
-        &mut self,
-        span: Span,
-        op: AssignOp,
-        left: AssignTarget,
-        right: Expr,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Assign(self.assign_expr(span, op, left, right).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_member_expr(
-        &mut self,
-        span: Span,
-        obj: Expr,
-        prop: MemberProp,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Member(self.member_expr(span, obj, prop).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_super_prop_expr(
-        &mut self,
-        span: Span,
-        obj: Super,
-        prop: SuperProp,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::SuperProp(
-            self.super_prop_expr(span, obj, prop).into(),
-        ))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_cond_expr(
-        &mut self,
-        span: Span,
-        test: Expr,
-        cons: Expr,
-        alt: Expr,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Cond(self.cond_expr(span, test, cons, alt).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_call_expr(
-        &mut self,
-        span: Span,
-        callee: Callee,
-        args: TypedSubRange<ExprOrSpread>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Call(self.call_expr(span, callee, args).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_new_expr(
-        &mut self,
-        span: Span,
-        callee: Expr,
-        args: TypedSubRange<ExprOrSpread>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::New(self.new_expr(span, callee, args).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_seq_expr(
-        &mut self,
-        span: Span,
-        exprs: TypedSubRange<Expr>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Seq(self.seq_expr(span, exprs).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_ident(
-        &mut self,
-        span: Span,
-        sym: AtomRef,
-        optional: bool,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_str(
-        &mut self,
-        span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_bool(&mut self, span: Span, value: bool) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::Bool(self.bool(span, value).into())))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_null(&mut self, span: Span) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_num(
-        &mut self,
-        span: Span,
-        value: f64,
-        raw: OptionalAtomRef,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::Num(self.num(span, value, raw).into())))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_big_int(
-        &mut self,
-        span: Span,
-        value: BigIntId,
-        raw: OptionalAtomRef,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::BigInt(
-            self.big_int(span, value, raw).into(),
-        )))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_lit_regex(
-        &mut self,
-        span: Span,
-        exp: AtomRef,
-        flags: AtomRef,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_tpl(
-        &mut self,
-        span: Span,
-        exprs: TypedSubRange<Expr>,
-        quasis: TypedSubRange<TplElement>,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Tpl(self.tpl(span, exprs, quasis).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_tagged_tpl(
-        &mut self,
-        span: Span,
-        tag: Expr,
-        tpl: Tpl,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::TaggedTpl(self.tagged_tpl(span, tag, tpl).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_arrow_expr(
-        &mut self,
-        span: Span,
-        params: TypedSubRange<Pat>,
-        body: BlockStmtOrExpr,
-        is_async: bool,
-        is_generator: bool,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Arrow(
-            self.arrow_expr(span, params, body, is_async, is_generator)
-                .into(),
-        ))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_class_expr(
-        &mut self,
-        span: Span,
-        ident: Option<Ident>,
-        class: Class,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Class(self.class_expr(span, ident, class).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_yield_expr(
-        &mut self,
-        span: Span,
-        arg: Option<Expr>,
-        delegate: bool,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Yield(self.yield_expr(span, arg, delegate).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_meta_prop_expr(
-        &mut self,
-        span: Span,
-        kind: MetaPropKind,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::MetaProp(self.meta_prop_expr(span, kind).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_await_expr(&mut self, span: Span, arg: Expr) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Await(self.await_expr(span, arg).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_paren_expr(&mut self, span: Span, expr: Expr) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_private_name(&mut self, span: Span, name: AtomRef) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::PrivateName(self.private_name(span, name).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_opt_chain_expr(
-        &mut self,
-        span: Span,
-        optional: bool,
-        base: OptChainBase,
-    ) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::OptChain(
-            self.opt_chain_expr(span, optional, base).into(),
-        ))
-    }
-    #[inline]
-    pub fn expr_or_spread_expr_invalid(&mut self, span: Span) -> ExprOrSpread {
-        ExprOrSpread::Expr(Expr::Invalid(self.invalid(span).into()))
-    }
-    #[inline]
-    pub fn expr_or_spread_elision(&mut self, span: Span) -> ExprOrSpread {
-        ExprOrSpread::Elision(self.elision(span).into())
-    }
-    #[inline]
-    pub fn elision(&mut self, span: Span) -> Elision {
-        Elision(self.add_node(AstNode {
+        let _f0 = self.add_extra(ExtraData {
+            optional_node: spread.optional_node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            node: expr.node_id(),
+        });
+        ExprOrSpread(self.add_node(AstNode {
             span,
-            kind: NodeKind::Elision,
+            kind: NodeKind::ExprOrSpread,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn spread_dot_3_token(&mut self, span: Span) -> SpreadDot3Token {
+        SpreadDot3Token(self.add_node(AstNode {
+            span,
+            kind: NodeKind::SpreadDot3Token,
             data: NodeData { empty: () },
         }))
     }
@@ -3149,7 +2907,7 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_array_lit(
         &mut self,
         span: Span,
-        elems: TypedSubRange<ExprOrSpread>,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Array(self.array_lit(span, elems).into()))
     }
@@ -3292,13 +3050,13 @@ impl Ast {
         BlockStmtOrExpr::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
     }
     #[inline]
-    pub fn block_stmt_or_expr_expr_lit_num(
+    pub fn block_stmt_or_expr_expr_lit_number(
         &mut self,
         span: Span,
         value: f64,
         raw: OptionalAtomRef,
     ) -> BlockStmtOrExpr {
-        BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(self.num(span, value, raw).into())))
+        BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
     #[inline]
     pub fn block_stmt_or_expr_expr_lit_big_int(
@@ -3957,8 +3715,8 @@ impl Ast {
         Key::Public(PropName::Str(self.str(span, value, raw).into()))
     }
     #[inline]
-    pub fn key_prop_name_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Key {
-        Key::Public(PropName::Num(self.num(span, value, raw).into()))
+    pub fn key_prop_name_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Key {
+        Key::Public(PropName::Num(self.number(span, value, raw).into()))
     }
     #[inline]
     pub fn key_prop_name_computed_prop_name(&mut self, span: Span, expr: Expr) -> Key {
@@ -4021,10 +3779,11 @@ impl Ast {
         &mut self,
         span: Span,
         key: PropName,
+        this_param: Option<Pat>,
         param: Pat,
         body: Option<BlockStmt>,
     ) -> Prop {
-        Prop::Setter(self.setter_prop(span, key, param, body).into())
+        Prop::Setter(self.setter_prop(span, key, this_param, param, body).into())
     }
     #[inline]
     pub fn prop_method_prop(&mut self, span: Span, key: PropName, function: Function) -> Prop {
@@ -4088,6 +3847,7 @@ impl Ast {
         &mut self,
         span: Span,
         key: PropName,
+        this_param: Option<Pat>,
         param: Pat,
         body: Option<BlockStmt>,
     ) -> SetterProp {
@@ -4095,9 +3855,12 @@ impl Ast {
             node: key.node_id(),
         });
         let _f1 = self.add_extra(ExtraData {
-            node: param.node_id(),
+            optional_node: this_param.optional_node_id(),
         });
         let _f2 = self.add_extra(ExtraData {
+            node: param.node_id(),
+        });
+        let _f3 = self.add_extra(ExtraData {
             optional_node: body.optional_node_id(),
         });
         SetterProp(self.add_node(AstNode {
@@ -4138,8 +3901,8 @@ impl Ast {
         PropName::Str(self.str(span, value, raw).into())
     }
     #[inline]
-    pub fn prop_name_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> PropName {
-        PropName::Num(self.num(span, value, raw).into())
+    pub fn prop_name_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> PropName {
+        PropName::Num(self.number(span, value, raw).into())
     }
     #[inline]
     pub fn prop_name_computed_prop_name(&mut self, span: Span, expr: Expr) -> PropName {
@@ -4206,7 +3969,11 @@ impl Ast {
         Pat::Expr(Expr::This(self.this_expr(span).into()))
     }
     #[inline]
-    pub fn pat_expr_array_lit(&mut self, span: Span, elems: TypedSubRange<ExprOrSpread>) -> Pat {
+    pub fn pat_expr_array_lit(
+        &mut self,
+        span: Span,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
+    ) -> Pat {
         Pat::Expr(Expr::Array(self.array_lit(span, elems).into()))
     }
     #[inline]
@@ -4303,8 +4070,8 @@ impl Ast {
         Pat::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
     }
     #[inline]
-    pub fn pat_expr_lit_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Pat {
-        Pat::Expr(Expr::Lit(Lit::Num(self.num(span, value, raw).into())))
+    pub fn pat_expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Pat {
+        Pat::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
     #[inline]
     pub fn pat_expr_lit_big_int(
@@ -4585,8 +4352,8 @@ impl Ast {
         Lit::Null(self.null(span).into())
     }
     #[inline]
-    pub fn lit_num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Lit {
-        Lit::Num(self.num(span, value, raw).into())
+    pub fn lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Lit {
+        Lit::Num(self.number(span, value, raw).into())
     }
     #[inline]
     pub fn lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalAtomRef) -> Lit {
@@ -4632,16 +4399,16 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn num(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Num {
+    pub fn number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Number {
         let _f0 = self.add_extra(ExtraData {
             number: value.into(),
         });
         let _f1 = self.add_extra(ExtraData {
             optional_atom: raw.into(),
         });
-        Num(self.add_node(AstNode {
+        Number(self.add_node(AstNode {
             span,
-            kind: NodeKind::Num,
+            kind: NodeKind::Number,
             data: NodeData {
                 extra_data_start: _f0,
             },

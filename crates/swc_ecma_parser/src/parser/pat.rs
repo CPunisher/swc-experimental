@@ -312,7 +312,7 @@ impl<I: Tokens> Parser<I> {
                 let count_of_trailing_comma = exprs
                     .iter()
                     .rev()
-                    .take_while(|e| self.ast.get_node(*e).is_elision())
+                    .take_while(|e| self.ast.get_opt_node(*e).is_none())
                     .count();
                 let len = exprs.len();
                 let mut params = Vec::with_capacity(exprs.len() - count_of_trailing_comma);
@@ -326,52 +326,66 @@ impl<I: Tokens> Parser<I> {
 
                 let after = exprs.split_off(idx_of_rest_not_allowed);
                 for expr in exprs.iter() {
-                    let expr = self.ast.get_node(expr);
+                    let expr = self.ast.get_opt_node(expr);
                     match expr {
-                        ExprOrSpread::Spread(spread) => self.emit_err(
-                            spread.expr(&self.ast).span(&self.ast),
-                            SyntaxError::NonLastRestParam,
-                        ),
-                        ExprOrSpread::Expr(expr) => {
-                            params.push(self.reparse_expr_as_pat(pat_ty.element(), expr).map(Some)?)
-                        }
-                        ExprOrSpread::Elision(_) => params.push(None),
+                        Some(expr_or_spread) => match expr_or_spread.spread(&self.ast) {
+                            Some(_) => self.emit_err(
+                                expr_or_spread.expr(&self.ast).span(&self.ast),
+                                SyntaxError::NonLastRestParam,
+                            ),
+                            None => params.push(
+                                self.reparse_expr_as_pat(
+                                    pat_ty.element(),
+                                    expr_or_spread.expr(&self.ast),
+                                )
+                                .map(Some)?,
+                            ),
+                        },
+                        None => params.push(None),
                     }
                 }
 
                 let exprs = after;
                 if count_of_trailing_comma == 0 {
-                    let expr = self.ast.get_node(exprs.iter().next().unwrap());
-                    let outer_expr_span = expr.span(&self.ast);
+                    let expr = self.ast.get_opt_node(exprs.iter().next().unwrap());
                     let last = match expr {
                         // Rest
-                        ExprOrSpread::Spread(spread) => {
-                            let expr = spread.expr(&self.ast);
-                            // TODO: is BindingPat correct?
-                            if let Expr::Assign(_) = expr {
-                                self.emit_err(outer_expr_span, SyntaxError::TS1048);
-                            };
-                            if let Some(trailing_comma) = self.state().trailing_commas.get(&span.lo)
-                            {
-                                self.emit_err(*trailing_comma, SyntaxError::CommaAfterRestElement);
+                        Some(expr_or_spread) => {
+                            let spread = expr_or_spread.spread(&self.ast);
+                            let expr = expr_or_spread.expr(&self.ast);
+                            match spread {
+                                Some(spread) => {
+                                    // TODO: is BindingPat correct?
+                                    if let Expr::Assign(_) = expr {
+                                        self.emit_err(expr.span(&self.ast), SyntaxError::TS1048);
+                                    };
+                                    if let Some(trailing_comma) =
+                                        self.state().trailing_commas.get(&span.lo)
+                                    {
+                                        self.emit_err(
+                                            *trailing_comma,
+                                            SyntaxError::CommaAfterRestElement,
+                                        );
+                                    }
+                                    let expr_span = expr.span(&self.ast);
+                                    self.reparse_expr_as_pat(pat_ty.element(), expr)
+                                        .map(|pat| {
+                                            self.ast.pat_rest_pat(
+                                                expr_span,
+                                                spread.span(&self.ast),
+                                                pat,
+                                            )
+                                        })
+                                        .map(Some)?
+                                }
+                                None => {
+                                    // TODO: is BindingPat correct?
+                                    self.reparse_expr_as_pat(pat_ty.element(), expr).map(Some)?
+                                }
                             }
-                            let expr_span = expr.span(&self.ast);
-                            self.reparse_expr_as_pat(pat_ty.element(), expr)
-                                .map(|pat| {
-                                    self.ast.pat_rest_pat(
-                                        expr_span,
-                                        spread.dot_3_token(&self.ast),
-                                        pat,
-                                    )
-                                })
-                                .map(Some)?
-                        }
-                        ExprOrSpread::Expr(expr) => {
-                            // TODO: is BindingPat correct?
-                            self.reparse_expr_as_pat(pat_ty.element(), expr).map(Some)?
                         }
                         // TODO: syntax error if last element is ellison and ...rest exists.
-                        ExprOrSpread::Elision(_) => None,
+                        None => None,
                     };
                     params.push(last);
                 }
@@ -774,16 +788,20 @@ impl<I: Tokens> Parser<I> {
 
         for expr in exprs.drain(..len - 1) {
             match expr {
-                AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Spread(..))
-                | AssignTargetOrSpread::Pat(Pat::Rest(..)) => {
+                AssignTargetOrSpread::ExprOrSpread(expr_or_spread) => {
+                    match expr_or_spread.spread(&self.ast) {
+                        Some(_) => self.emit_err(expr.span(&self.ast), SyntaxError::TS1014),
+                        None => {
+                            let param =
+                                self.reparse_expr_as_pat(pat_ty, expr_or_spread.expr(&self.ast))?;
+                            params.push(self, param);
+                        }
+                    }
+                }
+                AssignTargetOrSpread::Pat(Pat::Rest(..)) => {
                     self.emit_err(expr.span(&self.ast), SyntaxError::TS1014)
                 }
-                AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Expr(expr)) => {
-                    let param = self.reparse_expr_as_pat(pat_ty, expr)?;
-                    params.push(self, param);
-                }
                 AssignTargetOrSpread::Pat(pat) => params.push(self, pat),
-                _ => unreachable!(),
             }
         }
 
@@ -792,21 +810,24 @@ impl<I: Tokens> Parser<I> {
         let outer_expr_span = expr.span(&self.ast);
         let last = match expr {
             // Rest
-            AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Spread(spread)) => {
-                let dot3_token = spread.dot_3_token(&self.ast);
-                let expr = spread.expr(&self.ast);
-                if let Expr::Assign(_) = expr {
-                    self.emit_err(outer_expr_span, SyntaxError::TS1048)
-                };
-                if let Some(trailing_comma) = trailing_comma {
-                    self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
+            AssignTargetOrSpread::ExprOrSpread(expr_or_spread) => {
+                match expr_or_spread.spread(&self.ast) {
+                    Some(dot3_token) => {
+                        let expr = expr_or_spread.expr(&self.ast);
+                        if let Expr::Assign(_) = expr {
+                            self.emit_err(outer_expr_span, SyntaxError::TS1048)
+                        };
+                        if let Some(trailing_comma) = trailing_comma {
+                            self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
+                        }
+                        let expr_span = expr.span(&self.ast);
+                        self.reparse_expr_as_pat(pat_ty, expr).map(|pat| {
+                            self.ast
+                                .pat_rest_pat(expr_span, dot3_token.span(&self.ast), pat)
+                        })?
+                    }
+                    None => self.reparse_expr_as_pat(pat_ty, expr_or_spread.expr(&self.ast))?,
                 }
-                let expr_span = expr.span(&self.ast);
-                self.reparse_expr_as_pat(pat_ty, expr)
-                    .map(|pat| self.ast.pat_rest_pat(expr_span, dot3_token, pat))?
-            }
-            AssignTargetOrSpread::ExprOrSpread(ExprOrSpread::Expr(expr)) => {
-                self.reparse_expr_as_pat(pat_ty, expr)?
             }
             AssignTargetOrSpread::Pat(pat) => {
                 if let Some(trailing_comma) = trailing_comma {
@@ -816,7 +837,6 @@ impl<I: Tokens> Parser<I> {
                 }
                 pat
             }
-            _ => unreachable!(),
         };
         params.push(self, last);
 
