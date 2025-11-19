@@ -1,7 +1,7 @@
 use swc_experimental_ecma_parser::{EsSyntax, Parser, StringInput, Syntax};
 
 fn main() {
-    let source = include_str!("../../../tasks/benchmark/files/typescript.js");
+    let source = include_str!("../files/typescript.js");
     let syntax = Syntax::Es(EsSyntax::default());
     let input = StringInput::new(source, Default::default(), Default::default());
 
