@@ -16,12 +16,3 @@ swc_common  = { workspace = true }
 tracing     = { workspace = true }
 
 swc_experimental_ecma_ast = { workspace = true }
-
-[dev-dependencies]
-criterion       = { workspace = true }
-mimalloc        = { workspace = true }
-swc_ecma_parser = { workspace = true }
-
-[[bench]]
-harness = false
-name    = "parser"

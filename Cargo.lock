@@ -99,6 +99,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
+name = "benchmark"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "mimalloc",
+ "swc_ecma_parser",
+ "swc_experimental_ecma_parser",
+]
+
+[[package]]
 name = "better_scoped_tls"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1186,9 +1196,7 @@ name = "swc_experimental_ecma_parser"
 version = "0.1.0"
 dependencies = [
  "bitflags",
- "criterion",
  "either",
- "mimalloc",
  "num-bigint",
  "rustc-hash",
  "seq-macro",
@@ -1196,7 +1204,6 @@ dependencies = [
  "stacker",
  "swc_atoms 8.0.2",
  "swc_common 16.0.0",
- "swc_ecma_parser",
  "swc_experimental_ecma_ast",
  "tracing",
 ]
