@@ -677,7 +677,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Module {
         <V as Visit>::visit_module(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -703,7 +703,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Script {
         <V as Visit>::visit_script(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -759,7 +759,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportDecl {
         <V as Visit>::visit_import_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -826,7 +826,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportNamedSpecifier {
         <V as Visit>::visit_import_named_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -859,7 +859,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportDefaultSpecifier {
         <V as Visit>::visit_import_default_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -874,7 +874,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportStarAsSpecifier {
         <V as Visit>::visit_import_star_as_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -889,7 +889,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDecl {
         <V as Visit>::visit_export_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -904,7 +904,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for NamedExport {
         <V as Visit>::visit_named_export(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -968,7 +968,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportNamespaceSpecifier {
         <V as Visit>::visit_export_namespace_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -998,7 +998,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultSpecifier {
         <V as Visit>::visit_export_default_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1013,7 +1013,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportNamedSpecifier {
         <V as Visit>::visit_export_named_specifier(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1050,7 +1050,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultDecl {
         <V as Visit>::visit_export_default_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1080,7 +1080,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultExpr {
         <V as Visit>::visit_export_default_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1095,7 +1095,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportAll {
         <V as Visit>::visit_export_all(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1128,7 +1128,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BlockStmt {
         <V as Visit>::visit_block_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1175,7 +1175,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExprStmt {
         <V as Visit>::visit_expr_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1190,7 +1190,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for EmptyStmt {
         <V as Visit>::visit_empty_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for DebuggerStmt {
@@ -1198,7 +1198,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for DebuggerStmt {
         <V as Visit>::visit_debugger_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for WithStmt {
@@ -1206,7 +1206,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for WithStmt {
         <V as Visit>::visit_with_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1228,7 +1228,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ReturnStmt {
         <V as Visit>::visit_return_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1247,7 +1247,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for LabeledStmt {
         <V as Visit>::visit_labeled_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1269,7 +1269,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BreakStmt {
         <V as Visit>::visit_break_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1288,7 +1288,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ContinueStmt {
         <V as Visit>::visit_continue_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1307,7 +1307,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for IfStmt {
         <V as Visit>::visit_if_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1340,7 +1340,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SwitchStmt {
         <V as Visit>::visit_switch_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1366,7 +1366,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ThrowStmt {
         <V as Visit>::visit_throw_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1381,7 +1381,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for TryStmt {
         <V as Visit>::visit_try_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1418,7 +1418,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for WhileStmt {
         <V as Visit>::visit_while_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1440,7 +1440,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for DoWhileStmt {
         <V as Visit>::visit_do_while_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1462,7 +1462,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForStmt {
         <V as Visit>::visit_for_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1510,7 +1510,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForInStmt {
         <V as Visit>::visit_for_in_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1539,7 +1539,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForOfStmt {
         <V as Visit>::visit_for_of_stmt(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1575,7 +1575,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SwitchCase {
         <V as Visit>::visit_switch_case(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1605,7 +1605,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for CatchClause {
         <V as Visit>::visit_catch_clause(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1667,7 +1667,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for FnDecl {
         <V as Visit>::visit_fn_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1696,7 +1696,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassDecl {
         <V as Visit>::visit_class_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1725,7 +1725,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for VarDecl {
         <V as Visit>::visit_var_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1758,7 +1758,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for VarDeclarator {
         <V as Visit>::visit_var_declarator(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1784,7 +1784,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for UsingDecl {
         <V as Visit>::visit_using_decl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1846,7 +1846,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ThisExpr {
         <V as Visit>::visit_this_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ArrayLit {
@@ -1854,7 +1854,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrayLit {
         <V as Visit>::visit_array_lit(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1873,7 +1873,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ObjectLit {
         <V as Visit>::visit_object_lit(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1905,7 +1905,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SpreadElement {
         <V as Visit>::visit_spread_element(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1927,7 +1927,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for UnaryExpr {
         <V as Visit>::visit_unary_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1949,7 +1949,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for UpdateExpr {
         <V as Visit>::visit_update_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -1978,7 +1978,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BinExpr {
         <V as Visit>::visit_bin_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2007,7 +2007,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for FnExpr {
         <V as Visit>::visit_fn_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2033,7 +2033,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassExpr {
         <V as Visit>::visit_class_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2059,7 +2059,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignExpr {
         <V as Visit>::visit_assign_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2092,7 +2092,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for MemberExpr {
         <V as Visit>::visit_member_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2126,7 +2126,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SuperPropExpr {
         <V as Visit>::visit_super_prop_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2159,7 +2159,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for CondExpr {
         <V as Visit>::visit_cond_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2188,7 +2188,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for CallExpr {
         <V as Visit>::visit_call_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2214,7 +2214,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for NewExpr {
         <V as Visit>::visit_new_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2240,7 +2240,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SeqExpr {
         <V as Visit>::visit_seq_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2259,7 +2259,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrowExpr {
         <V as Visit>::visit_arrow_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2303,7 +2303,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for YieldExpr {
         <V as Visit>::visit_yield_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2329,7 +2329,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for MetaPropExpr {
         <V as Visit>::visit_meta_prop_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2348,7 +2348,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AwaitExpr {
         <V as Visit>::visit_await_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2363,7 +2363,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Tpl {
         <V as Visit>::visit_tpl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2393,7 +2393,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for TaggedTpl {
         <V as Visit>::visit_tagged_tpl(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2415,7 +2415,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for TplElement {
         <V as Visit>::visit_tpl_element(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2444,7 +2444,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ParenExpr {
         <V as Visit>::visit_paren_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2471,7 +2471,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Super {
         <V as Visit>::visit_super(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Import {
@@ -2479,7 +2479,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Import {
         <V as Visit>::visit_import(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2494,7 +2494,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExprOrSpread {
         <V as Visit>::visit_expr_or_spread(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2520,7 +2520,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SpreadDot3Token {
         <V as Visit>::visit_spread_dot_3_token(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BlockStmtOrExpr {
@@ -2577,7 +2577,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for OptChainExpr {
         <V as Visit>::visit_opt_chain_expr(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2614,7 +2614,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for OptCall {
         <V as Visit>::visit_opt_call(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2640,7 +2640,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Invalid {
         <V as Visit>::visit_invalid(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Function {
@@ -2648,7 +2648,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Function {
         <V as Visit>::visit_function(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2703,7 +2703,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Param {
         <V as Visit>::visit_param(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2739,7 +2739,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Class {
         <V as Visit>::visit_class(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2806,7 +2806,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassProp {
         <V as Visit>::visit_class_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2850,7 +2850,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateProp {
         <V as Visit>::visit_private_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2898,7 +2898,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassMethod {
         <V as Visit>::visit_class_method(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2934,7 +2934,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateMethod {
         <V as Visit>::visit_private_method(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -2974,7 +2974,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Constructor {
         <V as Visit>::visit_constructor(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3011,7 +3011,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Decorator {
         <V as Visit>::visit_decorator(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3026,7 +3026,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for StaticBlock {
         <V as Visit>::visit_static_block(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3052,7 +3052,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AutoAccessor {
         <V as Visit>::visit_auto_accessor(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3111,7 +3111,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for KeyValueProp {
         <V as Visit>::visit_key_value_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3133,7 +3133,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignProp {
         <V as Visit>::visit_assign_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3155,7 +3155,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for GetterProp {
         <V as Visit>::visit_getter_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3181,7 +3181,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for SetterProp {
         <V as Visit>::visit_setter_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3225,7 +3225,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for MethodProp {
         <V as Visit>::visit_method_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3261,7 +3261,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ComputedPropName {
         <V as Visit>::visit_computed_prop_name(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3292,7 +3292,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrayPat {
         <V as Visit>::visit_array_pat(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3318,7 +3318,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for ObjectPat {
         <V as Visit>::visit_object_pat(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3344,7 +3344,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignPat {
         <V as Visit>::visit_assign_pat(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3366,7 +3366,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for RestPat {
         <V as Visit>::visit_rest_pat(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3400,7 +3400,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for KeyValuePatProp {
         <V as Visit>::visit_key_value_pat_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3422,7 +3422,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignPatProp {
         <V as Visit>::visit_assign_pat_prop(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3452,7 +3452,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Ident {
         <V as Visit>::visit_ident(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3474,7 +3474,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for IdentName {
         <V as Visit>::visit_ident_name(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3489,7 +3489,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateName {
         <V as Visit>::visit_private_name(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3504,7 +3504,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BindingIdent {
         <V as Visit>::visit_binding_ident(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3534,7 +3534,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Str {
         <V as Visit>::visit_str(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3556,7 +3556,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Bool {
         <V as Visit>::visit_bool(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3571,7 +3571,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Null {
         <V as Visit>::visit_null(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Number {
@@ -3579,7 +3579,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Number {
         <V as Visit>::visit_number(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3601,7 +3601,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BigInt {
         <V as Visit>::visit_big_int(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3623,7 +3623,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Regex {
         <V as Visit>::visit_regex(visitor, self, ast)
     }
     fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4668,7 +4668,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Module {
         <V as VisitMut>::visit_mut_module(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4694,7 +4694,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Script {
         <V as VisitMut>::visit_mut_script(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4756,7 +4756,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportDecl {
         <V as VisitMut>::visit_mut_import_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4829,7 +4829,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportNamedSpecifier {
         <V as VisitMut>::visit_mut_import_named_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4862,7 +4862,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportDefaultSpecifier {
         <V as VisitMut>::visit_mut_import_default_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4877,7 +4877,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportStarAsSpecifier {
         <V as VisitMut>::visit_mut_import_star_as_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4892,7 +4892,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDecl {
         <V as VisitMut>::visit_mut_export_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4907,7 +4907,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for NamedExport {
         <V as VisitMut>::visit_mut_named_export(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -4973,7 +4973,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportNamespaceSpecifier {
         <V as VisitMut>::visit_mut_export_namespace_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5003,7 +5003,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultSpecifier {
         <V as VisitMut>::visit_mut_export_default_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5018,7 +5018,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportNamedSpecifier {
         <V as VisitMut>::visit_mut_export_named_specifier(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5055,7 +5055,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultDecl {
         <V as VisitMut>::visit_mut_export_default_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5085,7 +5085,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultExpr {
         <V as VisitMut>::visit_mut_export_default_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5100,7 +5100,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportAll {
         <V as VisitMut>::visit_mut_export_all(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5133,7 +5133,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BlockStmt {
         <V as VisitMut>::visit_mut_block_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5184,7 +5184,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprStmt {
         <V as VisitMut>::visit_mut_expr_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5199,7 +5199,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for EmptyStmt {
         <V as VisitMut>::visit_mut_empty_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for DebuggerStmt {
@@ -5207,7 +5207,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for DebuggerStmt {
         <V as VisitMut>::visit_mut_debugger_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for WithStmt {
@@ -5215,7 +5215,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for WithStmt {
         <V as VisitMut>::visit_mut_with_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5237,7 +5237,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ReturnStmt {
         <V as VisitMut>::visit_mut_return_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5256,7 +5256,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for LabeledStmt {
         <V as VisitMut>::visit_mut_labeled_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5278,7 +5278,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BreakStmt {
         <V as VisitMut>::visit_mut_break_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5297,7 +5297,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ContinueStmt {
         <V as VisitMut>::visit_mut_continue_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5316,7 +5316,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for IfStmt {
         <V as VisitMut>::visit_mut_if_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5349,7 +5349,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchStmt {
         <V as VisitMut>::visit_mut_switch_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5375,7 +5375,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ThrowStmt {
         <V as VisitMut>::visit_mut_throw_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5390,7 +5390,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TryStmt {
         <V as VisitMut>::visit_mut_try_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5431,7 +5431,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for WhileStmt {
         <V as VisitMut>::visit_mut_while_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5453,7 +5453,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for DoWhileStmt {
         <V as VisitMut>::visit_mut_do_while_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5475,7 +5475,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForStmt {
         <V as VisitMut>::visit_mut_for_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5523,7 +5523,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForInStmt {
         <V as VisitMut>::visit_mut_for_in_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5552,7 +5552,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForOfStmt {
         <V as VisitMut>::visit_mut_for_of_stmt(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5588,7 +5588,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchCase {
         <V as VisitMut>::visit_mut_switch_case(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5618,7 +5618,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CatchClause {
         <V as VisitMut>::visit_mut_catch_clause(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5684,7 +5684,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for FnDecl {
         <V as VisitMut>::visit_mut_fn_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5717,7 +5717,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassDecl {
         <V as VisitMut>::visit_mut_class_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5746,7 +5746,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDecl {
         <V as VisitMut>::visit_mut_var_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5783,7 +5783,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDeclarator {
         <V as VisitMut>::visit_mut_var_declarator(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5809,7 +5809,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UsingDecl {
         <V as VisitMut>::visit_mut_using_decl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5879,7 +5879,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ThisExpr {
         <V as VisitMut>::visit_mut_this_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayLit {
@@ -5887,7 +5887,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayLit {
         <V as VisitMut>::visit_mut_array_lit(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5906,7 +5906,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectLit {
         <V as VisitMut>::visit_mut_object_lit(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5938,7 +5938,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SpreadElement {
         <V as VisitMut>::visit_mut_spread_element(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5960,7 +5960,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UnaryExpr {
         <V as VisitMut>::visit_mut_unary_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -5982,7 +5982,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UpdateExpr {
         <V as VisitMut>::visit_mut_update_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6011,7 +6011,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BinExpr {
         <V as VisitMut>::visit_mut_bin_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6040,7 +6040,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for FnExpr {
         <V as VisitMut>::visit_mut_fn_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6070,7 +6070,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassExpr {
         <V as VisitMut>::visit_mut_class_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6096,7 +6096,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignExpr {
         <V as VisitMut>::visit_mut_assign_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6129,7 +6129,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MemberExpr {
         <V as VisitMut>::visit_mut_member_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6171,7 +6171,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SuperPropExpr {
         <V as VisitMut>::visit_mut_super_prop_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6210,7 +6210,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CondExpr {
         <V as VisitMut>::visit_mut_cond_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6239,7 +6239,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CallExpr {
         <V as VisitMut>::visit_mut_call_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6265,7 +6265,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for NewExpr {
         <V as VisitMut>::visit_mut_new_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6291,7 +6291,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SeqExpr {
         <V as VisitMut>::visit_mut_seq_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6310,7 +6310,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrowExpr {
         <V as VisitMut>::visit_mut_arrow_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6354,7 +6354,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for YieldExpr {
         <V as VisitMut>::visit_mut_yield_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6380,7 +6380,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MetaPropExpr {
         <V as VisitMut>::visit_mut_meta_prop_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6399,7 +6399,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AwaitExpr {
         <V as VisitMut>::visit_mut_await_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6414,7 +6414,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Tpl {
         <V as VisitMut>::visit_mut_tpl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6444,7 +6444,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TaggedTpl {
         <V as VisitMut>::visit_mut_tagged_tpl(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6466,7 +6466,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TplElement {
         <V as VisitMut>::visit_mut_tpl_element(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6495,7 +6495,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ParenExpr {
         <V as VisitMut>::visit_mut_paren_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6522,7 +6522,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Super {
         <V as VisitMut>::visit_mut_super(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Import {
@@ -6530,7 +6530,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Import {
         <V as VisitMut>::visit_mut_import(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6549,7 +6549,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprOrSpread {
         <V as VisitMut>::visit_mut_expr_or_spread(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6575,7 +6575,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SpreadDot3Token {
         <V as VisitMut>::visit_mut_spread_dot_3_token(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BlockStmtOrExpr {
@@ -6638,7 +6638,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for OptChainExpr {
         <V as VisitMut>::visit_mut_opt_chain_expr(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6675,7 +6675,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for OptCall {
         <V as VisitMut>::visit_mut_opt_call(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6701,7 +6701,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Invalid {
         <V as VisitMut>::visit_mut_invalid(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Function {
@@ -6709,7 +6709,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Function {
         <V as VisitMut>::visit_mut_function(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6764,7 +6764,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Param {
         <V as VisitMut>::visit_mut_param(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6800,7 +6800,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Class {
         <V as VisitMut>::visit_mut_class(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6875,7 +6875,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassProp {
         <V as VisitMut>::visit_mut_class_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6923,7 +6923,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateProp {
         <V as VisitMut>::visit_mut_private_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6971,7 +6971,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassMethod {
         <V as VisitMut>::visit_mut_class_method(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7019,7 +7019,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateMethod {
         <V as VisitMut>::visit_mut_private_method(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7067,7 +7067,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Constructor {
         <V as VisitMut>::visit_mut_constructor(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7108,7 +7108,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Decorator {
         <V as VisitMut>::visit_mut_decorator(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7123,7 +7123,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for StaticBlock {
         <V as VisitMut>::visit_mut_static_block(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7153,7 +7153,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AutoAccessor {
         <V as VisitMut>::visit_mut_auto_accessor(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7214,7 +7214,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for KeyValueProp {
         <V as VisitMut>::visit_mut_key_value_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7240,7 +7240,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignProp {
         <V as VisitMut>::visit_mut_assign_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7262,7 +7262,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for GetterProp {
         <V as VisitMut>::visit_mut_getter_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7292,7 +7292,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SetterProp {
         <V as VisitMut>::visit_mut_setter_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7340,7 +7340,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MethodProp {
         <V as VisitMut>::visit_mut_method_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7386,7 +7386,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ComputedPropName {
         <V as VisitMut>::visit_mut_computed_prop_name(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7417,7 +7417,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayPat {
         <V as VisitMut>::visit_mut_array_pat(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7443,7 +7443,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectPat {
         <V as VisitMut>::visit_mut_object_pat(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7469,7 +7469,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPat {
         <V as VisitMut>::visit_mut_assign_pat(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7491,7 +7491,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for RestPat {
         <V as VisitMut>::visit_mut_rest_pat(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7529,7 +7529,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for KeyValuePatProp {
         <V as VisitMut>::visit_mut_key_value_pat_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7555,7 +7555,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPatProp {
         <V as VisitMut>::visit_mut_assign_pat_prop(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7585,7 +7585,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Ident {
         <V as VisitMut>::visit_mut_ident(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7607,7 +7607,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for IdentName {
         <V as VisitMut>::visit_mut_ident_name(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7622,7 +7622,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateName {
         <V as VisitMut>::visit_mut_private_name(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7637,7 +7637,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BindingIdent {
         <V as VisitMut>::visit_mut_binding_ident(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7667,7 +7667,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Str {
         <V as VisitMut>::visit_mut_str(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7689,7 +7689,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Bool {
         <V as VisitMut>::visit_mut_bool(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7704,7 +7704,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Null {
         <V as VisitMut>::visit_mut_null(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Number {
@@ -7712,7 +7712,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Number {
         <V as VisitMut>::visit_mut_number(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7734,7 +7734,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BigInt {
         <V as VisitMut>::visit_mut_big_int(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7756,7 +7756,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
         <V as VisitMut>::visit_mut_regex(visitor, self, ast)
     }
     fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-        let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()

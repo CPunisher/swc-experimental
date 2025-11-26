@@ -56,6 +56,20 @@ impl NodeList {
     }
 }
 
+impl NodeList {
+    pub(crate) unsafe fn get_unchecked(&self, node_id: NodeId) -> &AstNode {
+        unsafe { self.inner.as_raw_slice().get_unchecked(node_id.index()) }
+    }
+
+    pub(crate) unsafe fn get_unchecked_mut(&mut self, node_id: NodeId) -> &mut AstNode {
+        unsafe {
+            self.inner
+                .as_raw_slice_mut()
+                .get_unchecked_mut(node_id.index())
+        }
+    }
+}
+
 impl Index<NodeId> for NodeList {
     type Output = AstNode;
 

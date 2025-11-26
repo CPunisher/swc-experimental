@@ -80,7 +80,7 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                         }
 
                         fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
-                            let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+                            let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
                             #visit_children
                         }
                     }
@@ -92,7 +92,7 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                         }
 
                         fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
-                            let offset = unsafe { ast.nodes[self.0].data.extra_data_start };
+                            let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
                             #visit_mut_children
                         }
                     }
