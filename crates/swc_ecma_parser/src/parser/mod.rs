@@ -1,7 +1,6 @@
 #![allow(clippy::let_unit_value)]
 #![deny(non_snake_case)]
 
-use rustc_hash::FxHashMap;
 use swc_common::{BytePos, Span, comments::Comments, input::StringInput};
 use swc_experimental_ecma_ast::*;
 
@@ -22,21 +21,13 @@ use crate::error::Error;
 
 #[macro_use]
 mod macros;
-mod class_and_fn;
-mod expr;
-mod ident;
 pub mod input;
+mod js;
 // mod jsx;
-mod module_item;
-mod object;
-mod pat;
 mod state;
-mod stmt;
-// #[cfg(test)]
-// mod tests;
 // #[cfg(feature = "typescript")]
 // mod typescript;
-mod util;
+pub(crate) mod util;
 
 pub type PResult<T> = Result<T, crate::error::Error>;
 

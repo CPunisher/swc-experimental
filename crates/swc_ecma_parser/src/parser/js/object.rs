@@ -1,10 +1,8 @@
 use swc_common::{DUMMY_SP, Span};
 use swc_experimental_ecma_ast::*;
 
-use crate::{
-    Context, PResult, Parser, error::SyntaxError, input::Tokens, lexer::Token,
-    parser::class_and_fn::is_not_this,
-};
+use crate::parser::js::is_not_this;
+use crate::{Context, PResult, Parser, error::SyntaxError, input::Tokens, lexer::Token};
 
 impl<I: Tokens> Parser<I> {
     pub(crate) fn parse_object<Object, ObjectProp: GetNodeId>(

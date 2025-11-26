@@ -1,5 +1,17 @@
-use super::*;
-use crate::parser::{Parser, pat::PatType, util::FromStmt};
+use swc_common::BytePos;
+use swc_experimental_ecma_ast::*;
+
+use crate::{
+    Context, PResult,
+    error::{Error, SyntaxError},
+    input::Tokens,
+    lexer::Token,
+    parser::{
+        Parser,
+        js::pat::PatType,
+        util::{FromStmt, ScratchIndex},
+    },
+};
 
 #[allow(clippy::enum_variant_names)]
 enum TempForHead {

@@ -1,11 +1,16 @@
 use either::Either;
+use rustc_hash::FxHashMap;
 use swc_atoms::atom;
 use swc_common::{BytePos, Span, source_map::SmallPos};
+use swc_experimental_ecma_ast::*;
 
-use super::*;
+use crate::parser::util::ExprExt;
 use crate::{
-    error::SyntaxError,
-    parser::{Parser, pat::PatType, util::IsSimpleParameterList},
+    Context, PResult,
+    error::{Error, SyntaxError},
+    input::Tokens,
+    lexer::Token,
+    parser::{Parser, js::pat::PatType, util::IsSimpleParameterList},
 };
 
 pub(crate) enum AssignTargetOrSpread {

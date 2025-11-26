@@ -8,6 +8,7 @@ use crate::{
     input::Tokens,
     lexer::Token,
     parser::{
+        js::is_not_this,
         state::State,
         util::{IsInvalidClassName, IsSimpleParameterList},
     },
@@ -1720,12 +1721,4 @@ fn is_constructor(ast: &Ast, key: Key) -> bool {
     } else {
         false
     }
-}
-
-pub(crate) fn is_not_this(ast: &Ast, p: Param) -> bool {
-    let Pat::Ident(ident) = p.pat(ast) else {
-        return true;
-    };
-
-    ast.get_atom(ident.id(ast).sym(ast)) != "this"
 }

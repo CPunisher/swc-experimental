@@ -5,7 +5,7 @@ use crate::{
     error::SyntaxError,
     input::Tokens,
     lexer::Token,
-    parser::{Parser, expr::AssignTargetOrSpread, util::ExprExt},
+    parser::{Parser, js::expr::AssignTargetOrSpread, util::ExprExt},
 };
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::*;
