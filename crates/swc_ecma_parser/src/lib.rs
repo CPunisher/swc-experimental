@@ -152,12 +152,14 @@ mod context;
 pub mod error;
 pub mod lexer;
 mod parser;
+mod string_alloc;
 mod syntax;
 
 pub use context::Context;
 pub use lexer::Lexer;
 pub use lexer::source::StringSource;
 pub use parser::*;
+pub use string_alloc::StringAllocator;
 pub use syntax::{EsSyntax, Syntax, SyntaxFlags, TsSyntax};
 
 pub struct ParseRet<T> {
