@@ -738,7 +738,7 @@ impl<I: Tokens> Parser<I> {
         let start = self.cur_pos();
 
         if peek!(self).is_some_and(|cur| cur == Token::Dot) {
-            let expr = self.parse_expr()?;
+            let expr = self.parse_expr_inner()?;
 
             self.eat_general_semi();
 
@@ -746,7 +746,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         if peek!(self).is_some_and(|cur| cur == Token::LParen) {
-            let expr = self.parse_expr()?;
+            let expr = self.parse_expr_inner()?;
 
             self.eat_general_semi();
 

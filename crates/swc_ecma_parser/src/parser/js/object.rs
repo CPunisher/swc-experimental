@@ -466,4 +466,53 @@ impl<I: Tokens> Parser<I> {
     pub(crate) fn parse_object_expr(&mut self) -> PResult<Expr> {
         self.parse_object(Self::parse_expr_object_prop, Self::make_expr_object)
     }
+
+    /// spec: 'PropertyName'
+    pub fn parse_prop_name(&mut self) -> PResult<PropName> {
+        trace_cur!(self, parse_prop_name);
+        self.do_inside_of_context(Context::InPropertyName, |p| {
+            let start = p.input().cur_pos();
+            let cur = p.input().cur();
+            let v = if cur == Token::Str {
+                PropName::Str(p.parse_str_lit())
+            } else if cur == Token::Num {
+                let (value, raw) = p.input_mut().expect_number_token_and_bump();
+                let raw = p.ast.add_atom_ref(raw);
+                p.ast.prop_name_number(p.span(start), value, raw.into())
+            } else if cur == Token::BigInt {
+                let (value, raw) = p.input_mut().expect_bigint_token_and_bump();
+                let value = p.ast.add_bigint(*value);
+                let raw = p.ast.add_atom_ref(raw);
+                p.ast.prop_name_big_int(p.span(start), value, raw.into())
+            } else if cur.is_word() {
+                let w = p.input_mut().expect_word_token_and_bump();
+                let w = p.ast.add_atom_ref(w);
+                p.ast.prop_name_ident_name(p.span(start), w)
+            } else if cur == Token::LBracket {
+                p.bump();
+                let inner_start = p.input().cur_pos();
+                let mut expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                if p.syntax().typescript() && p.input().is(Token::Comma) {
+                    let mut exprs = p.scratch_start();
+                    exprs.push(p, expr);
+                    while p.input_mut().eat(Token::Comma) {
+                        let expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                        exprs.push(p, expr);
+                    }
+                    p.emit_err(p.span(inner_start), SyntaxError::TS1171);
+
+                    let exprs = exprs.end(p);
+                    expr = p.ast.expr_seq_expr(p.span(inner_start), exprs);
+                }
+                expect!(p, Token::RBracket);
+                p.ast.prop_name_computed_prop_name(p.span(start), expr)
+            } else {
+                unexpected!(
+                    p,
+                    "identifier, string literal, numeric literal or [ for the computed key"
+                )
+            };
+            Ok(v)
+        })
+    }
 }

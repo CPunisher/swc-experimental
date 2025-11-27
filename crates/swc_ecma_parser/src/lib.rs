@@ -160,20 +160,32 @@ pub use lexer::source::StringSource;
 pub use parser::*;
 pub use syntax::{EsSyntax, Syntax, SyntaxFlags, TsSyntax};
 
+pub struct ParseRet<T> {
+    pub ast: Ast,
+    pub errors: Vec<Error>,
+    pub root: T,
+}
+
+impl<T> ParseRet<T> {
+    pub fn map_root<U, F: FnOnce(T) -> U>(self, op: F) -> ParseRet<U> {
+        ParseRet {
+            ast: self.ast,
+            errors: self.errors,
+            root: op(self.root),
+        }
+    }
+}
+
 pub fn with_file_parser<T>(
     src: &str,
     syntax: Syntax,
     target: EsVersion,
     comments: Option<&dyn Comments>,
-    recovered_errors: &mut Vec<Error>,
-    op: impl for<'aa> FnOnce(&mut Parser<self::Lexer>) -> PResult<T>,
-) -> PResult<T> {
+    op: impl FnOnce(Parser<self::Lexer>) -> T,
+) -> T {
     let lexer = self::Lexer::new(syntax, target, StringSource::new(src), comments);
-    let mut p = Parser::new_from(lexer);
-    let ret = op(&mut p);
-
-    recovered_errors.append(&mut p.take_errors());
-
+    let p = Parser::new_from(lexer);
+    let ret = op(p);
     ret
 }
 
@@ -192,19 +204,13 @@ macro_rules! expose {
             syntax: Syntax,
             target: EsVersion,
             comments: Option<&dyn Comments>,
-            recovered_errors: &mut Vec<Error>,
-        ) -> PResult<$T> {
-            with_file_parser(src, syntax, target, comments, recovered_errors, $($t)*)
+        ) -> PResult<ParseRet<$T>> {
+            with_file_parser(src, syntax, target, comments, $($t)*)
         }
     };
 }
 
-expose!(parse_file_as_expr, Expr, |p| {
-    // This allow to parse `import.meta`
-    let ctx = p.ctx();
-    p.set_ctx(ctx.union(Context::CanBeModule));
-    p.parse_expr()
-});
+expose!(parse_file_as_expr, Expr, |p| { p.parse_expr() });
 expose!(parse_file_as_module, Module, |p| { p.parse_module() });
 expose!(parse_file_as_script, Script, |p| { p.parse_script() });
 expose!(parse_file_as_commonjs, Script, |p| { p.parse_commonjs() });

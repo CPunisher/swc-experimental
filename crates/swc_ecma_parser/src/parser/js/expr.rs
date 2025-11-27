@@ -42,7 +42,7 @@ impl CloneIn for AssignTargetOrSpread {
 }
 
 impl<I: Tokens> Parser<I> {
-    pub fn parse_expr(&mut self) -> PResult<Expr> {
+    pub(crate) fn parse_expr_inner(&mut self) -> PResult<Expr> {
         trace_cur!(self, parse_expr);
         debug_tracing!(self, "parse_expr");
         let expr = self.parse_assignment_expr()?;
@@ -576,7 +576,7 @@ impl<I: Tokens> Parser<I> {
         let mut quasis = vec![cur_elem.node_id()];
 
         while !is_tail {
-            exprs.push(self.allow_in_expr(|p| p.parse_expr())?.node_id());
+            exprs.push(self.allow_in_expr(|p| p.parse_expr_inner())?.node_id());
             let elem = self.parse_tpl_element(is_tagged_tpl)?;
             is_tail = elem.tail(&self.ast);
             quasis.push(elem.node_id());
@@ -1174,7 +1174,7 @@ impl<I: Tokens> Parser<I> {
         // $obj[name()]
         if !no_computed_member && self.input_mut().eat(Token::LBracket) {
             let bracket_lo = self.input().prev_span().lo;
-            let prop = self.allow_in_expr(|p| p.parse_expr())?;
+            let prop = self.allow_in_expr(|p| p.parse_expr_inner())?;
             expect!(self, Token::RBracket);
             let span = Span::new_with_checked(callee.span_lo(&self.ast), self.input().last_pos());
             debug_assert_eq!(callee.span_lo(&self.ast), span.lo());
@@ -1324,7 +1324,7 @@ impl<I: Tokens> Parser<I> {
             Token::LBracket => {
                 self.bump();
                 let bracket_lo = self.input().prev_span().lo;
-                let prop = self.allow_in_expr(|p| p.parse_expr())?;
+                let prop = self.allow_in_expr(|p| p.parse_expr_inner())?;
                 expect!(self, Token::RBracket);
                 let span = Span::new_with_checked(lhs.span_lo(&self.ast), self.input().last_pos());
                 debug_assert_eq!(lhs.span_lo(&self.ast), span.lo());
@@ -1867,7 +1867,7 @@ impl<I: Tokens> Parser<I> {
     }
 
     pub(crate) fn parse_for_head_prefix(&mut self) -> PResult<Expr> {
-        self.parse_expr()
+        self.parse_expr_inner()
     }
 
     // Returns (args_or_pats, trailing_comma)

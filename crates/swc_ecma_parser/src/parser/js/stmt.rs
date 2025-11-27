@@ -35,7 +35,7 @@ impl<I: Tokens> Parser<I> {
         let test = if self.input_mut().eat(Token::Semi) {
             None
         } else {
-            let test = self.allow_in_expr(|p| p.parse_expr()).map(Some)?;
+            let test = self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?;
             self.input_mut().eat(Token::Semi);
             test
         };
@@ -43,7 +43,7 @@ impl<I: Tokens> Parser<I> {
         let update = if self.input().is(Token::RParen) {
             None
         } else {
-            self.allow_in_expr(|p| p.parse_expr()).map(Some)?
+            self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
         };
 
         Ok(TempForHead::For { init, test, update })
@@ -62,7 +62,7 @@ impl<I: Tokens> Parser<I> {
                     SyntaxError::UsingDeclNotAllowedForForInLoop,
                 )
             }
-            let right = self.allow_in_expr(|p| p.parse_expr())?;
+            let right = self.allow_in_expr(|p| p.parse_expr_inner())?;
             Ok(TempForHead::ForIn { left, right })
         }
     }
@@ -75,7 +75,7 @@ impl<I: Tokens> Parser<I> {
         let arg = if self.is_general_semi() {
             None
         } else {
-            self.allow_in_expr(|p| p.parse_expr()).map(Some)?
+            self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
         };
         self.expect_general_semi()?;
         let stmt = self.ast.stmt_return_stmt(self.span(start), arg);
@@ -259,7 +259,7 @@ impl<I: Tokens> Parser<I> {
         if !for_loop && !self.eat_general_semi() {
             self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
 
-            let _ = self.parse_expr();
+            let _ = self.parse_expr_inner();
 
             while !self.eat_general_semi() {
                 self.bump();
@@ -542,16 +542,18 @@ impl<I: Tokens> Parser<I> {
 
         expect!(self, Token::LParen);
 
-        let test = self.allow_in_expr(|p| p.parse_expr()).map_err(|err| {
-            Error::new(
-                err.span(),
-                SyntaxError::WithLabel {
-                    inner: Box::new(err),
-                    span: if_token,
-                    note: "Tried to parse the condition for an if statement",
-                },
-            )
-        })?;
+        let test = self
+            .allow_in_expr(|p| p.parse_expr_inner())
+            .map_err(|err| {
+                Error::new(
+                    err.span(),
+                    SyntaxError::WithLabel {
+                        inner: Box::new(err),
+                        span: if_token,
+                        note: "Tried to parse the condition for an if statement",
+                    },
+                )
+            })?;
         expect!(self, Token::RParen);
 
         let cons = self.parse_stmt()?;
@@ -575,7 +577,7 @@ impl<I: Tokens> Parser<I> {
             syntax_error!(self, SyntaxError::LineBreakInThrow);
         }
 
-        let arg = self.allow_in_expr(|p| p.parse_expr())?;
+        let arg = self.allow_in_expr(|p| p.parse_expr_inner())?;
         self.expect_general_semi()?;
 
         let span = self.span(start);
@@ -598,7 +600,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::With);
 
         expect!(self, Token::LParen);
-        let obj = self.allow_in_expr(|p| p.parse_expr())?;
+        let obj = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let body = self.do_inside_of_context(Context::InFunction, |p| {
@@ -615,7 +617,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::While);
 
         expect!(self, Token::LParen);
-        let test = self.allow_in_expr(|p| p.parse_expr())?;
+        let test = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let body = self.do_inside_of_context(
@@ -674,7 +676,7 @@ impl<I: Tokens> Parser<I> {
         expect!(self, Token::While);
         expect!(self, Token::LParen);
 
-        let test = self.allow_in_expr(|p| p.parse_expr())?;
+        let test = self.allow_in_expr(|p| p.parse_expr_inner())?;
 
         expect!(self, Token::RParen);
 
@@ -796,7 +798,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::Switch);
 
         expect!(self, Token::LParen);
-        let discriminant = self.allow_in_expr(|p| p.parse_expr())?;
+        let discriminant = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let mut cases = self.scratch_start();
@@ -814,7 +816,7 @@ impl<I: Tokens> Parser<I> {
                 let case_start = p.cur_pos();
                 p.bump();
                 let test = if is_case {
-                    p.allow_in_expr(|p| p.parse_expr()).map(Some)?
+                    p.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
                 } else {
                     if let Some(previous) = span_of_previous_default {
                         syntax_error!(p, SyntaxError::MultipleDefault { previous });
@@ -1096,7 +1098,7 @@ impl<I: Tokens> Parser<I> {
         // simply start parsing an expression, and afterwards, if the
         // next token is a colon and the expression was a simple
         // Identifier node, we switch to interpreting it as a label.
-        let expr = self.allow_in_expr(|p| p.parse_expr())?;
+        let expr = self.allow_in_expr(|p| p.parse_expr_inner())?;
 
         let expr = match expr {
             Expr::Ident(ident) => {
@@ -1231,6 +1233,17 @@ impl<I: Tokens> Parser<I> {
         let stmts = stmts.end(self);
         Ok(stmts)
     }
+
+    pub(crate) fn parse_shebang(&mut self) -> PResult<OptionalAtomRef> {
+        let cur = self.input().cur();
+        Ok(if cur == Token::Shebang {
+            let ret = self.input_mut().expect_shebang_token_and_bump();
+            let atom = self.ast.add_atom_ref(ret);
+            atom.into()
+        } else {
+            OptionalAtomRef::new_none()
+        })
+    }
 }
 
 fn handle_import_export<I: Tokens>(
@@ -1239,7 +1252,7 @@ fn handle_import_export<I: Tokens>(
 ) -> PResult<Stmt> {
     let start = p.cur_pos();
     if p.input().is(Token::Import) && peek!(p).is_some_and(|peek| peek == Token::LParen) {
-        let expr = p.parse_expr()?;
+        let expr = p.parse_expr_inner()?;
 
         p.eat_general_semi();
 
@@ -1247,7 +1260,7 @@ fn handle_import_export<I: Tokens>(
     }
 
     if p.input().is(Token::Import) && peek!(p).is_some_and(|peek| peek == Token::Dot) {
-        let expr = p.parse_expr()?;
+        let expr = p.parse_expr_inner()?;
 
         p.eat_general_semi();
 

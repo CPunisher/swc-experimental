@@ -117,7 +117,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::At);
 
         let expr = if self.input_mut().eat(Token::LParen) {
-            let expr = self.parse_expr()?;
+            let expr = self.parse_expr_inner()?;
             expect!(self, Token::RParen);
             expr
         } else {

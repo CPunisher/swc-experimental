@@ -5,7 +5,7 @@ use swc_common::{BytePos, Span, comments::Comments};
 use swc_experimental_ecma_ast::*;
 
 use crate::{
-    Context, Syntax,
+    Context, ParseRet, Syntax,
     error::SyntaxError,
     input::Buffer,
     lexer::{Token, TokenAndSpan, source::StringSource},
@@ -41,8 +41,7 @@ pub struct ParserCheckpoint<I: Tokens> {
 
 /// EcmaScript parser.
 pub struct Parser<I: self::input::Tokens> {
-    // TODO: just for debug
-    pub ast: Ast,
+    ast: Ast,
     /// Don't mutable this directly. Use Parser::scratch_xxx instead for safety.
     scratch: Vec<NodeId>,
     state: State,
@@ -137,7 +136,7 @@ impl<I: Tokens> Parser<I> {
         self.input.iter.take_script_module_errors()
     }
 
-    pub fn parse_script(&mut self) -> PResult<Script> {
+    pub fn parse_script(mut self) -> PResult<ParseRet<Script>> {
         trace_cur!(self, parse_script);
 
         let ctx = (self.ctx() & !Context::Module) | Context::TopLevel;
@@ -151,10 +150,15 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(self.input().cur() == Token::Eof);
         self.input_mut().bump();
 
-        Ok(ret)
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: ret,
+            errors,
+        })
     }
 
-    pub fn parse_commonjs(&mut self) -> PResult<Script> {
+    pub fn parse_commonjs(mut self) -> PResult<ParseRet<Script>> {
         trace_cur!(self, parse_commonjs);
 
         // CommonJS module is acctually in a function scope
@@ -172,10 +176,15 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(self.input().cur() == Token::Eof);
         self.input_mut().bump();
 
-        Ok(ret)
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: ret,
+            errors,
+        })
     }
 
-    pub fn parse_typescript_module(&mut self) -> PResult<Module> {
+    pub fn parse_typescript_module(mut self) -> PResult<ParseRet<Module>> {
         trace_cur!(self, parse_typescript_module);
 
         debug_assert!(self.syntax().typescript());
@@ -194,7 +203,12 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(self.input().cur() == Token::Eof);
         self.input_mut().bump();
 
-        Ok(ret)
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: ret,
+            errors,
+        })
     }
 
     /// Returns [Module] if it's a module and returns [Script] if it's not a
@@ -202,7 +216,7 @@ impl<I: Tokens> Parser<I> {
     ///
     /// Note: This is not perfect yet. It means, some strict mode violations may
     /// not be reported even if the method returns [Module].
-    pub fn parse_program(&mut self) -> PResult<Program> {
+    pub fn parse_program(mut self) -> PResult<ParseRet<Program>> {
         let start = self.cur_pos();
         let shebang = self.parse_shebang()?;
 
@@ -232,7 +246,7 @@ impl<I: Tokens> Parser<I> {
             for item in body.iter() {
                 let item = self.ast.get_node(item);
                 match item {
-                    ModuleItem::Stmt(stmt) => stmts.push(self, stmt),
+                    ModuleItem::Stmt(stmt) => stmts.push(&mut self, stmt),
                     ModuleItem::ModuleDecl(_) => {
                         unreachable!("module is handled above")
                     }
@@ -241,17 +255,22 @@ impl<I: Tokens> Parser<I> {
                 }
             }
 
-            let body = stmts.end(self);
+            let body = stmts.end(&mut self);
             self.ast.program_script(self.span(start), body, shebang)
         };
 
         debug_assert!(self.input().cur() == Token::Eof);
         self.input_mut().bump();
 
-        Ok(ret)
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: ret,
+            errors,
+        })
     }
 
-    pub fn parse_module(&mut self) -> PResult<Module> {
+    pub fn parse_module(mut self) -> PResult<ParseRet<Module>> {
         let ctx = self.ctx()
             | Context::Module
             | Context::CanBeModule
@@ -269,17 +288,25 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(self.input().cur() == Token::Eof);
         self.input_mut().bump();
 
-        Ok(ret)
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: ret,
+            errors,
+        })
     }
 
-    pub fn parse_shebang(&mut self) -> PResult<OptionalAtomRef> {
-        let cur = self.input().cur();
-        Ok(if cur == Token::Shebang {
-            let ret = self.input_mut().expect_shebang_token_and_bump();
-            let atom = self.ast.add_atom_ref(ret);
-            atom.into()
-        } else {
-            OptionalAtomRef::new_none()
+    pub fn parse_expr(mut self) -> PResult<ParseRet<Expr>> {
+        // This allow to parse `import.meta`
+        let ctx = self.ctx();
+        self.set_ctx(ctx.union(Context::CanBeModule));
+
+        let expr = self.parse_expr_inner()?;
+        let errors = self.take_errors();
+        Ok(ParseRet {
+            ast: self.ast,
+            root: expr,
+            errors,
         })
     }
 }
@@ -543,55 +570,6 @@ impl<I: Tokens> Parser<I> {
         // }
     }
 
-    /// spec: 'PropertyName'
-    pub fn parse_prop_name(&mut self) -> PResult<PropName> {
-        trace_cur!(self, parse_prop_name);
-        self.do_inside_of_context(Context::InPropertyName, |p| {
-            let start = p.input().cur_pos();
-            let cur = p.input().cur();
-            let v = if cur == Token::Str {
-                PropName::Str(p.parse_str_lit())
-            } else if cur == Token::Num {
-                let (value, raw) = p.input_mut().expect_number_token_and_bump();
-                let raw = p.ast.add_atom_ref(raw);
-                p.ast.prop_name_number(p.span(start), value, raw.into())
-            } else if cur == Token::BigInt {
-                let (value, raw) = p.input_mut().expect_bigint_token_and_bump();
-                let value = p.ast.add_bigint(*value);
-                let raw = p.ast.add_atom_ref(raw);
-                p.ast.prop_name_big_int(p.span(start), value, raw.into())
-            } else if cur.is_word() {
-                let w = p.input_mut().expect_word_token_and_bump();
-                let w = p.ast.add_atom_ref(w);
-                p.ast.prop_name_ident_name(p.span(start), w)
-            } else if cur == Token::LBracket {
-                p.bump();
-                let inner_start = p.input().cur_pos();
-                let mut expr = p.allow_in_expr(Self::parse_assignment_expr)?;
-                if p.syntax().typescript() && p.input().is(Token::Comma) {
-                    let mut exprs = p.scratch_start();
-                    exprs.push(p, expr);
-                    while p.input_mut().eat(Token::Comma) {
-                        let expr = p.allow_in_expr(Self::parse_assignment_expr)?;
-                        exprs.push(p, expr);
-                    }
-                    p.emit_err(p.span(inner_start), SyntaxError::TS1171);
-
-                    let exprs = exprs.end(p);
-                    expr = p.ast.expr_seq_expr(p.span(inner_start), exprs);
-                }
-                expect!(p, Token::RBracket);
-                p.ast.prop_name_computed_prop_name(p.span(start), expr)
-            } else {
-                unexpected!(
-                    p,
-                    "identifier, string literal, numeric literal or [ for the computed key"
-                )
-            };
-            Ok(v)
-        })
-    }
-
     #[inline]
     pub fn is_ident_ref(&mut self) -> bool {
         let cur = self.input().cur();
@@ -626,67 +604,3 @@ impl<I: Tokens> Parser<I> {
         Error::new(last, SyntaxError::Eof)
     }
 }
-
-// #[cfg(test)]
-// pub fn test_parser<F, Ret>(s: &'static str, syntax: Syntax, f: F) -> Ret
-// where
-//     F: FnOnce(&mut Parser<crate::lexer::Lexer>) -> Result<Ret, Error>,
-// {
-//     crate::with_test_sess(s, |handler, input| {
-//         let lexer = crate::lexer::Lexer::new(syntax, EsVersion::Es2019, input, None);
-//         let mut p = Parser::new_from(lexer);
-//         let ret = f(&mut p);
-//         let mut error = false;
-
-//         for err in p.take_errors() {
-//             error = true;
-//             err.into_diagnostic(handler).emit();
-//         }
-
-//         let res = ret.map_err(|err| err.into_diagnostic(handler).emit())?;
-
-//         if error {
-//             return Err(());
-//         }
-
-//         Ok(res)
-//     })
-//     .unwrap_or_else(|output| panic!("test_parser(): failed to parse \n{s}\n{output}"))
-// }
-
-// #[cfg(test)]
-// pub fn test_parser_comment<F, Ret>(c: &dyn Comments, s: &'static str, syntax: Syntax, f: F) -> Ret
-// where
-//     F: FnOnce(&mut Parser<crate::lexer::Lexer>) -> Result<Ret, Error>,
-// {
-//     crate::with_test_sess(s, |handler, input| {
-//         let lexer = crate::lexer::Lexer::new(syntax, EsVersion::Es2019, input, Some(&c));
-//         let mut p = Parser::new_from(lexer);
-//         let ret = f(&mut p);
-
-//         for err in p.take_errors() {
-//             err.into_diagnostic(handler).emit();
-//         }
-
-//         ret.map_err(|err| err.into_diagnostic(handler).emit())
-//     })
-//     .unwrap_or_else(|output| panic!("test_parser(): failed to parse \n{s}\n{output}"))
-// }
-
-// #[cfg(test)]
-// pub fn bench_parser<F>(b: &mut Bencher, s: &'static str, syntax: Syntax, mut f: F)
-// where
-//     F: for<'a> FnMut(&'a mut Parser<crate::lexer::Lexer<'a>>) -> PResult<()>,
-// {
-//     b.bytes = s.len() as u64;
-
-//     let _ = crate::with_test_sess(s, |handler, input| {
-//         b.iter(|| {
-//             let lexer = crate::lexer::Lexer::new(syntax, Default::default(), input.clone(), None);
-//             let _ =
-//                 f(&mut Parser::new_from(lexer)).map_err(|err| err.into_diagnostic(handler).emit());
-//         });
-
-//         Ok(())
-//     });
-// }
