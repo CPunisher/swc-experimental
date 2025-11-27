@@ -22,3 +22,7 @@ name    = "parser"
 [[bench]]
 harness = false
 name    = "visit"
+
+[[bench]]
+harness = false
+name    = "visit_compare"

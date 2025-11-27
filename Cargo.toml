@@ -37,7 +37,7 @@ swc_experimental_ecma_visit    = { path = "crates/swc_ecma_visit" }
 
 # Dev
 colored         = "3.0.0"
-criterion       = "0.7.0"
+criterion       = { package = "codspeed-criterion-compat", version = "*" }
 mimalloc        = "0.1.48"
 pico-args       = "0.5.0"
 swc_ecma_ast    = "17.0.0"
@@ -49,5 +49,4 @@ codegen-units = 1
 debug         = true
 lto           = "fat"
 opt-level     = 3
-panic         = "abort"
 strip         = "none"

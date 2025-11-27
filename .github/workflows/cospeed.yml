@@ -7,10 +7,6 @@ on:
   pull_request:
     types: ["opened", "reopened"]
 
-permissions: # optional for public repositories
-  contents: read # required for actions/checkout
-  id-token: write # required for OIDC authentication with CodSpeed
-
 jobs:
   benchmarks:
     name: Run benchmarks
@@ -36,5 +32,6 @@ jobs:
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v4
         with:
+          token: ${{ secrets.CODSPEED_TOKEN }}
           mode: simulation
           run: cargo codspeed run
