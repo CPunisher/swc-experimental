@@ -1,7 +1,7 @@
 use colored::Colorize;
 use swc_common::comments::SingleThreadedComments;
 use swc_experimental_ecma_ast::Program;
-use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
+use swc_experimental_ecma_parser::{Lexer, Parser, StringAllocator, StringSource};
 
 use crate::{AppArgs, cases::Case, suite::TestResult};
 
@@ -32,7 +32,14 @@ impl Test262ParserRunner {
 
             let input = StringSource::new(&case.code());
             let comments = SingleThreadedComments::default();
-            let lexer = Lexer::new(case.syntax(), Default::default(), input, Some(&comments));
+            let string_allocator = StringAllocator::new();
+            let lexer = Lexer::new(
+                case.syntax(),
+                Default::default(),
+                input,
+                Some(&comments),
+                string_allocator,
+            );
             let parser = Parser::new_from(lexer);
             let ret = if filename.ends_with(".module.js") {
                 parser

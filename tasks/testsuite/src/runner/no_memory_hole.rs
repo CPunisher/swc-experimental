@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use colored::Colorize;
 use swc_common::comments::SingleThreadedComments;
 use swc_experimental_ecma_ast::{GetNodeId, NodeId, Program, Visit};
-use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
+use swc_experimental_ecma_parser::{Lexer, Parser, StringAllocator, StringSource};
 
 use crate::{AppArgs, cases::Case, suite::TestResult};
 
@@ -24,7 +24,14 @@ impl NoMemoryHoleRunner {
             let syntax = case.syntax();
             let input = StringSource::new(case.code());
             let comments = SingleThreadedComments::default();
-            let lexer = Lexer::new(syntax, Default::default(), input, Some(&comments));
+            let string_allocator = StringAllocator::new();
+            let lexer = Lexer::new(
+                syntax,
+                Default::default(),
+                input,
+                Some(&comments),
+                string_allocator,
+            );
             let parser = Parser::new_from(lexer);
             let ret = match case.ext().as_str() {
                 "js" => parser.parse_program(),

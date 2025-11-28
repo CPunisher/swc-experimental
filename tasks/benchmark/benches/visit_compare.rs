@@ -4,6 +4,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use criterion::{Bencher, Criterion, criterion_group, criterion_main};
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::NodeKind;
+use swc_experimental_ecma_parser::StringAllocator;
 
 fn bench_legacy(b: &mut Bencher, src: &'static str) {
     use swc_ecma_parser::{Parser, StringInput, Syntax, lexer::Lexer};
@@ -42,11 +43,13 @@ fn bench_new(b: &mut Bencher, src: &'static str) {
     use swc_experimental_ecma_visit::VisitWith;
 
     let input = StringSource::new(src);
+    let string_allocator = StringAllocator::new();
     let lexer = Lexer::new(
         swc_experimental_ecma_parser::Syntax::Es(Default::default()),
         Default::default(),
         input,
         None,
+        string_allocator,
     );
     let parser = Parser::new_from(lexer);
     let ret = parser.parse_module().unwrap();
@@ -72,11 +75,13 @@ fn bench_post_order(b: &mut Bencher, src: &'static str) {
     use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
 
     let input = StringSource::new(src);
+    let string_allocator = StringAllocator::new();
     let lexer = Lexer::new(
         swc_experimental_ecma_parser::Syntax::Es(Default::default()),
         Default::default(),
         input,
         None,
+        string_allocator,
     );
     let parser = Parser::new_from(lexer);
     let ret = parser.parse_module().unwrap();
