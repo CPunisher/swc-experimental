@@ -23,81 +23,84 @@ impl StringAllocator {
     }
 
     pub fn alloc_utf8(&mut self) -> Utf8Builder<'_> {
+        let start = self.allocated_utf8.len() as u32;
         Utf8Builder {
-            start: self.allocated_utf8.len() as u32,
-            slice: &mut self.allocated_utf8,
+            alloc: self,
+            start: start,
         }
     }
 
     pub fn alloc_wtf8(&mut self) -> Wtf8Builder<'_> {
         Wtf8Builder {
             start: self.allocated_wtf8.len() as u32,
-            slice: &mut self.allocated_wtf8,
+            alloc: self,
         }
     }
 
     pub fn get_utf8(&self, id: AtomId) -> &str {
         let id = self.utf8_mapping[id];
-        &self.allocated_utf8[id.start as usize..(id.start + id.len) as usize]
+        &self.allocated_utf8[id.start as usize..id.end as usize]
     }
 
     pub fn get_wtf8(&self, id: Wtf8AtomId) -> &Wtf8 {
         let id = self.wtf8_mapping[id];
         &self
             .allocated_wtf8
-            .slice(id.start as usize, (id.start + id.len) as usize)
+            .slice(id.start as usize, id.end as usize)
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct AllocatedUtf8 {
+struct AllocatedUtf8 {
     start: u32,
-    len: u32,
+    end: u32,
 }
 
 pub struct Utf8Builder<'a> {
     start: u32,
-    slice: &'a mut str,
+    alloc: &'a mut StringAllocator,
 }
 
 impl<'a> Utf8Builder<'a> {
-    pub fn finish(self) -> AllocatedUtf8 {
+    pub fn finish(self) -> AtomId {
         let start = self.start;
-        let len = self.slice.len() as u32;
-        AllocatedUtf8 { start, len }
+        let end = self.alloc.allocated_utf8.len() as u32;
+        let allocated = AllocatedUtf8 { start, end };
+        self.alloc.utf8_mapping.push(allocated)
     }
 }
 
 impl Deref for Utf8Builder<'_> {
-    type Target = str;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        self.slice
+        &self.alloc.allocated_utf8
     }
 }
 
 impl DerefMut for Utf8Builder<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.slice
+        &mut self.alloc.allocated_utf8
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct AllocatedWtf8 {
+struct AllocatedWtf8 {
     start: u32,
-    len: u32,
+    end: u32,
 }
 
 pub struct Wtf8Builder<'a> {
     start: u32,
-    slice: &'a mut Wtf8Buf,
+    alloc: &'a mut StringAllocator,
 }
 
 impl<'a> Wtf8Builder<'a> {
-    pub fn finish(self) -> AllocatedWtf8 {
+    pub fn finish(self) -> Wtf8AtomId {
         let start = self.start;
-        let len = self.slice.len() as u32;
-        AllocatedWtf8 { start, len }
+        let end = self.alloc.allocated_utf8.len() as u32;
+        let allocated = AllocatedWtf8 { start, end };
+        self.alloc.wtf8_mapping.push(allocated)
     }
 }
 
@@ -105,12 +108,12 @@ impl Deref for Wtf8Builder<'_> {
     type Target = Wtf8Buf;
 
     fn deref(&self) -> &Self::Target {
-        self.slice
+        &self.alloc.allocated_wtf8
     }
 }
 
 impl DerefMut for Wtf8Builder<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.slice
+        &mut self.alloc.allocated_wtf8
     }
 }
