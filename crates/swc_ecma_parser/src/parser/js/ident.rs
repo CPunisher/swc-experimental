@@ -182,32 +182,31 @@ impl<I: Tokens> Parser<I> {
         if t == Token::Await {
             let ctx = self.ctx();
             if ctx.contains(Context::InDeclare) {
-                word = atom!("await");
+                word = AtomRef::new_from_span(span)
             } else if ctx.contains(Context::InStaticBlock) {
                 syntax_error!(self, span, SyntaxError::ExpectedIdent)
             } else if ctx.contains(Context::Module) | ctx.contains(Context::InAsync) {
                 syntax_error!(self, span, SyntaxError::InvalidIdentInAsync)
             } else if incl_await {
-                word = atom!("await")
+                word = AtomRef::new_from_span(span)
             } else {
                 syntax_error!(self, span, SyntaxError::ExpectedIdent)
             }
         } else if t == Token::This && self.input().syntax().typescript() {
-            word = atom!("this")
+            word = AtomRef::new_from_span(span)
         } else if t == Token::Let {
-            word = atom!("let")
+            word = AtomRef::new_from_span(span)
         } else if t.is_known_ident() {
-            let ident = t.take_known_ident();
-            word = ident
+            word = AtomRef::new_from_span(span)
         } else if t == Token::Ident {
             let word = self.input_mut().expect_word_token_and_bump();
-            if self.ctx().contains(Context::InClassField) && word == atom!("arguments") {
+            let word_str = self.input.iter.get_atom_str(word);
+            if self.ctx().contains(Context::InClassField) && word_str == "arguments" {
                 self.emit_err(span, SyntaxError::ArgumentsInClassField)
             }
-            let word = self.ast.add_atom_ref(word);
             return Ok(self.ast.ident(self.span(start), word, false));
         } else if t == Token::Yield && incl_yield {
-            word = atom!("yield")
+            word = AtomRef::new_from_span(span)
         } else if t == Token::Null || t == Token::True || t == Token::False || t.is_keyword() {
             syntax_error!(self, span, SyntaxError::ExpectedIdent)
         } else {
@@ -215,7 +214,6 @@ impl<I: Tokens> Parser<I> {
         }
         self.bump();
 
-        let word = self.ast.add_atom_ref(word);
         Ok(self.ast.ident(self.span(start), word, false))
     }
 }

@@ -384,12 +384,6 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn into_atom(self, lexer: &mut crate::Lexer<'a>) -> OptionalAtomRef {
-        let value = lexer.get_token_value();
-        self.as_word_atom(value)
-    }
-
-    #[inline(always)]
     pub fn take_error<I: Tokens>(self, buffer: &mut Buffer<I>) -> Error {
         buffer.expect_error_token_value()
     }
@@ -411,17 +405,13 @@ impl<'a> Token {
 
     #[inline]
     pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> OptionalAtomRef {
-        self.as_word_atom(buffer.get_token_value())
+        let span = buffer.cur.span;
+        AtomRef::new_from_span(span).into()
     }
 
     #[inline(always)]
     pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
         buffer.expect_word_token_value()
-    }
-
-    #[inline(always)]
-    pub fn take_known_ident(self) -> AtomRef {
-        self.as_known_ident_atom().unwrap()
     }
 
     #[inline(always)]
@@ -717,106 +707,10 @@ impl Token {
         .to_string()
     }
 
-    pub fn as_keyword_atom(self) -> Option<Atom> {
-        let atom = match self {
-            Token::Await => atom!("await"),
-            Token::Break => atom!("break"),
-            Token::Case => atom!("case"),
-            Token::Catch => atom!("catch"),
-            Token::Class => atom!("class"),
-            Token::Const => atom!("const"),
-            Token::Continue => atom!("continue"),
-            Token::Debugger => atom!("debugger"),
-            Token::Default => atom!("default"),
-            Token::Delete => atom!("delete"),
-            Token::Do => atom!("do"),
-            Token::Else => atom!("else"),
-            Token::Export => atom!("export"),
-            Token::Extends => atom!("extends"),
-            Token::Finally => atom!("finally"),
-            Token::For => atom!("for"),
-            Token::Function => atom!("function"),
-            Token::If => atom!("if"),
-            Token::Import => atom!("import"),
-            Token::In => atom!("in"),
-            Token::InstanceOf => atom!("instanceof"),
-            Token::Let => atom!("let"),
-            Token::New => atom!("new"),
-            Token::Return => atom!("return"),
-            Token::Super => atom!("super"),
-            Token::Switch => atom!("switch"),
-            Token::This => atom!("this"),
-            Token::Throw => atom!("throw"),
-            Token::Try => atom!("try"),
-            Token::TypeOf => atom!("typeof"),
-            Token::Var => atom!("var"),
-            Token::Void => atom!("void"),
-            Token::While => atom!("while"),
-            Token::With => atom!("with"),
-            Token::Yield => atom!("yield"),
-            Token::Module => atom!("module"),
-            _ => return None,
-        };
-        Some(atom)
-    }
-
     #[inline(always)]
     pub const fn is_keyword(self) -> bool {
         let t = self as u8;
         t >= Token::Await as u8 && t <= Token::Module as u8
-    }
-
-    pub fn as_known_ident_atom(self) -> Option<Atom> {
-        let atom = match self {
-            Token::Abstract => atom!("abstract"),
-            Token::Any => atom!("any"),
-            Token::As => atom!("as"),
-            Token::Asserts => atom!("asserts"),
-            Token::Assert => atom!("assert"),
-            Token::Async => atom!("async"),
-            Token::Bigint => atom!("bigint"),
-            Token::Boolean => atom!("boolean"),
-            Token::Constructor => atom!("constructor"),
-            Token::Declare => atom!("declare"),
-            Token::Enum => atom!("enum"),
-            Token::From => atom!("from"),
-            Token::Get => atom!("get"),
-            Token::Global => atom!("global"),
-            Token::Implements => atom!("implements"),
-            Token::Interface => atom!("interface"),
-            Token::Intrinsic => atom!("intrinsic"),
-            Token::Is => atom!("is"),
-            Token::Keyof => atom!("keyof"),
-            Token::Namespace => atom!("namespace"),
-            Token::Never => atom!("never"),
-            Token::Number => atom!("number"),
-            Token::Object => atom!("object"),
-            Token::Of => atom!("of"),
-            Token::Out => atom!("out"),
-            Token::Override => atom!("override"),
-            Token::Package => atom!("package"),
-            Token::Private => atom!("private"),
-            Token::Protected => atom!("protected"),
-            Token::Public => atom!("public"),
-            Token::Readonly => atom!("readonly"),
-            Token::Require => atom!("require"),
-            Token::Set => atom!("set"),
-            Token::Static => atom!("static"),
-            Token::String => atom!("string"),
-            Token::Symbol => atom!("symbol"),
-            Token::Type => atom!("type"),
-            Token::Undefined => atom!("undefined"),
-            Token::Unique => atom!("unique"),
-            Token::Unknown => atom!("unknown"),
-            Token::Using => atom!("using"),
-            Token::Accessor => atom!("accessor"),
-            Token::Infer => atom!("infer"),
-            Token::Satisfies => atom!("satisfies"),
-            Token::Meta => atom!("meta"),
-            Token::Target => atom!("target"),
-            _ => return None,
-        };
-        Some(atom)
     }
 
     #[inline(always)]
@@ -831,23 +725,6 @@ impl Token {
             Token::Null | Token::True | Token::False | Token::Ident
         ) || self.is_known_ident()
             || self.is_keyword()
-    }
-
-    pub fn as_word_atom(self, value: Option<&TokenValue>) -> OptionalAtomRef {
-        match self {
-            Token::Null => Some(atom!("null")),
-            Token::True => Some(atom!("true")),
-            Token::False => Some(atom!("false")),
-            Token::Ident => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                OptionalAtomRef::from(*w)
-            }
-            _ => self
-                .as_known_ident_atom()
-                .or_else(|| self.as_keyword_atom()),
-        }
     }
 
     #[inline(always)]

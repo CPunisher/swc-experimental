@@ -1,4 +1,4 @@
-use swc_common::BytePos;
+use swc_common::{BytePos, Span};
 
 oxc_index::define_index_type! {
     pub struct AtomId = u32;
@@ -15,6 +15,10 @@ pub struct AtomRef {
 impl AtomRef {
     pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {
         Self { lo, hi }
+    }
+
+    pub const fn new_from_span(span: Span) -> Self {
+        Self::new_ref(span.lo, span.hi)
     }
 
     pub const fn new_alloc(atom: AtomId) -> Self {
