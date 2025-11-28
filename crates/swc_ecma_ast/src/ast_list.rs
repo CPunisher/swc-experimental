@@ -58,6 +58,7 @@ impl NodeList {
 
 impl NodeList {
     pub(crate) unsafe fn get_unchecked(&self, node_id: NodeId) -> &AstNode {
+        debug_assert!(node_id.index() < self.inner.len());
         unsafe { self.inner.as_raw_slice().get_unchecked(node_id.index()) }
     }
 

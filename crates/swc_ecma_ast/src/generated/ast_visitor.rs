@@ -2429,7 +2429,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for TplElement {
                 .get_unchecked((offset + 1usize).index())
                 .optional_wtf8_atom
         };
-        <OptionalWtf8AtomId as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalWtf8AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3541,7 +3541,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Str {
                 .get_unchecked((offset + 0usize).index())
                 .wtf8_atom
         };
-        <Wtf8AtomId as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Wtf8AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -6480,7 +6480,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TplElement {
                 .get_unchecked((offset + 1usize).index())
                 .optional_wtf8_atom
         };
-        <OptionalWtf8AtomId as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalWtf8AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7674,7 +7674,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Str {
                 .get_unchecked((offset + 0usize).index())
                 .wtf8_atom
         };
-        <Wtf8AtomId as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Wtf8AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()

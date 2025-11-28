@@ -100,7 +100,6 @@ fn generate_property_for_struct(ast: &AstStruct, schema: &Schema) -> TokenStream
         field_getters.extend(quote! {
             #[inline]
             pub fn #getter_name(&self, ast: &crate::Ast) -> #ret_ty {
-                debug_assert!(self.0 < ast.nodes.len());
                 let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + #offset;
 
                 debug_assert!(offset < ast.extra_data.len());
@@ -123,7 +122,6 @@ fn generate_property_for_struct(ast: &AstStruct, schema: &Schema) -> TokenStream
         field_setters.extend(quote! {
             #[inline]
             pub fn #setter_name(&self, ast: &mut crate::Ast, #field_name: #ret_ty) {
-                // debug_assert!(self.0 < ast.nodes.len());
                 let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + #offset;
 
                 debug_assert!(offset < ast.extra_data.len());
