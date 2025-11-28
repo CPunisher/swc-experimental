@@ -32,17 +32,15 @@ fn test_legacy(src: &str) -> usize {
 
 fn test_new(src: &str) -> usize {
     use swc_experimental_ecma_ast::Ast;
-    use swc_experimental_ecma_parser::{Lexer, Parser, StringAllocator, StringSource};
+    use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
     use swc_experimental_ecma_visit::VisitWith;
 
     let input = StringSource::new(src);
-    let string_allocator = StringAllocator::new();
     let lexer = Lexer::new(
         swc_experimental_ecma_parser::Syntax::Es(Default::default()),
         Default::default(),
         input,
         None,
-        string_allocator,
     );
     let parser = Parser::new_from(lexer);
     let ret = parser.parse_module().unwrap();
@@ -63,16 +61,14 @@ fn test_new(src: &str) -> usize {
 }
 
 fn test_post_order(src: &str) -> usize {
-    use swc_experimental_ecma_parser::{Lexer, Parser, StringAllocator, StringSource};
+    use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
 
     let input = StringSource::new(src);
-    let string_allocator = StringAllocator::new();
     let lexer = Lexer::new(
         swc_experimental_ecma_parser::Syntax::Es(Default::default()),
         Default::default(),
         input,
         None,
-        string_allocator,
     );
     let parser = Parser::new_from(lexer);
     let ret = parser.parse_module().unwrap();
