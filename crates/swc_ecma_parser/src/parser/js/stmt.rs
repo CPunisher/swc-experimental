@@ -1184,15 +1184,10 @@ impl<I: Tokens> Parser<I> {
 
         let mut stmts = self.scratch_start();
 
-        let has_strict_directive = allow_directives
-            && (self
-                .input()
-                .cur()
-                .is_str_raw_content("\"use strict\"", self.input())
-                || self
-                    .input()
-                    .cur()
-                    .is_str_raw_content("'use strict'", self.input()));
+        let cur_atom = AtomRef::new_from_span(self.input.cur_span());
+        let cur_str = self.input.iter.get_atom_str(cur_atom);
+        let has_strict_directive =
+            allow_directives && (cur_str == "\"use strict\"" || cur_str == "'use strict'");
 
         let parse_stmts = |p: &mut Self, stmts: &mut ScratchIndex<Type>| -> PResult<()> {
             let is_stmt_start = |p: &mut Self| {
@@ -1237,8 +1232,7 @@ impl<I: Tokens> Parser<I> {
     pub(crate) fn parse_shebang(&mut self) -> PResult<OptionalAtomRef> {
         let cur = self.input().cur();
         Ok(if cur == Token::Shebang {
-            let ret = self.input_mut().expect_shebang_token_and_bump();
-            let atom = self.ast.add_atom_ref(ret);
+            let atom = self.input_mut().expect_shebang_token_and_bump();
             atom.into()
         } else {
             OptionalAtomRef::new_none()
