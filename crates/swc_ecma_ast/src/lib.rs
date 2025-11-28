@@ -25,14 +25,11 @@ pub use common::*;
 pub use derive::*;
 pub use generated::ast_visitor::*;
 pub use node_id::{
-    AtomRef, BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalAtomRef,
-    OptionalNodeId, OptionalWtf8AtomRef, SubRange, TypedSubRange, Wtf8AtomRef,
+    AtomId, AtomRef, BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalAtomRef,
+    OptionalNodeId, OptionalWtf8AtomRef, SubRange, TypedSubRange, Wtf8AtomId, Wtf8AtomRef,
 };
 
-use crate::{
-    ast_list::NodeList,
-    node_id::{AtomId, Wtf8AtomId},
-};
+use crate::ast_list::NodeList;
 
 #[derive(Default)]
 pub struct Ast {

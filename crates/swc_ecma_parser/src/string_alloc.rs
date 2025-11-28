@@ -1,10 +1,15 @@
 use std::ops::{Deref, DerefMut};
 
+use oxc_index::IndexVec;
 use swc_atoms::wtf8::{Wtf8, Wtf8Buf};
+use swc_experimental_ecma_ast::{AtomId, Wtf8AtomId};
 
+#[derive(Clone)]
 pub struct StringAllocator {
     allocated_utf8: String,
     allocated_wtf8: Wtf8Buf,
+    utf8_mapping: IndexVec<AtomId, AllocatedUtf8>,
+    wtf8_mapping: IndexVec<Wtf8AtomId, AllocatedWtf8>,
 }
 
 impl StringAllocator {
@@ -12,6 +17,8 @@ impl StringAllocator {
         Self {
             allocated_utf8: String::new(),
             allocated_wtf8: Wtf8Buf::new(),
+            utf8_mapping: IndexVec::new(),
+            wtf8_mapping: IndexVec::new(),
         }
     }
 
@@ -29,17 +36,20 @@ impl StringAllocator {
         }
     }
 
-    pub fn get_utf8(&self, id: AllocatedUtf8) -> &str {
+    pub fn get_utf8(&self, id: AtomId) -> &str {
+        let id = self.utf8_mapping[id];
         &self.allocated_utf8[id.start as usize..(id.start + id.len) as usize]
     }
 
-    pub fn get_wtf8(&self, id: AllocatedWtf8) -> &Wtf8 {
+    pub fn get_wtf8(&self, id: Wtf8AtomId) -> &Wtf8 {
+        let id = self.wtf8_mapping[id];
         &self
             .allocated_wtf8
             .slice(id.start as usize, (id.start + id.len) as usize)
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct AllocatedUtf8 {
     start: u32,
     len: u32,
@@ -72,6 +82,7 @@ impl DerefMut for Utf8Builder<'_> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct AllocatedWtf8 {
     start: u32,
     len: u32,

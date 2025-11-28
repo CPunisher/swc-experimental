@@ -1297,6 +1297,7 @@ dependencies = [
  "bitflags",
  "either",
  "num-bigint",
+ "oxc_index",
  "rustc-hash",
  "seq-macro",
  "smartstring",
