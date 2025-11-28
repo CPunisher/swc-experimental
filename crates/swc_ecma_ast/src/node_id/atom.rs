@@ -23,6 +23,18 @@ impl AtomRef {
             hi: STR_REF_ATOM_LO,
         }
     }
+
+    pub const fn new_empty() -> Self {
+        Self {
+            lo: BytePos(0),
+            hi: BytePos(0),
+        }
+    }
+
+    #[inline]
+    pub fn get_atom_id(&self) -> Option<AtomId> {
+        (self.hi == STR_REF_ATOM_LO).then_some(AtomId(self.lo.0))
+    }
 }
 
 #[derive(Debug, Clone, Copy, Hash)]

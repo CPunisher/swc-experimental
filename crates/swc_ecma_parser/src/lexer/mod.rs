@@ -1,26 +1,23 @@
 //! ECMAScript lexer.
 
-use std::{borrow::Cow, char, iter::FusedIterator, rc::Rc};
+use std::{borrow::Cow, char, iter::FusedIterator};
 
 use either::Either::{self, Left, Right};
 use num_bigint::BigInt as BigIntValue;
 use smartstring::{LazyCompact, SmartString};
-use swc_atoms::{
-    Atom, AtomStoreCell,
-    wtf8::{CodePoint, Wtf8, Wtf8Buf},
-};
+use swc_atoms::{Atom, wtf8::CodePoint};
 use swc_common::{
     BytePos, Span,
     comments::{Comment, CommentKind, Comments},
 };
 use swc_experimental_ecma_ast::{
-    EsVersion, is_valid_ascii_continue, is_valid_ascii_start, is_valid_non_ascii_continue,
-    is_valid_non_ascii_start,
+    AtomRef, EsVersion, OptionalAtomRef, Wtf8AtomRef, is_valid_ascii_continue,
+    is_valid_ascii_start, is_valid_non_ascii_continue, is_valid_non_ascii_start,
 };
 
 use self::table::{BYTE_HANDLERS, ByteHandler};
 use crate::{
-    Context, Syntax, byte_search,
+    Context, StringAllocator, Syntax, byte_search,
     error::{Error, SyntaxError},
     input::Tokens,
     lexer::{
@@ -33,6 +30,7 @@ use crate::{
         state::State,
     },
     safe_byte_match_table,
+    string_alloc::Wtf8Builder,
     syntax::SyntaxFlags,
 };
 
@@ -136,7 +134,7 @@ pub struct Lexer<'a> {
     errors: Vec<Error>,
     module_errors: Vec<Error>,
 
-    atoms: Rc<AtomStoreCell>,
+    string_allocator: &'a StringAllocator,
 }
 
 impl FusedIterator for Lexer<'_> {}
@@ -192,14 +190,13 @@ impl<'a> Lexer<'a> {
         unsafe { self.input.slice(start, end) }
     }
 
-    #[inline(always)]
-    fn atom<'b>(&self, s: impl Into<std::borrow::Cow<'b, str>>) -> swc_atoms::Atom {
-        self.atoms.atom(s)
-    }
-
-    #[inline(always)]
-    fn wtf8_atom<'b>(&self, s: impl Into<std::borrow::Cow<'b, Wtf8>>) -> swc_atoms::Wtf8Atom {
-        self.atoms.wtf8_atom(s)
+    #[inline]
+    fn get_atom_str(&self, atom_ref: AtomRef) -> &str {
+        match atom_ref.get_atom_id() {
+            Some(atom_id) => self.string_allocator.get_utf8(atom_id),
+            // TODO:
+            None => unsafe { self.input.slice(atom_ref.lo, atom_ref.hi) },
+        }
     }
 }
 
@@ -209,6 +206,7 @@ impl<'a> Lexer<'a> {
         target: EsVersion,
         input: StringSource<'a>,
         comments: Option<&'a dyn Comments>,
+        string_allocator: &'a StringAllocator,
     ) -> Self {
         let start_pos = input.cur_pos();
 
@@ -223,7 +221,7 @@ impl<'a> Lexer<'a> {
             target,
             errors: Default::default(),
             module_errors: Default::default(),
-            atoms: Default::default(),
+            string_allocator,
             token_flags: TokenFlags::empty(),
         }
     }
@@ -405,15 +403,10 @@ impl Lexer<'_> {
         started_with_backtick: bool,
     ) -> LexResult<Token> {
         debug_assert!(self.peek() == Some(if started_with_backtick { b'`' } else { b'}' }));
-        let mut cooked = Ok(Wtf8Buf::with_capacity(8));
+        let mut cooked = Ok(self.string_allocator.alloc_wtf8());
         self.bump(1); // `}` or `\``
         let mut cooked_slice_start = self.cur_pos();
         let raw_slice_start = cooked_slice_start;
-        let raw_atom = |this: &mut Self| {
-            let last_pos = this.cur_pos();
-            let s = unsafe { this.input.slice(raw_slice_start, last_pos) };
-            this.atoms.atom(s)
-        };
         macro_rules! consume_cooked {
             () => {{
                 if let Ok(cooked) = &mut cooked {
@@ -430,8 +423,8 @@ impl Lexer<'_> {
         while let Some(c) = self.peek() {
             if c == b'`' {
                 consume_cooked!();
-                let cooked = cooked.map(|cooked| self.atoms.wtf8_atom(&*cooked));
-                let raw = raw_atom(self);
+                let cooked = cooked.map(|cooked| Wtf8AtomRef::new_alloc(cooked.finish()));
+                let raw = AtomRef::new_ref(raw_slice_start, self.cur_pos());
                 self.bump(1);
                 return Ok(if started_with_backtick {
                     self.set_token_value(Some(TokenValue::Template { raw, cooked }));
@@ -442,8 +435,8 @@ impl Lexer<'_> {
                 });
             } else if c == b'$' && self.input.peek_2() == Some(b'{') {
                 consume_cooked!();
-                let cooked = cooked.map(|cooked| self.atoms.wtf8_atom(&*cooked));
-                let raw = raw_atom(self);
+                let cooked = cooked.map(|cooked| Wtf8AtomRef::new_alloc(cooked.finish()));
+                let raw = AtomRef::new_ref(raw_slice_start, self.cur_pos());
 
                 // Safety: `self.input.peek_2() == Some(b'{')`
                 self.bump(2);
@@ -686,7 +679,7 @@ impl<'a> Lexer<'a> {
                     let cmt = swc_common::comments::Comment {
                         kind: swc_common::comments::CommentKind::Line,
                         span: Span::new_with_checked(start, end),
-                        text: self.atom(s),
+                        text: Atom::new(s),
                     };
 
                     if is_for_next {
@@ -717,7 +710,7 @@ impl<'a> Lexer<'a> {
             let cmt = swc_common::comments::Comment {
                 kind: swc_common::comments::CommentKind::Line,
                 span: Span::new_with_checked(start, end),
-                text: self.atom(s),
+                text: Atom::new(s),
             };
 
             if is_for_next {
@@ -801,7 +794,7 @@ impl<'a> Lexer<'a> {
                                 let cmt = Comment {
                                     kind: CommentKind::Block,
                                     span: Span::new_with_checked(start, slice_start + BytePos(pos_offset as u32)),
-                                    text: self.atom(s),
+                                    text: Atom::new(s),
                                 };
 
                                 if is_for_next {
@@ -985,7 +978,7 @@ impl<'a> Lexer<'a> {
     /// Reads an integer, octal integer, or floating-point number
     fn read_number<const START_WITH_DOT: bool, const START_WITH_ZERO: bool>(
         &mut self,
-    ) -> LexResult<Either<(f64, Atom), (Box<BigIntValue>, Atom)>> {
+    ) -> LexResult<Either<(f64, AtomRef), (Box<BigIntValue>, AtomRef)>> {
         debug_assert!(!(START_WITH_DOT && START_WITH_ZERO));
         debug_assert!(self.peek().is_some());
 
@@ -1019,12 +1012,9 @@ impl<'a> Lexer<'a> {
             if (!START_WITH_ZERO || lazy_integer.end - lazy_integer.start == BytePos(1))
                 && self.eat(b'n')
             {
-                let raw = unsafe {
-                    // Safety: We got both start and end position from `self.input`
-                    self.input_slice_to_cur(start)
-                };
+                let raw = AtomRef::new_ref(start, self.cur_pos());
                 let bigint_value = num_bigint::BigInt::parse_bytes(s.as_bytes(), 10).unwrap();
-                return Ok(Either::Right((Box::new(bigint_value), self.atom(raw))));
+                return Ok(Either::Right((Box::new(bigint_value), raw)));
             }
 
             if START_WITH_ZERO {
@@ -1038,11 +1028,7 @@ impl<'a> Lexer<'a> {
                     //
                     // e.g. `000` is octal
                     if start.0 != self.last_pos().0 - 1 {
-                        let raw = unsafe {
-                            // Safety: We got both start and end position from `self.input`
-                            self.input_slice_to_cur(start)
-                        };
-                        let raw = self.atom(raw);
+                        let raw = AtomRef::new_ref(start, self.cur_pos());
                         return self
                             .make_legacy_octal(start, 0f64)
                             .map(|value| Either::Left((value, raw)));
@@ -1054,11 +1040,7 @@ impl<'a> Lexer<'a> {
                     // It's Legacy octal, and we should reinterpret value.
                     let s = remove_underscore(s, lazy_integer.has_underscore);
                     let val = parse_integer::<8>(&s);
-                    let raw = unsafe {
-                        // Safety: We got both start and end position from `self.input`
-                        self.input_slice_to_cur(start)
-                    };
-                    let raw = self.atom(raw);
+                    let raw = AtomRef::new_ref(start, self.cur_pos());
                     return self
                         .make_legacy_octal(start, val)
                         .map(|value| Either::Left((value, raw)));
@@ -1127,11 +1109,8 @@ impl<'a> Lexer<'a> {
 
         self.ensure_not_ident()?;
 
-        let raw_str = unsafe {
-            // Safety: We got both start and end position from `self.input`
-            self.input_slice_to_cur(start)
-        };
-        Ok(Either::Left((val, raw_str.into())))
+        let raw_str = AtomRef::new_ref(start, self.cur_pos());
+        Ok(Either::Left((val, raw_str)))
     }
 
     fn read_int_u32<const RADIX: u8>(&mut self, len: u8) -> LexResult<Option<u32>> {
@@ -1166,7 +1145,7 @@ impl<'a> Lexer<'a> {
     /// Returns `Left(value)` or `Right(BigInt)`
     fn read_radix_number<const RADIX: u8>(
         &mut self,
-    ) -> LexResult<Either<(f64, Atom), (Box<BigIntValue>, Atom)>> {
+    ) -> LexResult<Either<(f64, AtomRef), (Box<BigIntValue>, AtomRef)>> {
         debug_assert!(
             RADIX == 2 || RADIX == 8 || RADIX == 16,
             "radix should be one of 2, 8, 16, but got {RADIX}"
@@ -1190,25 +1169,17 @@ impl<'a> Lexer<'a> {
             self.input_slice_to_cur(lazy_integer.start)
         };
         if self.eat(b'n') {
-            let raw = unsafe {
-                // Safety: We got both start and end position from `self.input`
-                self.input_slice_to_cur(start)
-            };
-
+            let raw = AtomRef::new_ref(start, self.cur_pos());
             let bigint_value = num_bigint::BigInt::parse_bytes(s.as_bytes(), RADIX as _).unwrap();
-            return Ok(Either::Right((Box::new(bigint_value), self.atom(raw))));
+            return Ok(Either::Right((Box::new(bigint_value), raw)));
         }
         let s = remove_underscore(s, has_underscore);
         let val = parse_integer::<RADIX>(&s);
 
         self.ensure_not_ident()?;
 
-        let raw = unsafe {
-            // Safety: We got both start and end position from `self.input`
-            self.input_slice_to_cur(start)
-        };
-
-        Ok(Either::Left((val, self.atom(raw))))
+        let raw = AtomRef::new_ref(start, self.cur_pos());
+        Ok(Either::Left((val, raw)))
     }
 
     /// Consume pending comments.
@@ -1331,7 +1302,7 @@ impl<'a> Lexer<'a> {
         debug_assert!(self.syntax().jsx());
         let start = self.input().cur_pos();
         self.bump(1); // `quote`
-        let mut out = String::new();
+        let mut out = self.string_allocator.alloc_wtf8();
         let mut chunk_start = self.input().cur_pos();
         loop {
             let ch = match self.input().peek() {
@@ -1349,7 +1320,7 @@ impl<'a> Lexer<'a> {
                 };
 
                 out.push_str(value);
-                out.push('\\');
+                out.push_char('\\');
 
                 self.bump(1);
 
@@ -1372,7 +1343,7 @@ impl<'a> Lexer<'a> {
 
                 let jsx_entity = self.read_jsx_entity()?;
 
-                out.push(jsx_entity.0);
+                out.push_char(jsx_entity.0);
 
                 chunk_start = self.input().cur_pos();
             } else if ch.is_line_terminator() {
@@ -1388,7 +1359,7 @@ impl<'a> Lexer<'a> {
                         out.push_str(s);
                     }
                     Either::Right(c) => {
-                        out.push(c);
+                        out.push_char(c);
                     }
                 }
 
@@ -1397,16 +1368,16 @@ impl<'a> Lexer<'a> {
                 self.bump(1);
             }
         }
-        let s = unsafe {
-            // Safety: We already checked for the range
-            self.input_slice_to_cur(chunk_start)
-        };
         let value = if out.is_empty() {
             // Fast path: We don't need to allocate
-            self.atom(s)
+            Wtf8AtomRef::new_ref(chunk_start, self.cur_pos())
         } else {
+            let s = unsafe {
+                // Safety: We already checked for the range
+                self.input_slice_to_cur(chunk_start)
+            };
             out.push_str(s);
-            self.atom(out)
+            Wtf8AtomRef::new_alloc(out.finish())
         };
 
         // it might be at the end of the file when
@@ -1415,12 +1386,8 @@ impl<'a> Lexer<'a> {
             self.bump(1);
         }
 
-        let raw = unsafe {
-            // Safety: Both of `start` and `end` are generated from `cur_pos()`
-            self.input_slice_to_cur(start)
-        };
-        let raw = self.atom(raw);
-        Ok(Token::str(value.into(), raw, self))
+        let raw = AtomRef::new_ref(start, self.cur_pos());
+        Ok(Token::str(value, raw, self))
     }
 
     // Modified based on <https://github.com/oxc-project/oxc/blob/f0e1510b44efdb1b0d9a09f950181b0e4c435abe/crates/oxc_parser/src/lexer/unicode.rs#L237>
@@ -1569,9 +1536,9 @@ impl<'a> Lexer<'a> {
     }
 
     #[cold]
-    fn read_shebang(&mut self) -> LexResult<Option<Atom>> {
+    fn read_shebang(&mut self) -> LexResult<OptionalAtomRef> {
         if self.input().peek() != Some(b'#') || self.input().peek_2() != Some(b'!') {
-            return Ok(None);
+            return Ok(OptionalAtomRef::new_none());
         }
         self.bump(2); // `#!`
 
@@ -1583,10 +1550,7 @@ impl<'a> Lexer<'a> {
             self.bump(1);
         }
 
-        // # Safety: `start_pos` comes from `self.cur_pos()`
-        Ok(Some(self.atom(unsafe {
-            self.input.slice(start_pos, self.cur_pos())
-        })))
+        Ok(OptionalAtomRef::new_ref(start_pos, self.cur_pos()))
     }
 
     /// Read an escaped character for string literal.
@@ -1754,10 +1718,7 @@ impl<'a> Lexer<'a> {
             self.bump(1);
         }
 
-        let content = {
-            let s = unsafe { self.input_slice_to_cur(slice_start) };
-            self.atom(s)
-        };
+        let content = AtomRef::new_ref(slice_start, self.cur_pos());
 
         // input is terminated without following `/`
         if !self.is(b'/') {
@@ -1779,19 +1740,16 @@ impl<'a> Lexer<'a> {
         // let flags_start = self.cur_pos();
         let flags = {
             match self.peek() {
-                Some(c) if c.is_ident_start() => self
-                    .read_word_as_str_with()
-                    .map(|(s, _)| Some(self.atom(s))),
-                _ => Ok(None),
+                Some(c) if c.is_ident_start() => self.read_word_as_str_with().map(|(s, _)| s),
+                _ => Ok(AtomRef::new_empty()),
             }
-        }?
-        .unwrap_or_default();
+        }?;
 
         Ok(Token::regexp(content, flags, self))
     }
 
     /// This method is optimized for texts without escape sequences.
-    fn read_word_as_str_with(&mut self) -> LexResult<(Cow<'a, str>, bool)> {
+    fn read_word_as_str_with(&mut self) -> LexResult<(AtomRef, bool)> {
         debug_assert!(self.peek().is_some());
         let slice_start = self.cur_pos();
 
@@ -1807,13 +1765,7 @@ impl<'a> Lexer<'a> {
                     table: NOT_ASCII_ID_CONTINUE_TABLE,
                     handle_eof: {
                         // Reached EOF, entire remainder is identifier
-                        let s = unsafe {
-                            // Safety: slice_start and end are valid position because we got them from
-                            // `self.input`
-                            self.input_slice_to_cur(slice_start)
-                        };
-
-                        return Ok((Cow::Borrowed(s), false));
+                        return Ok((AtomRef::new_ref(slice_start, self.cur_pos()), false));
                     },
                 };
 
@@ -1826,13 +1778,8 @@ impl<'a> Lexer<'a> {
                     return self.read_word_as_str_with_slow_path(slice_start);
                 } else {
                     // Hit end of identifier (non-continue ASCII char)
-                    let s = unsafe {
-                        // Safety: slice_start and end are valid position because we got them from
-                        // `self.input`
-                        self.input_slice_to_cur(slice_start)
-                    };
-
-                    return Ok((Cow::Borrowed(s), false));
+                    let s = AtomRef::new_ref(slice_start, self.cur_pos());
+                    return Ok((s, false));
                 }
             }
         }
@@ -1846,11 +1793,11 @@ impl<'a> Lexer<'a> {
     fn read_word_as_str_with_slow_path(
         &mut self,
         mut slice_start: BytePos,
-    ) -> LexResult<(Cow<'a, str>, bool)> {
+    ) -> LexResult<(AtomRef, bool)> {
         let mut first = true;
         let mut has_escape = false;
 
-        let mut buf = String::with_capacity(16);
+        let mut buf = self.string_allocator.alloc_utf8();
         loop {
             if let Some(c) = self.input().peek_ascii() {
                 if is_valid_ascii_continue(c) {
@@ -1932,17 +1879,18 @@ impl<'a> Lexer<'a> {
         }
 
         let end = self.cur_pos();
-        let s = unsafe {
-            // Safety: slice_start and end are valid position because we got them from
-            // `self.input`
-            self.input_slice(slice_start, end)
-        };
         let value = if !has_escape {
             // Fast path: raw slice is enough if there's no escape.
-            Cow::Borrowed(s)
+            AtomRef::new_ref(slice_start, end)
         } else {
+            let s = unsafe {
+                // Safety: slice_start and end are valid position because we got them from
+                // `self.input`
+                self.input_slice(slice_start, end)
+            };
+
             buf.push_str(s);
-            Cow::Owned(buf)
+            AtomRef::new_alloc(buf.finish())
         };
 
         Ok((value, has_escape))
@@ -2150,8 +2098,7 @@ impl<'a> Lexer<'a> {
     fn read_ident_unknown(&mut self) -> LexResult<Token> {
         debug_assert!(self.peek().is_some());
 
-        let (s, has_escape) = self.read_word_as_str_with()?;
-        let atom = self.atom(s);
+        let (atom, has_escape) = self.read_word_as_str_with()?;
         let word = Token::unknown_ident(atom, self);
 
         if has_escape {
@@ -2172,7 +2119,7 @@ impl<'a> Lexer<'a> {
 
         let mut slice_start = self.input().cur_pos();
 
-        let mut buf: Option<Wtf8Buf> = None;
+        let mut buf: Option<Wtf8Builder> = None;
 
         loop {
             let table = if quote == b'"' {
@@ -2186,17 +2133,13 @@ impl<'a> Lexer<'a> {
                 table: table,
                 handle_eof: {
                     let value_end = self.cur_pos();
-                    let s = unsafe {
-                            // Safety: slice_start and value_end are valid position because we
-                            // got them from `self.input`
-                        self.input_slice(slice_start, value_end)
-                    };
+                    let s = Wtf8AtomRef::new_ref(slice_start, value_end);
 
                     self.emit_error(start, SyntaxError::UnterminatedStrLit);
 
                     let end = self.cur_pos();
-                    let raw = unsafe { self.input_slice(start, end) };
-                    return Ok(Token::str(self.wtf8_atom(Wtf8::from_str(s)), self.atom(raw), self));
+                    let raw = AtomRef::new_ref(start, end);
+                    return Ok(Token::str(s, raw, self));
                 },
             };
             // dbg!(char::from_u32(fast_path_result as u32));
@@ -2205,7 +2148,7 @@ impl<'a> Lexer<'a> {
                 b'"' | b'\'' if fast_path_result == quote => {
                     let value_end = self.cur_pos();
 
-                    let value = if let Some(buf) = buf.as_mut() {
+                    let value = if let Some(mut buf) = buf.take() {
                         // `buf` only exist when there has escape.
                         debug_assert!(unsafe { self.input_slice(start, value_end).contains('\\') });
                         let s = unsafe {
@@ -2214,21 +2157,15 @@ impl<'a> Lexer<'a> {
                             self.input_slice(slice_start, value_end)
                         };
                         buf.push_str(s);
-                        self.wtf8_atom(&**buf)
+                        Wtf8AtomRef::new_alloc(buf.finish())
                     } else {
-                        let s = unsafe { self.input_slice(slice_start, value_end) };
-                        self.wtf8_atom(Wtf8::from_str(s))
+                        Wtf8AtomRef::new_ref(slice_start, value_end)
                     };
 
                     self.bump(1);
 
                     let end = self.cur_pos();
-                    let raw = unsafe {
-                        // Safety: start and end are valid position because we got them from
-                        // `self.input`
-                        self.input_slice(start, end)
-                    };
-                    let raw = self.atom(raw);
+                    let raw = AtomRef::new_ref(start, end);
                     return Ok(Token::str(value, raw, self));
                 }
                 b'\\' => {
@@ -2240,7 +2177,7 @@ impl<'a> Lexer<'a> {
                     };
 
                     if buf.is_none() {
-                        buf = Some(Wtf8Buf::from_str(s));
+                        buf = Some(self.string_allocator.alloc_wtf8());
                     } else {
                         buf.as_mut().unwrap().push_str(s);
                     }
@@ -2254,26 +2191,14 @@ impl<'a> Lexer<'a> {
                 }
                 b'\n' | b'\r' => {
                     let end = self.cur_pos();
-                    let s = unsafe {
-                        // Safety: start and end are valid position because we got them from
-                        // `self.input`
-                        self.input_slice(slice_start, end)
-                    };
+                    let s = Wtf8AtomRef::new_ref(slice_start, end);
 
                     self.emit_error(start, SyntaxError::UnterminatedStrLit);
 
                     let end = self.cur_pos();
 
-                    let raw = unsafe {
-                        // Safety: start and end are valid position because we got them from
-                        // `self.input`
-                        self.input_slice(start, end)
-                    };
-                    return Ok(Token::str(
-                        self.wtf8_atom(Wtf8::from_str(s)),
-                        self.atom(raw),
-                        self,
-                    ));
+                    let raw = AtomRef::new_ref(start, end);
+                    return Ok(Token::str(s, raw, self));
                 }
                 _ => self.bump(1),
             }
@@ -2285,7 +2210,7 @@ impl<'a> Lexer<'a> {
 
         let start = self.cur_pos();
         let (s, has_escape) = self.read_keyword_as_str_with()?;
-        if let Some(word) = convert(s.as_ref()) {
+        if let Some(word) = convert(self.get_atom_str(s)) {
             // Note: ctx is store in lexer because of this error.
             // 'await' and 'yield' may have semantic of reserved word, which means lexer
             // should know context or parser should handle this error. Our approach to this
@@ -2293,21 +2218,22 @@ impl<'a> Lexer<'a> {
             if has_escape && word.is_reserved(self.ctx()) {
                 self.error(
                     start,
-                    SyntaxError::EscapeInReservedWord { word: Atom::new(s) },
+                    SyntaxError::EscapeInReservedWord {
+                        word: Atom::new(self.get_atom_str(s)),
+                    },
                 )
             } else {
                 Ok(word)
             }
         } else {
-            let atom = self.atom(s);
-            Ok(Token::unknown_ident(atom, self))
+            Ok(Token::unknown_ident(s, self))
         }
     }
 
     /// This is a performant version of [Lexer::read_word_as_str_with] for
     /// reading keywords. We should make sure the first byte is a valid
     /// ASCII.
-    fn read_keyword_as_str_with(&mut self) -> LexResult<(Cow<'a, str>, bool)> {
+    fn read_keyword_as_str_with(&mut self) -> LexResult<(AtomRef, bool)> {
         let slice_start = self.cur_pos();
 
         // Fast path: try to scan ASCII identifier using byte_search
@@ -2321,13 +2247,8 @@ impl<'a> Lexer<'a> {
             table: NOT_ASCII_ID_CONTINUE_TABLE,
             handle_eof: {
                 // Reached EOF, entire remainder is identifier
-                let s = unsafe {
-                    // Safety: slice_start and end are valid position because we got them from
-                    // `self.input`
-                    self.input_slice_to_cur(slice_start)
-                };
-
-                return Ok((Cow::Borrowed(s), false));
+                let s = AtomRef::new_ref(slice_start, self.cur_pos());
+                return Ok((s, false));
             },
         };
 
@@ -2338,13 +2259,8 @@ impl<'a> Lexer<'a> {
             self.read_word_as_str_with_slow_path(slice_start)
         } else {
             // Hit end of identifier (non-continue ASCII char)
-            let s = unsafe {
-                // Safety: slice_start and end are valid position because we got them from
-                // `self.input`
-                self.input_slice_to_cur(slice_start)
-            };
-
-            Ok((Cow::Borrowed(s), false))
+            let s = AtomRef::new_ref(slice_start, self.cur_pos());
+            Ok((s, false))
         }
     }
 }
