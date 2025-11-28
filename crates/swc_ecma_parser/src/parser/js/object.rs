@@ -477,16 +477,13 @@ impl<I: Tokens> Parser<I> {
                 PropName::Str(p.parse_str_lit())
             } else if cur == Token::Num {
                 let (value, raw) = p.input_mut().expect_number_token_and_bump();
-                let raw = p.ast.add_atom_ref(raw);
                 p.ast.prop_name_number(p.span(start), value, raw.into())
             } else if cur == Token::BigInt {
                 let (value, raw) = p.input_mut().expect_bigint_token_and_bump();
                 let value = p.ast.add_bigint(*value);
-                let raw = p.ast.add_atom_ref(raw);
                 p.ast.prop_name_big_int(p.span(start), value, raw.into())
             } else if cur.is_word() {
                 let w = p.input_mut().expect_word_token_and_bump();
-                let w = p.ast.add_atom_ref(w);
                 p.ast.prop_name_ident_name(p.span(start), w)
             } else if cur == Token::LBracket {
                 p.bump();

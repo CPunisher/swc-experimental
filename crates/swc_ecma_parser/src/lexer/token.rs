@@ -1,7 +1,6 @@
 use num_bigint::BigInt;
-use swc_experimental_ecma_ast::AssignOp;
-use swc_atoms::{Atom, Wtf8Atom, atom};
 use swc_common::Span;
+use swc_experimental_ecma_ast::{AssignOp, AtomRef, OptionalAtomRef, Wtf8AtomRef};
 
 use super::LexResult;
 use crate::{
@@ -13,28 +12,28 @@ use crate::{
 #[derive(Debug, Clone)]
 pub enum TokenValue {
     /// unknown ident, jsx name and shebang
-    Word(Atom),
+    Word(AtomRef),
     Template {
-        raw: Atom,
-        cooked: LexResult<Wtf8Atom>,
+        raw: AtomRef,
+        cooked: LexResult<Wtf8AtomRef>,
     },
     // string, jsx text
     Str {
-        value: Wtf8Atom,
-        raw: Atom,
+        value: Wtf8AtomRef,
+        raw: AtomRef,
     },
     // regexp
     Regex {
-        value: Atom,
-        flags: Atom,
+        value: AtomRef,
+        flags: AtomRef,
     },
     Num {
         value: f64,
-        raw: Atom,
+        raw: AtomRef,
     },
     BigInt {
         value: Box<num_bigint::BigInt>,
-        raw: Atom,
+        raw: AtomRef,
     },
     Error(crate::error::Error),
 }
@@ -333,31 +332,28 @@ impl Token {
 
 impl<'a> Token {
     #[inline(always)]
-    pub fn jsx_name(name: &str, lexer: &mut crate::Lexer) -> Self {
-        let name = lexer.atoms.atom(name);
-        lexer.set_token_value(Some(TokenValue::Word(name)));
-        Token::JSXName
-    }
-
-    #[inline(always)]
-    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn str(value: Wtf8Atom, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn str(value: Wtf8AtomRef, raw: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::Str
     }
 
     #[inline(always)]
-    pub fn template(cooked: LexResult<Wtf8Atom>, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn template(
+        cooked: LexResult<Wtf8AtomRef>,
+        raw: AtomRef,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::Template { cooked, raw }));
         Token::Template
     }
 
     #[inline(always)]
-    pub fn regexp(content: Atom, flags: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn regexp(content: AtomRef, flags: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Regex {
             value: content,
             flags,
@@ -366,25 +362,29 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn num(value: f64, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn num(value: f64, raw: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Num { value, raw }));
         Self::Num
     }
 
     #[inline(always)]
-    pub fn bigint(value: Box<num_bigint::BigInt>, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn bigint(
+        value: Box<num_bigint::BigInt>,
+        raw: AtomRef,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::BigInt { value, raw }));
         Self::BigInt
     }
 
     #[inline(always)]
-    pub fn unknown_ident(value: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn unknown_ident(value: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Ident
     }
 
     #[inline(always)]
-    pub fn into_atom(self, lexer: &mut crate::Lexer<'a>) -> Option<Atom> {
+    pub fn into_atom(self, lexer: &mut crate::Lexer<'a>) -> OptionalAtomRef {
         let value = lexer.get_token_value();
         self.as_word_atom(value)
     }
@@ -395,81 +395,67 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn is_str_raw_content<I: Tokens>(self, content: &str, buffer: &Buffer<I>) -> bool {
-        self == Token::Str
-            && if let Some(TokenValue::Str { raw, .. }) = buffer.get_token_value() {
-                raw == content
-            } else {
-                unreachable!()
-            }
-    }
-
-    #[inline(always)]
-    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Wtf8Atom, Atom) {
+    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Wtf8AtomRef, AtomRef) {
         buffer.expect_string_token_value()
     }
 
     #[inline(always)]
-    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, Atom) {
+    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, AtomRef) {
         buffer.expect_number_token_value()
     }
 
     #[inline(always)]
-    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, Atom) {
+    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, AtomRef) {
         buffer.expect_bigint_token_value()
     }
 
     #[inline]
-    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> Option<Atom> {
+    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> OptionalAtomRef {
         self.as_word_atom(buffer.get_token_value())
     }
 
     #[inline(always)]
-    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn take_known_ident(self) -> Atom {
+    pub fn take_known_ident(self) -> AtomRef {
         self.as_known_ident_atom().unwrap()
     }
 
     #[inline(always)]
-    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> &'b Atom {
+    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> AtomRef {
         buffer.expect_word_token_value_ref()
     }
 
     #[inline(always)]
-    pub fn take_template<I: Tokens>(self, buffer: &mut Buffer<I>) -> (LexResult<Wtf8Atom>, Atom) {
+    pub fn take_template<I: Tokens>(
+        self,
+        buffer: &mut Buffer<I>,
+    ) -> (LexResult<Wtf8AtomRef>, AtomRef) {
         buffer.expect_template_token_value()
     }
 
     #[inline(always)]
-    pub fn jsx_text(value: Wtf8Atom, raw: Atom, lexer: &mut Lexer) -> Self {
+    pub fn jsx_text(value: Wtf8AtomRef, raw: AtomRef, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::JSXText
     }
 
     #[inline(always)]
-    pub fn take_jsx_text<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Atom, Atom) {
-        let (value, raw) = buffer.expect_string_token_value();
-        // SAFETY: We set value as Atom in `jsx_text` method.
-        (value.as_atom().cloned().unwrap(), raw)
-    }
-
-    #[inline(always)]
-    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Atom, Atom) {
+    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (AtomRef, AtomRef) {
         buffer.expect_regex_token_value()
     }
 
     #[inline(always)]
-    pub fn shebang(value: Atom, lexer: &mut Lexer) -> Self {
+    pub fn shebang(value: AtomRef, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Shebang
     }
 
     #[inline(always)]
-    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
         buffer.expect_word_token_value()
     }
 }
@@ -489,7 +475,7 @@ impl std::fmt::Debug for Token {
             Token::JSXText => "<jsx text>",
             Token::Ident => "<identifier>",
             Token::Error => "<error>",
-            _ => &self.to_string(None),
+            _ => &self.to_string(),
         };
         f.write_str(s)
     }
@@ -561,7 +547,7 @@ impl Token {
     }
 
     #[cold]
-    pub fn to_string(self, value: Option<&TokenValue>) -> String {
+    pub fn to_string(self) -> String {
         match self {
             Token::LParen => "(",
             Token::RParen => ")",
@@ -626,69 +612,19 @@ impl Token {
             Token::DollarLBrace => "${",
             Token::JSXTagStart => "jsx tag start",
             Token::JSXTagEnd => "jsx tag end",
-            Token::JSXText => {
-                let Some(TokenValue::Str { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("jsx text ({raw})");
-            }
-            Token::Str => {
-                let Some(TokenValue::Str { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("string literal ({value:?}, {raw})");
-            }
-            Token::Num => {
-                let Some(TokenValue::Num { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("numeric literal ({value}, {raw})");
-            }
-            Token::BigInt => {
-                let Some(TokenValue::BigInt { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("bigint literal ({value}, {raw})");
-            }
-            Token::Regex => {
-                let Some(TokenValue::Regex { value, flags, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("regexp literal ({value}, {flags})");
-            }
-            Token::Template => {
-                let Some(TokenValue::Template { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("template token ({raw})");
-            }
-            Token::JSXName => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("jsx name ({w})");
-            }
-            Token::Error => {
-                let Some(TokenValue::Error(e)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("<lexing error: {e:?}>");
-            }
-            Token::Ident => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                w.as_ref()
-            }
-            Token::NoSubstitutionTemplateLiteral
-            | Token::TemplateHead
-            | Token::TemplateMiddle
-            | Token::TemplateTail => {
-                let Some(TokenValue::Template { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                raw
-            }
+            Token::JSXText => "jsx text",
+            Token::Str => "string literal",
+            Token::Num => "numeric literal",
+            Token::BigInt => "bigint literal",
+            Token::Regex => "regexp literal",
+            Token::Template => "template token",
+            Token::JSXName => "jsx name",
+            Token::Error => "<lexing error>",
+            Token::Ident => "ident",
+            Token::NoSubstitutionTemplateLiteral => "no substitution template literal",
+            Token::TemplateHead => "template head",
+            Token::TemplateMiddle => "template middle",
+            Token::TemplateTail => "template tail",
             Token::Await => "await",
             Token::Break => "break",
             Token::Case => "case",
@@ -897,7 +833,7 @@ impl Token {
             || self.is_keyword()
     }
 
-    pub fn as_word_atom(self, value: Option<&TokenValue>) -> Option<Atom> {
+    pub fn as_word_atom(self, value: Option<&TokenValue>) -> OptionalAtomRef {
         match self {
             Token::Null => Some(atom!("null")),
             Token::True => Some(atom!("true")),
@@ -906,7 +842,7 @@ impl Token {
                 let Some(TokenValue::Word(w)) = value else {
                     unreachable!("{:#?}", value)
                 };
-                Some(w.clone())
+                OptionalAtomRef::from(*w)
             }
             _ => self
                 .as_known_ident_atom()
@@ -933,9 +869,7 @@ impl Token {
             Token::GtEq => Some(swc_experimental_ecma_ast::BinaryOp::GtEq),
             Token::LShift => Some(swc_experimental_ecma_ast::BinaryOp::LShift),
             Token::RShift => Some(swc_experimental_ecma_ast::BinaryOp::RShift),
-            Token::ZeroFillRShift => {
-                Some(swc_experimental_ecma_ast::BinaryOp::ZeroFillRShift)
-            }
+            Token::ZeroFillRShift => Some(swc_experimental_ecma_ast::BinaryOp::ZeroFillRShift),
             Token::Plus => Some(swc_experimental_ecma_ast::BinaryOp::Add),
             Token::Minus => Some(swc_experimental_ecma_ast::BinaryOp::Sub),
             Token::Asterisk => Some(swc_experimental_ecma_ast::BinaryOp::Mul),

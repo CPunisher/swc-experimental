@@ -1,5 +1,5 @@
 use either::Either;
-use swc_atoms::atom;
+use swc_atoms::{Atom, atom};
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::*;
 
@@ -33,7 +33,6 @@ impl<I: Tokens> Parser<I> {
         } else {
             syntax_error!(self, SyntaxError::ExpectedIdent)
         };
-        let w = self.ast.add_atom_ref(w);
         Ok((self.span(start), w))
     }
 
@@ -91,11 +90,11 @@ impl<I: Tokens> Parser<I> {
         } else if cur == Token::Ident {
             let span = self.input().cur_span();
             let word = self.input_mut().expect_word_token_and_bump();
-            if atom!("arguments") == word || atom!("eval") == word {
+            let word_str = self.input.iter.get_atom_str(word);
+            if "arguments" == word_str || "eval" == word_str {
                 self.emit_strict_mode_err(span, SyntaxError::EvalAndArgumentsInStrict);
             }
 
-            let word = self.ast.add_atom_ref(word);
             let ident = self.ast.ident(span, word, false);
             return Ok(ident);
         }
@@ -150,9 +149,11 @@ impl<I: Tokens> Parser<I> {
         // "package", "private", "protected", "public", "static", or "yield".
         if t == Token::Enum {
             let word = self.input_mut().expect_word_token_and_bump();
-            self.emit_err(span, SyntaxError::InvalidIdentInStrict(word.clone()));
+            self.emit_err(
+                span,
+                SyntaxError::InvalidIdentInStrict(Atom::new(self.input.iter.get_atom_str(word))),
+            );
 
-            let word = self.ast.add_atom_ref(word);
             return Ok(self.ast.ident(span, word, false));
         } else if t == Token::Yield
             || t == Token::Let
@@ -165,9 +166,11 @@ impl<I: Tokens> Parser<I> {
             || t == Token::Public
         {
             let word = self.input_mut().expect_word_token_and_bump();
-            self.emit_strict_mode_err(span, SyntaxError::InvalidIdentInStrict(word.clone()));
+            self.emit_strict_mode_err(
+                span,
+                SyntaxError::InvalidIdentInStrict(Atom::new(self.input.iter.get_atom_str(word))),
+            );
 
-            let word = self.ast.add_atom_ref(word);
             return Ok(self.ast.ident(span, word, false));
         };
 

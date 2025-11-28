@@ -22,6 +22,8 @@ pub trait Tokens: Clone + Iterator<Item = TokenAndSpan> {
     fn checkpoint_save(&self) -> Self::Checkpoint;
     fn checkpoint_load(&mut self, checkpoint: Self::Checkpoint);
 
+    fn get_atom_str(&self, atom_ref: AtomRef) -> &str;
+
     fn start_pos(&self) -> BytePos {
         BytePos(0)
     }
@@ -361,7 +363,7 @@ impl<I: Tokens> Buffer<I> {
     #[inline(never)]
     pub fn dump_cur(&self) -> String {
         let cur = self.cur();
-        cur.to_string(self.get_token_value())
+        cur.to_string()
     }
 }
 

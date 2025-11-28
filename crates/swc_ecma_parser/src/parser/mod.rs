@@ -5,7 +5,7 @@ use swc_common::{BytePos, Span, comments::Comments};
 use swc_experimental_ecma_ast::*;
 
 use crate::{
-    Context, ParseRet, Syntax,
+    Context, ParseRet, StringAllocator, Syntax,
     error::SyntaxError,
     input::Buffer,
     lexer::{Token, TokenAndSpan, source::StringSource},
@@ -104,8 +104,15 @@ impl<'a> Parser<crate::lexer::Lexer<'a>> {
         syntax: Syntax,
         input: StringSource<'a>,
         comments: Option<&'a dyn Comments>,
+        string_allocator: &'a StringAllocator,
     ) -> Self {
-        let lexer = crate::lexer::Lexer::new(syntax, Default::default(), input, comments);
+        let lexer = crate::lexer::Lexer::new(
+            syntax,
+            Default::default(),
+            input,
+            comments,
+            string_allocator,
+        );
         Self::new_from(lexer)
     }
 }

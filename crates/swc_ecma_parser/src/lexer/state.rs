@@ -1,7 +1,7 @@
 use std::mem::take;
 
 use swc_atoms::wtf8::CodePoint;
-use swc_experimental_ecma_ast::EsVersion;
+use swc_experimental_ecma_ast::{AtomRef, EsVersion, Wtf8AtomRef};
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;
 
@@ -70,6 +70,15 @@ impl crate::input::Tokens for Lexer<'_> {
         unsafe { self.input.reset_to(checkpoint.input_cur_pos) };
         if let Some(comments_buffer) = self.comments_buffer.as_mut() {
             comments_buffer.checkpoint_load(checkpoint.comments_buffer);
+        }
+    }
+
+    #[inline]
+    fn get_atom_str(&self, atom_ref: AtomRef) -> &str {
+        match atom_ref.get_atom_id() {
+            Some(atom_id) => self.string_allocator.get_utf8(atom_id),
+            // TODO: Safety guarantee
+            None => unsafe { self.input.slice(atom_ref.lo, atom_ref.hi) },
         }
     }
 
@@ -252,16 +261,22 @@ impl crate::input::Tokens for Lexer<'_> {
             }
         }
         let v = if !v.is_empty() {
-            let v = if token.is_known_ident() || token.is_keyword() {
-                format!("{}{}", token.to_string(None), v)
+            let mut atom = self.string_allocator.alloc_utf8();
+            if token.is_known_ident() || token.is_keyword() {
+                atom.push_str(&token.to_string());
+                atom.push_str(&v);
             } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
-                format!("{value}{v}")
+                atom.push_str(self.get_atom_str(value));
+                atom.push_str(&v);
             } else {
-                format!("{}{}", token.to_string(None), v)
+                atom.push_str(&token.to_string());
+                atom.push_str(&v);
             };
-            self.atom(v)
+            AtomRef::new_alloc(atom.finish())
         } else if token.is_known_ident() || token.is_keyword() {
-            self.atom(token.to_string(None))
+            let mut atom = self.string_allocator.alloc_utf8();
+            atom.push_str(&token.to_string());
+            AtomRef::new_alloc(atom.finish())
         } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
             value
         } else {
@@ -368,7 +383,7 @@ impl Lexer<'_> {
         }
 
         if self.state.is_first {
-            if let Some(shebang) = self.read_shebang()? {
+            if let Some(shebang) = self.read_shebang()?.to_option() {
                 self.state.set_token_value(TokenValue::Word(shebang));
                 return Ok(Token::Shebang);
             }
@@ -409,7 +424,7 @@ impl Lexer<'_> {
         let start = self.input.cur_pos();
         let mut first_non_whitespace = 0;
         let mut chunk_start = start;
-        let mut value = String::new();
+        let mut value = self.string_allocator.alloc_wtf8();
 
         while let Some(ch) = self.input_mut().peek() {
             if ch == b'{' {
@@ -454,7 +469,7 @@ impl Lexer<'_> {
                 value.push_str(s);
 
                 if let Ok(jsx_entity) = self.read_jsx_entity() {
-                    value.push(jsx_entity.0);
+                    value.push_char(jsx_entity.0);
 
                     chunk_start = self.input.cur_pos();
                 }
@@ -463,28 +478,19 @@ impl Lexer<'_> {
             }
         }
 
-        let raw = unsafe {
-            // Safety: Both of `start` and `end` are generated from `cur_pos()`
-            self.input_slice_to_cur(start)
-        };
+        let raw = AtomRef::new_ref(start, self.cur_pos());
         let value = if value.is_empty() {
-            self.atom(raw)
+            Wtf8AtomRef::new_ref(start, self.cur_pos())
         } else {
             let s = unsafe {
                 // Safety: We already checked for the range
                 self.input_slice_to_cur(chunk_start)
             };
             value.push_str(s);
-            self.atom(value)
+            Wtf8AtomRef::new_alloc(value.finish())
         };
 
-        let raw: swc_atoms::Atom = self.atom(raw);
-
-        self.state.set_token_value(TokenValue::Str {
-            raw,
-            value: value.into(),
-        });
-
+        self.state.set_token_value(TokenValue::Str { raw, value });
         Ok(Token::JSXText)
     }
 

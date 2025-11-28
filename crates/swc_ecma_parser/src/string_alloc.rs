@@ -1,7 +1,5 @@
-use std::ops::{Deref, DerefMut};
-
 use oxc_index::IndexVec;
-use swc_atoms::wtf8::{Wtf8, Wtf8Buf};
+use swc_atoms::wtf8::{CodePoint, Wtf8, Wtf8Buf};
 use swc_experimental_ecma_ast::{AtomId, Wtf8AtomId};
 
 #[derive(Clone)]
@@ -22,19 +20,14 @@ impl StringAllocator {
         }
     }
 
-    pub fn alloc_utf8(&mut self) -> Utf8Builder<'_> {
+    pub fn alloc_utf8(&self) -> Utf8Builder<'_> {
         let start = self.allocated_utf8.len() as u32;
-        Utf8Builder {
-            alloc: self,
-            start: start,
-        }
+        Utf8Builder { start, alloc: self }
     }
 
-    pub fn alloc_wtf8(&mut self) -> Wtf8Builder<'_> {
-        Wtf8Builder {
-            start: self.allocated_wtf8.len() as u32,
-            alloc: self,
-        }
+    pub fn alloc_wtf8(&self) -> Wtf8Builder<'_> {
+        let start = self.allocated_wtf8.len() as u32;
+        Wtf8Builder { start, alloc: self }
     }
 
     pub fn get_utf8(&self, id: AtomId) -> &str {
@@ -68,19 +61,25 @@ impl<'a> Utf8Builder<'a> {
         let allocated = AllocatedUtf8 { start, end };
         self.alloc.utf8_mapping.push(allocated)
     }
-}
 
-impl Deref for Utf8Builder<'_> {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.alloc.allocated_utf8
+    #[inline]
+    pub fn push_str(&mut self, s: &str) {
+        self.alloc.allocated_utf8.push_str(s);
     }
-}
 
-impl DerefMut for Utf8Builder<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.alloc.allocated_utf8
+    #[inline]
+    pub fn push(&mut self, c: char) {
+        self.alloc.allocated_utf8.push(c);
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.alloc.allocated_utf8.len() - self.start as usize
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -98,22 +97,33 @@ pub struct Wtf8Builder<'a> {
 impl<'a> Wtf8Builder<'a> {
     pub fn finish(self) -> Wtf8AtomId {
         let start = self.start;
-        let end = self.alloc.allocated_utf8.len() as u32;
+        let end = self.alloc.allocated_wtf8.len() as u32;
         let allocated = AllocatedWtf8 { start, end };
         self.alloc.wtf8_mapping.push(allocated)
     }
-}
 
-impl Deref for Wtf8Builder<'_> {
-    type Target = Wtf8Buf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.alloc.allocated_wtf8
+    #[inline]
+    pub fn push(&mut self, c: CodePoint) {
+        self.alloc.allocated_wtf8.push(c);
     }
-}
 
-impl DerefMut for Wtf8Builder<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.alloc.allocated_wtf8
+    #[inline]
+    pub fn push_str(&mut self, s: &str) {
+        self.alloc.allocated_wtf8.push_str(s);
+    }
+
+    #[inline]
+    pub fn push_char(&mut self, c: char) {
+        self.alloc.allocated_wtf8.push_char(c);
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.alloc.allocated_wtf8.len() - self.start as usize
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }

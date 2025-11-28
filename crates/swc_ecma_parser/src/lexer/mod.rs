@@ -189,15 +189,6 @@ impl<'a> Lexer<'a> {
     unsafe fn input_slice(&mut self, start: BytePos, end: BytePos) -> &'a str {
         unsafe { self.input.slice(start, end) }
     }
-
-    #[inline]
-    fn get_atom_str(&self, atom_ref: AtomRef) -> &str {
-        match atom_ref.get_atom_id() {
-            Some(atom_id) => self.string_allocator.get_utf8(atom_id),
-            // TODO:
-            None => unsafe { self.input.slice(atom_ref.lo, atom_ref.hi) },
-        }
-    }
 }
 
 impl<'a> Lexer<'a> {
