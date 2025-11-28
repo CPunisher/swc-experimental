@@ -104,7 +104,7 @@ impl<'a> Parser<crate::lexer::Lexer<'a>> {
         syntax: Syntax,
         input: StringSource<'a>,
         comments: Option<&'a dyn Comments>,
-        string_allocator: &'a StringAllocator,
+        string_allocator: StringAllocator,
     ) -> Self {
         let lexer = crate::lexer::Lexer::new(
             syntax,

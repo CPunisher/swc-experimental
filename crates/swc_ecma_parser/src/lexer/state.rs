@@ -1,6 +1,6 @@
 use std::mem::take;
 
-use swc_atoms::wtf8::CodePoint;
+use swc_atoms::wtf8::{CodePoint, Wtf8Buf};
 use swc_experimental_ecma_ast::{AtomRef, EsVersion, Wtf8AtomRef};
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;
@@ -261,22 +261,17 @@ impl crate::input::Tokens for Lexer<'_> {
             }
         }
         let v = if !v.is_empty() {
-            let mut atom = self.string_allocator.alloc_utf8();
-            if token.is_known_ident() || token.is_keyword() {
-                atom.push_str(&token.to_string());
-                atom.push_str(&v);
+            let v = if token.is_known_ident() || token.is_keyword() {
+                format!("{}{}", token.to_string(), v)
             } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
-                atom.push_str(self.get_atom_str(value));
-                atom.push_str(&v);
+                let value = self.get_atom_str(value);
+                format!("{value}{v}")
             } else {
-                atom.push_str(&token.to_string());
-                atom.push_str(&v);
+                format!("{}{}", token.to_string(), v)
             };
-            AtomRef::new_alloc(atom.finish())
+            AtomRef::new_alloc(self.string_allocator.alloc_utf8(v))
         } else if token.is_known_ident() || token.is_keyword() {
-            let mut atom = self.string_allocator.alloc_utf8();
-            atom.push_str(&token.to_string());
-            AtomRef::new_alloc(atom.finish())
+            AtomRef::new_alloc(self.string_allocator.alloc_utf8(token.to_string()))
         } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
             value
         } else {
@@ -424,7 +419,7 @@ impl Lexer<'_> {
         let start = self.input.cur_pos();
         let mut first_non_whitespace = 0;
         let mut chunk_start = start;
-        let mut value = self.string_allocator.alloc_wtf8();
+        let mut value = Wtf8Buf::new();
 
         while let Some(ch) = self.input_mut().peek() {
             if ch == b'{' {
@@ -487,7 +482,7 @@ impl Lexer<'_> {
                 self.input_slice_to_cur(chunk_start)
             };
             value.push_str(s);
-            Wtf8AtomRef::new_alloc(value.finish())
+            Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(value))
         };
 
         self.state.set_token_value(TokenValue::Str { raw, value });

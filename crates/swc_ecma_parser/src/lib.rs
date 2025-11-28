@@ -178,14 +178,21 @@ impl<T> ParseRet<T> {
     }
 }
 
-pub fn with_file_parser<T>(
+pub fn with_file_parser<'a, T>(
     src: &str,
     syntax: Syntax,
     target: EsVersion,
     comments: Option<&dyn Comments>,
+    string_allocator: StringAllocator,
     op: impl FnOnce(Parser<self::Lexer>) -> T,
 ) -> T {
-    let lexer = self::Lexer::new(syntax, target, StringSource::new(src), comments);
+    let lexer = self::Lexer::new(
+        syntax,
+        target,
+        StringSource::new(src),
+        comments,
+        string_allocator,
+    );
     let p = Parser::new_from(lexer);
     let ret = op(p);
     ret
@@ -201,13 +208,14 @@ macro_rules! expose {
         ///
         /// This is an alias for [Parser], [Lexer] and [SourceFileInput], but
         /// instantiation of generics occur in `swc_ecma_parser` crate.
-        pub fn $name(
+        pub fn $name<'a>(
             src: &str,
             syntax: Syntax,
             target: EsVersion,
             comments: Option<&dyn Comments>,
+            string_allocator: StringAllocator,
         ) -> PResult<ParseRet<$T>> {
-            with_file_parser(src, syntax, target, comments, $($t)*)
+            with_file_parser(src, syntax, target, comments, string_allocator, $($t)*)
         }
     };
 }

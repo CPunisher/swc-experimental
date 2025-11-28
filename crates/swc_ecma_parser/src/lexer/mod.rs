@@ -5,7 +5,10 @@ use std::{borrow::Cow, char, iter::FusedIterator};
 use either::Either::{self, Left, Right};
 use num_bigint::BigInt as BigIntValue;
 use smartstring::{LazyCompact, SmartString};
-use swc_atoms::{Atom, wtf8::CodePoint};
+use swc_atoms::{
+    Atom,
+    wtf8::{CodePoint, Wtf8Buf},
+};
 use swc_common::{
     BytePos, Span,
     comments::{Comment, CommentKind, Comments},
@@ -30,7 +33,6 @@ use crate::{
         state::State,
     },
     safe_byte_match_table,
-    string_alloc::Wtf8Builder,
     syntax::SyntaxFlags,
 };
 
@@ -134,7 +136,7 @@ pub struct Lexer<'a> {
     errors: Vec<Error>,
     module_errors: Vec<Error>,
 
-    string_allocator: &'a StringAllocator,
+    string_allocator: StringAllocator,
 }
 
 impl FusedIterator for Lexer<'_> {}
@@ -197,7 +199,7 @@ impl<'a> Lexer<'a> {
         target: EsVersion,
         input: StringSource<'a>,
         comments: Option<&'a dyn Comments>,
-        string_allocator: &'a StringAllocator,
+        string_allocator: StringAllocator,
     ) -> Self {
         let start_pos = input.cur_pos();
 
@@ -212,8 +214,9 @@ impl<'a> Lexer<'a> {
             target,
             errors: Default::default(),
             module_errors: Default::default(),
-            string_allocator,
             token_flags: TokenFlags::empty(),
+
+            string_allocator,
         }
     }
 
@@ -394,7 +397,7 @@ impl Lexer<'_> {
         started_with_backtick: bool,
     ) -> LexResult<Token> {
         debug_assert!(self.peek() == Some(if started_with_backtick { b'`' } else { b'}' }));
-        let mut cooked = Ok(self.string_allocator.alloc_wtf8());
+        let mut cooked = Ok(Wtf8Buf::with_capacity(8));
         self.bump(1); // `}` or `\``
         let mut cooked_slice_start = self.cur_pos();
         let raw_slice_start = cooked_slice_start;
@@ -414,7 +417,8 @@ impl Lexer<'_> {
         while let Some(c) = self.peek() {
             if c == b'`' {
                 consume_cooked!();
-                let cooked = cooked.map(|cooked| Wtf8AtomRef::new_alloc(cooked.finish()));
+                let cooked = cooked
+                    .map(|cooked| Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(cooked)));
                 let raw = AtomRef::new_ref(raw_slice_start, self.cur_pos());
                 self.bump(1);
                 return Ok(if started_with_backtick {
@@ -426,7 +430,8 @@ impl Lexer<'_> {
                 });
             } else if c == b'$' && self.input.peek_2() == Some(b'{') {
                 consume_cooked!();
-                let cooked = cooked.map(|cooked| Wtf8AtomRef::new_alloc(cooked.finish()));
+                let cooked = cooked
+                    .map(|cooked| Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(cooked)));
                 let raw = AtomRef::new_ref(raw_slice_start, self.cur_pos());
 
                 // Safety: `self.input.peek_2() == Some(b'{')`
@@ -1293,7 +1298,7 @@ impl<'a> Lexer<'a> {
         debug_assert!(self.syntax().jsx());
         let start = self.input().cur_pos();
         self.bump(1); // `quote`
-        let mut out = self.string_allocator.alloc_wtf8();
+        let mut out = Wtf8Buf::new();
         let mut chunk_start = self.input().cur_pos();
         loop {
             let ch = match self.input().peek() {
@@ -1368,7 +1373,7 @@ impl<'a> Lexer<'a> {
                 self.input_slice_to_cur(chunk_start)
             };
             out.push_str(s);
-            Wtf8AtomRef::new_alloc(out.finish())
+            Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(out))
         };
 
         // it might be at the end of the file when
@@ -1788,7 +1793,7 @@ impl<'a> Lexer<'a> {
         let mut first = true;
         let mut has_escape = false;
 
-        let mut buf = self.string_allocator.alloc_utf8();
+        let mut buf = String::with_capacity(16);
         loop {
             if let Some(c) = self.input().peek_ascii() {
                 if is_valid_ascii_continue(c) {
@@ -1881,7 +1886,7 @@ impl<'a> Lexer<'a> {
             };
 
             buf.push_str(s);
-            AtomRef::new_alloc(buf.finish())
+            AtomRef::new_alloc(self.string_allocator.alloc_utf8(buf))
         };
 
         Ok((value, has_escape))
@@ -2110,7 +2115,7 @@ impl<'a> Lexer<'a> {
 
         let mut slice_start = self.input().cur_pos();
 
-        let mut buf: Option<Wtf8Builder> = None;
+        let mut buf: Option<Wtf8Buf> = None;
 
         loop {
             let table = if quote == b'"' {
@@ -2148,7 +2153,7 @@ impl<'a> Lexer<'a> {
                             self.input_slice(slice_start, value_end)
                         };
                         buf.push_str(s);
-                        Wtf8AtomRef::new_alloc(buf.finish())
+                        Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(buf))
                     } else {
                         Wtf8AtomRef::new_ref(slice_start, value_end)
                     };
@@ -2168,7 +2173,7 @@ impl<'a> Lexer<'a> {
                     };
 
                     if buf.is_none() {
-                        buf = Some(self.string_allocator.alloc_wtf8());
+                        buf = Some(Wtf8Buf::from_str(s));
                     } else {
                         buf.as_mut().unwrap().push_str(s);
                     }
