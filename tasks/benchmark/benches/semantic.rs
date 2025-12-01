@@ -1,7 +1,6 @@
 use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use swc_experimental_ecma_ast::VisitWith;
 use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
 use swc_experimental_ecma_semantic::resolver::resolver;
 
@@ -20,8 +19,7 @@ fn bench_semantic(c: &mut Criterion) {
             let parser = Parser::new_from(lexer);
             let ret = parser.parse_module().unwrap();
             b.iter(|| {
-                let mut resolver = resolver();
-                black_box(ret.root.visit_with(&mut resolver, &ret.ast));
+                black_box(resolver(ret.root, &ret.ast));
             });
         });
     }
