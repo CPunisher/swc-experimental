@@ -3,9 +3,9 @@ use crate::{ast::*, node_id::*, Ast};
 use swc_common::Span;
 pub trait Visit {
     #[inline]
-    fn enter_node(&self, node_id: NodeId, ast: &Ast) {}
+    fn enter_node(&mut self, node_id: NodeId, ast: &Ast) {}
     #[inline]
-    fn leave_node(&self, node_id: NodeId, ast: &Ast) {}
+    fn leave_node(&mut self, node_id: NodeId, ast: &Ast) {}
     #[inline]
     fn visit_program(&mut self, node: Program, ast: &Ast) {
         <Program as VisitWith<Self>>::visit_children_with(node, self, ast)
