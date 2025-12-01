@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{ast::*, node_id::*, Ast};
+use crate::{Ast, ast::*, node_id::*};
 use swc_common::Span;
 pub trait Visit {
     #[inline]
@@ -695,7 +695,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Module {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Script {
@@ -721,7 +721,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Script {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ModuleItem {
@@ -2429,14 +2429,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for TplElement {
                 .get_unchecked((offset + 1usize).index())
                 .optional_wtf8_atom
         };
-        <OptionalWtf8AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalWtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 2usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ParenExpr {
@@ -3459,7 +3459,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Ident {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -3481,7 +3481,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for IdentName {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PrivateName {
@@ -3496,7 +3496,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateName {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BindingIdent {
@@ -3541,14 +3541,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for Str {
                 .get_unchecked((offset + 0usize).index())
                 .wtf8_atom
         };
-        <Wtf8AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Wtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Bool {
@@ -3593,7 +3593,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Number {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BigInt {
@@ -3615,7 +3615,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for BigInt {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Regex {
@@ -3630,14 +3630,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for Regex {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 1usize).index())
                 .atom
         };
-        <AtomRef as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ModuleItem> {
@@ -4686,7 +4686,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Module {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Script {
@@ -4712,7 +4712,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Script {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ModuleItem {
@@ -6480,14 +6480,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TplElement {
                 .get_unchecked((offset + 1usize).index())
                 .optional_wtf8_atom
         };
-        <OptionalWtf8AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalWtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 2usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ParenExpr {
@@ -7592,7 +7592,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Ident {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
@@ -7614,7 +7614,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for IdentName {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateName {
@@ -7629,7 +7629,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateName {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BindingIdent {
@@ -7674,14 +7674,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Str {
                 .get_unchecked((offset + 0usize).index())
                 .wtf8_atom
         };
-        <Wtf8AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Wtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Bool {
@@ -7726,7 +7726,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Number {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BigInt {
@@ -7748,7 +7748,7 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BigInt {
                 .get_unchecked((offset + 1usize).index())
                 .optional_atom
         };
-        <OptionalAtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
@@ -7763,14 +7763,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
                 .get_unchecked((offset + 0usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
         let ret = unsafe {
             ast.extra_data
                 .as_raw_slice()
                 .get_unchecked((offset + 1usize).index())
                 .atom
         };
-        <AtomRef as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ModuleItem> {

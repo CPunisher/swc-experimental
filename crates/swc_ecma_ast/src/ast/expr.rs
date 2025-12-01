@@ -318,7 +318,7 @@ impl Expr {
         S: AsRef<str>,
     {
         match self {
-            Expr::Ident(i) => ast.get_atom(i.sym(ast)) == ident.as_ref(),
+            Expr::Ident(i) => ast.get_utf8(i.sym(ast)) == ident.as_ref(),
             _ => false,
         }
     }

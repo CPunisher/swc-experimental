@@ -72,7 +72,7 @@ impl Module {
         unsafe { ret.cast_to_typed() }
     }
     #[inline]
-    pub fn shebang(&self, ast: &crate::Ast) -> OptionalAtomRef {
+    pub fn shebang(&self, ast: &crate::Ast) -> OptionalUtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -101,7 +101,7 @@ impl Module {
         };
     }
     #[inline]
-    pub fn set_shebang(&self, ast: &mut crate::Ast, shebang: OptionalAtomRef) {
+    pub fn set_shebang(&self, ast: &mut crate::Ast, shebang: OptionalUtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -138,7 +138,7 @@ impl Script {
         unsafe { ret.cast_to_typed() }
     }
     #[inline]
-    pub fn shebang(&self, ast: &crate::Ast) -> OptionalAtomRef {
+    pub fn shebang(&self, ast: &crate::Ast) -> OptionalUtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -167,7 +167,7 @@ impl Script {
         };
     }
     #[inline]
-    pub fn set_shebang(&self, ast: &mut crate::Ast, shebang: OptionalAtomRef) {
+    pub fn set_shebang(&self, ast: &mut crate::Ast, shebang: OptionalUtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -5418,7 +5418,7 @@ impl TplElement {
         ret.into()
     }
     #[inline]
-    pub fn cooked(&self, ast: &crate::Ast) -> OptionalWtf8AtomRef {
+    pub fn cooked(&self, ast: &crate::Ast) -> OptionalWtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -5430,7 +5430,7 @@ impl TplElement {
         ret.into()
     }
     #[inline]
-    pub fn raw(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn raw(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -5459,7 +5459,7 @@ impl TplElement {
         };
     }
     #[inline]
-    pub fn set_cooked(&self, ast: &mut crate::Ast, cooked: OptionalWtf8AtomRef) {
+    pub fn set_cooked(&self, ast: &mut crate::Ast, cooked: OptionalWtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -5470,7 +5470,7 @@ impl TplElement {
         };
     }
     #[inline]
-    pub fn set_raw(&self, ast: &mut crate::Ast, raw: AtomRef) {
+    pub fn set_raw(&self, ast: &mut crate::Ast, raw: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -8612,7 +8612,7 @@ impl Ident {
         self.span(ast).hi
     }
     #[inline]
-    pub fn sym(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn sym(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -8642,7 +8642,7 @@ impl Ident {
         }
     }
     #[inline]
-    pub fn set_sym(&self, ast: &mut crate::Ast, sym: AtomRef) {
+    pub fn set_sym(&self, ast: &mut crate::Ast, sym: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -8678,7 +8678,7 @@ impl IdentName {
         self.span(ast).hi
     }
     #[inline]
-    pub fn sym(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn sym(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -8696,7 +8696,7 @@ impl IdentName {
         }
     }
     #[inline]
-    pub fn set_sym(&self, ast: &mut crate::Ast, sym: AtomRef) {
+    pub fn set_sym(&self, ast: &mut crate::Ast, sym: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -8721,7 +8721,7 @@ impl PrivateName {
         self.span(ast).hi
     }
     #[inline]
-    pub fn name(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn name(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -8739,7 +8739,7 @@ impl PrivateName {
         }
     }
     #[inline]
-    pub fn set_name(&self, ast: &mut crate::Ast, name: AtomRef) {
+    pub fn set_name(&self, ast: &mut crate::Ast, name: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -8905,7 +8905,7 @@ impl Str {
         self.span(ast).hi
     }
     #[inline]
-    pub fn value(&self, ast: &crate::Ast) -> Wtf8AtomRef {
+    pub fn value(&self, ast: &crate::Ast) -> Wtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -8917,7 +8917,7 @@ impl Str {
         ret.into()
     }
     #[inline]
-    pub fn raw(&self, ast: &crate::Ast) -> OptionalAtomRef {
+    pub fn raw(&self, ast: &crate::Ast) -> OptionalUtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -8935,7 +8935,7 @@ impl Str {
         }
     }
     #[inline]
-    pub fn set_value(&self, ast: &mut crate::Ast, value: Wtf8AtomRef) {
+    pub fn set_value(&self, ast: &mut crate::Ast, value: Wtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -8946,7 +8946,7 @@ impl Str {
         };
     }
     #[inline]
-    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalAtomRef) {
+    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalUtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -9046,7 +9046,7 @@ impl Number {
         ret.into()
     }
     #[inline]
-    pub fn raw(&self, ast: &crate::Ast) -> OptionalAtomRef {
+    pub fn raw(&self, ast: &crate::Ast) -> OptionalUtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -9075,7 +9075,7 @@ impl Number {
         };
     }
     #[inline]
-    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalAtomRef) {
+    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalUtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -9112,7 +9112,7 @@ impl BigInt {
         ret.into()
     }
     #[inline]
-    pub fn raw(&self, ast: &crate::Ast) -> OptionalAtomRef {
+    pub fn raw(&self, ast: &crate::Ast) -> OptionalUtf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -9141,7 +9141,7 @@ impl BigInt {
         };
     }
     #[inline]
-    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalAtomRef) {
+    pub fn set_raw(&self, ast: &mut crate::Ast, raw: OptionalUtf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -9166,7 +9166,7 @@ impl Regex {
         self.span(ast).hi
     }
     #[inline]
-    pub fn exp(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn exp(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -9178,7 +9178,7 @@ impl Regex {
         ret.into()
     }
     #[inline]
-    pub fn flags(&self, ast: &crate::Ast) -> AtomRef {
+    pub fn flags(&self, ast: &crate::Ast) -> Utf8Ref {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -9196,7 +9196,7 @@ impl Regex {
         }
     }
     #[inline]
-    pub fn set_exp(&self, ast: &mut crate::Ast, exp: AtomRef) {
+    pub fn set_exp(&self, ast: &mut crate::Ast, exp: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -9207,7 +9207,7 @@ impl Regex {
         };
     }
     #[inline]
-    pub fn set_flags(&self, ast: &mut crate::Ast, flags: AtomRef) {
+    pub fn set_flags(&self, ast: &mut crate::Ast, flags: Utf8Ref) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {

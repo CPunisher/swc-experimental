@@ -25,8 +25,8 @@ pub use common::*;
 pub use derive::*;
 pub use generated::ast_visitor::*;
 pub use node_id::{
-    AtomRef, BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalAtomRef,
-    OptionalNodeId, OptionalWtf8AtomRef, SubRange, TypedSubRange, Wtf8AtomRef,
+    BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalNodeId, OptionalUtf8Ref,
+    OptionalWtf8Ref, SubRange, TypedSubRange, Utf8Ref, Wtf8Ref,
 };
 
 use crate::ast_list::NodeList;
@@ -55,12 +55,12 @@ pub union NodeData {
 pub union ExtraData {
     span: Span,
     node: NodeId,
-    atom: AtomRef,
-    wtf8_atom: Wtf8AtomRef,
+    atom: Utf8Ref,
+    wtf8_atom: Wtf8Ref,
     bigint: BigIntId,
     optional_node: OptionalNodeId,
-    optional_atom: OptionalAtomRef,
-    optional_wtf8_atom: OptionalWtf8AtomRef,
+    optional_atom: OptionalUtf8Ref,
+    optional_wtf8_atom: OptionalWtf8Ref,
 
     bool: bool,
     number: f64,
@@ -318,59 +318,59 @@ impl Ast {
     }
 
     #[inline]
-    pub fn add_atom_ref(&mut self, s: &str) -> AtomRef {
+    pub fn add_utf8(&mut self, s: &str) -> Utf8Ref {
         let lo = self.allocated_atom.len() as u32;
         self.allocated_atom.push_str(s);
         let hi = self.allocated_atom.len() as u32;
-        AtomRef::new_ref(lo, hi)
+        Utf8Ref::new_ref(lo, hi)
     }
 
     #[inline]
-    pub fn add_optional_atom_ref(&mut self, s: Option<&str>) -> OptionalAtomRef {
+    pub fn add_optional_utf8(&mut self, s: Option<&str>) -> OptionalUtf8Ref {
         match s {
-            Some(s) => self.add_atom_ref(s).into(),
-            None => OptionalAtomRef::new_none(),
+            Some(s) => self.add_utf8(s).into(),
+            None => OptionalUtf8Ref::new_none(),
         }
     }
 
     #[inline]
-    pub fn add_wtf8_atom_ref(&mut self, s: &Wtf8) -> Wtf8AtomRef {
+    pub fn add_wtf8(&mut self, s: &Wtf8) -> Wtf8Ref {
         let lo = self.allocated_wtf8.len() as u32;
         self.allocated_wtf8.push_wtf8(s);
         let hi = self.allocated_wtf8.len() as u32;
-        Wtf8AtomRef::new_ref(lo, hi)
+        Wtf8Ref::new_ref(lo, hi)
     }
 
     #[inline]
-    pub fn add_optional_wtf8_atom_ref(&mut self, s: Option<&Wtf8>) -> OptionalWtf8AtomRef {
+    pub fn add_optional_wtf8(&mut self, s: Option<&Wtf8>) -> OptionalWtf8Ref {
         match s {
-            Some(s) => self.add_wtf8_atom_ref(s).into(),
-            None => OptionalWtf8AtomRef::new_none(),
+            Some(s) => self.add_wtf8(s).into(),
+            None => OptionalWtf8Ref::new_none(),
         }
     }
 
     #[inline]
-    pub fn get_atom(&self, id: AtomRef) -> &str {
+    pub fn get_utf8(&self, id: Utf8Ref) -> &str {
         &self.allocated_atom[id.lo() as usize..id.hi() as usize]
     }
 
     #[inline]
-    pub fn get_optional_atom(&self, id: OptionalAtomRef) -> Option<&str> {
+    pub fn get_optional_utf8(&self, id: OptionalUtf8Ref) -> Option<&str> {
         let id = id.to_option()?;
-        Some(self.get_atom(id))
+        Some(self.get_utf8(id))
     }
 
     #[inline]
-    pub fn get_wtf8_atom(&self, id: Wtf8AtomRef) -> &Wtf8 {
+    pub fn get_wtf8(&self, id: Wtf8Ref) -> &Wtf8 {
         &self
             .allocated_wtf8
             .slice(id.lo() as usize, id.hi() as usize)
     }
 
     #[inline]
-    pub fn get_optional_wtf8_atom(&self, id: OptionalWtf8AtomRef) -> Option<&Wtf8> {
+    pub fn get_optional_wtf8(&self, id: OptionalWtf8Ref) -> Option<&Wtf8> {
         let id = id.to_option()?;
-        Some(self.get_wtf8_atom(id))
+        Some(self.get_wtf8(id))
     }
 
     #[inline]

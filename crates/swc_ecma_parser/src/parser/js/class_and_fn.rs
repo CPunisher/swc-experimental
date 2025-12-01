@@ -189,7 +189,7 @@ impl<I: Tokens> Parser<I> {
     fn parse_class_prop_name(&mut self) -> PResult<Key> {
         if self.input().is(Token::Hash) {
             let name = self.parse_private_name()?;
-            if self.ast.get_atom(name.name(&self.ast)) == "constructor" {
+            if self.ast.get_utf8(name.name(&self.ast)) == "constructor" {
                 self.emit_err(name.span(&self.ast), SyntaxError::PrivateConstructor);
             }
             Ok(Key::Private(name))
@@ -912,7 +912,7 @@ impl<I: Tokens> Parser<I> {
         trace_cur!(self, parse_class_member_with_is_static__normal_class_member);
         let key = if readonly.is_some() && matches!(self.input().cur(), Token::Bang | Token::Colon)
         {
-            let sym = self.ast.add_atom_ref(atom!("readonly"));
+            let sym = self.ast.add_utf8(atom!("readonly"));
             self.ast.key_prop_name_ident_name(readonly.unwrap(), sym)
         } else {
             self.parse_class_prop_name()?
@@ -1051,7 +1051,7 @@ impl<I: Tokens> Parser<I> {
         let getter_or_setter_ident = match key {
             // `get\n*` is an uninitialized property named 'get' followed by a generator.
             Key::Public(PropName::Ident(ref i)) => {
-                let sym = self.ast.get_atom(i.sym(&self.ast));
+                let sym = self.ast.get_utf8(i.sym(&self.ast));
                 if (sym == "get" || sym == "set")
                     && !self.is_class_property(/* asi */ false)
                     && !is_next_line_generator
@@ -1081,7 +1081,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         if match key {
-            Key::Public(PropName::Ident(ref i)) => self.ast.get_atom(i.sym(&self.ast)) == "async",
+            Key::Public(PropName::Ident(ref i)) => self.ast.get_utf8(i.sym(&self.ast)) == "async",
             _ => false,
         } && !self.input_mut().had_line_break_before_cur()
         {
@@ -1143,7 +1143,7 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(key_span, SyntaxError::ConstructorAccessor);
             }
 
-            return match self.ast.get_atom(sym).as_str() {
+            return match self.ast.get_utf8(sym).as_str() {
                 "get" => self.make_method(
                     |p| {
                         let params = p.parse_formal_params()?;
@@ -1230,7 +1230,7 @@ impl<I: Tokens> Parser<I> {
         let declare_token = if declare {
             // Handle declare(){}
             if self.is_class_method() {
-                let sym = self.ast.add_atom_ref(atom!("declare"));
+                let sym = self.ast.add_utf8(atom!("declare"));
                 let key = self.ast.key_prop_name_ident_name(self.span(start), sym);
                 let is_optional =
                     self.input().syntax().typescript() && self.input_mut().eat(Token::QuestionMark);
@@ -1255,7 +1255,7 @@ impl<I: Tokens> Parser<I> {
             {
                 // Property named `declare`
 
-                let sym = self.ast.add_atom_ref(atom!("declare"));
+                let sym = self.ast.add_utf8(atom!("declare"));
                 let key = self.ast.key_prop_name_ident_name(self.span(start), sym);
                 let is_optional =
                     self.input().syntax().typescript() && self.input_mut().eat(Token::QuestionMark);
@@ -1302,7 +1302,7 @@ impl<I: Tokens> Parser<I> {
         if let Some(accessor_token) = accessor_token {
             // Handle accessor(){}
             if self.is_class_method() {
-                let sym = self.ast.add_atom_ref(atom!("accessor"));
+                let sym = self.ast.add_utf8(atom!("accessor"));
                 let key = self.ast.key_prop_name_ident_name(accessor_token, sym);
                 let is_optional =
                     self.input().syntax().typescript() && self.input_mut().eat(Token::QuestionMark);
@@ -1327,7 +1327,7 @@ impl<I: Tokens> Parser<I> {
             {
                 // Property named `accessor`
 
-                let sym = self.ast.add_atom_ref(atom!("accessor"));
+                let sym = self.ast.add_utf8(atom!("accessor"));
                 let key = self.ast.key_prop_name_ident_name(accessor_token, sym);
                 let is_optional =
                     self.input().syntax().typescript() && self.input_mut().eat(Token::QuestionMark);
@@ -1351,7 +1351,7 @@ impl<I: Tokens> Parser<I> {
         if let Some(static_token) = static_token {
             // Handle static(){}
             if self.is_class_method() {
-                let sym = self.ast.add_atom_ref(atom!("static"));
+                let sym = self.ast.add_utf8(atom!("static"));
                 let key = self.ast.key_prop_name_ident_name(static_token, sym);
                 let is_optional =
                     self.input().syntax().typescript() && self.input_mut().eat(Token::QuestionMark);
@@ -1381,7 +1381,7 @@ impl<I: Tokens> Parser<I> {
                 //   {}
                 let is_parsing_static_blocks = self.input().is(Token::LBrace);
                 if !is_parsing_static_blocks {
-                    let sym = self.ast.add_atom_ref(atom!("static"));
+                    let sym = self.ast.add_utf8(atom!("static"));
                     let key = self.ast.key_prop_name_ident_name(static_token, sym);
                     let is_optional = self.input().syntax().typescript()
                         && self.input_mut().eat(Token::QuestionMark);
@@ -1715,9 +1715,9 @@ fn has_use_strict(ast: &Ast, block: BlockStmt) -> Option<Span> {
 
 fn is_constructor(ast: &Ast, key: Key) -> bool {
     if let Key::Public(PropName::Ident(ident_name)) = key {
-        ast.get_atom(ident_name.sym(ast)).eq("constructor")
+        ast.get_utf8(ident_name.sym(ast)).eq("constructor")
     } else if let Key::Public(PropName::Str(s)) = key {
-        ast.get_wtf8_atom(s.value(ast)).eq("constructor")
+        ast.get_wtf8(s.value(ast)).eq("constructor")
     } else {
         false
     }

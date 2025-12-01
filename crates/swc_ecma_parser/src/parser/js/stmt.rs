@@ -692,7 +692,7 @@ impl<I: Tokens> Parser<I> {
         self.do_inside_of_context(Context::IsBreakAllowed, |p| {
             p.do_outside_of_context(Context::AllowUsingDecl, |p| {
                 let start = l.span_lo(&p.ast);
-                let atom = p.ast.get_atom(l.sym(&p.ast)).clone();
+                let atom = p.ast.get_utf8(l.sym(&p.ast)).clone();
 
                 let mut errors = Vec::new();
                 for lb in &p.state().labels {
@@ -959,7 +959,7 @@ impl<I: Tokens> Parser<I> {
                     && !self
                         .state()
                         .labels
-                        .contains(self.ast.get_atom(label.as_ref().unwrap().sym(&self.ast)))
+                        .contains(self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)))
                 {
                     self.emit_err(span, SyntaxError::TS1116);
                 } else if !self.ctx().contains(Context::IsBreakAllowed) {
@@ -971,7 +971,7 @@ impl<I: Tokens> Parser<I> {
                 && !self
                     .state()
                     .labels
-                    .contains(self.ast.get_atom(label.as_ref().unwrap().sym(&self.ast)))
+                    .contains(self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)))
             {
                 self.emit_err(span, SyntaxError::TS1107);
             }
@@ -1111,7 +1111,7 @@ impl<I: Tokens> Parser<I> {
         };
 
         if let Expr::Ident(ref ident) = expr {
-            let ident_sym = self.ast.get_atom(ident.sym(&self.ast));
+            let ident_sym = self.ast.get_utf8(ident.sym(&self.ast));
             if ident_sym.as_str() == "interface" && self.input().had_line_break_before_cur() {
                 self.emit_strict_mode_err(
                     ident.span(&self.ast),
@@ -1184,7 +1184,7 @@ impl<I: Tokens> Parser<I> {
 
         let mut stmts = self.scratch_start();
 
-        let cur_atom = AtomRef::new_from_span(self.input.cur_span());
+        let cur_atom = Utf8Ref::new_from_span(self.input.cur_span());
         let cur_str = self.input.iter.get_atom_str(cur_atom);
         let has_strict_directive =
             allow_directives && (cur_str == "\"use strict\"" || cur_str == "'use strict'");
@@ -1229,13 +1229,13 @@ impl<I: Tokens> Parser<I> {
         Ok(stmts)
     }
 
-    pub(crate) fn parse_shebang(&mut self) -> PResult<OptionalAtomRef> {
+    pub(crate) fn parse_shebang(&mut self) -> PResult<OptionalUtf8Ref> {
         let cur = self.input().cur();
         Ok(if cur == Token::Shebang {
             let atom = self.input_mut().expect_shebang_token_and_bump();
             atom.into()
         } else {
-            OptionalAtomRef::new_none()
+            OptionalUtf8Ref::new_none()
         })
     }
 }

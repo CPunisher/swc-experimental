@@ -161,7 +161,7 @@ impl Stmt {
         match self {
             Stmt::Expr(expr) => match expr.expr(ast) {
                 Expr::Lit(Lit::Str(s)) => {
-                    let raw = ast.get_optional_atom(s.raw(ast));
+                    let raw = ast.get_optional_utf8(s.raw(ast));
                     matches!(raw, Some(value) if value == "\"use strict\"" || value == "'use strict'")
                 }
                 _ => false,

@@ -1,12 +1,22 @@
+use swc_common::Span;
+
 #[derive(Debug, Clone, Copy)]
-pub struct Wtf8AtomRef {
+pub struct Utf8Ref {
     lo: u32,
     hi: u32,
 }
 
-impl Wtf8AtomRef {
+impl Utf8Ref {
     pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
+    }
+
+    pub const fn new_from_span(span: Span) -> Self {
+        Self::new_ref(span.lo.0, span.hi.0)
+    }
+
+    pub const fn new_empty() -> Self {
+        Self { lo: 0, hi: 0 }
     }
 
     pub const fn lo(&self) -> u32 {
@@ -19,11 +29,12 @@ impl Wtf8AtomRef {
 }
 
 #[derive(Debug, Clone, Copy, Hash)]
-pub struct OptionalWtf8AtomRef {
+pub struct OptionalUtf8Ref {
     lo: u32,
     hi: u32,
 }
-impl OptionalWtf8AtomRef {
+
+impl OptionalUtf8Ref {
     pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
     }
@@ -35,20 +46,20 @@ impl OptionalWtf8AtomRef {
         }
     }
 
-    pub const fn to_option(self) -> Option<Wtf8AtomRef> {
+    pub const fn to_option(self) -> Option<Utf8Ref> {
         if self.hi == u32::MAX {
             return None;
         }
 
-        Some(Wtf8AtomRef {
+        Some(Utf8Ref {
             lo: self.lo,
             hi: self.hi,
         })
     }
 }
 
-impl From<Wtf8AtomRef> for OptionalWtf8AtomRef {
-    fn from(value: Wtf8AtomRef) -> Self {
+impl From<Utf8Ref> for OptionalUtf8Ref {
+    fn from(value: Utf8Ref) -> Self {
         Self::new_ref(value.lo, value.hi)
     }
 }

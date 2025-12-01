@@ -624,7 +624,7 @@ impl<I: Tokens> Parser<I> {
             Ok(cooked) => (raw, cooked.into()),
             Err(err) => {
                 if is_tagged_tpl {
-                    (raw, OptionalWtf8AtomRef::new_none())
+                    (raw, OptionalWtf8Ref::new_none())
                 } else {
                     return Err(err);
                 }
@@ -662,7 +662,7 @@ impl<I: Tokens> Parser<I> {
             Ok(cooked) => (raw, cooked.into()),
             Err(err) => {
                 if is_tagged_tpl {
-                    (raw, OptionalWtf8AtomRef::new_none())
+                    (raw, OptionalWtf8Ref::new_none())
                 } else {
                     return Err(err);
                 }
@@ -710,7 +710,7 @@ impl<I: Tokens> Parser<I> {
                     Ok(cooked) => (raw, cooked.into(), false, span),
                     Err(err) => {
                         if is_tagged_tpl {
-                            (raw, OptionalWtf8AtomRef::new_none(), false, span)
+                            (raw, OptionalWtf8Ref::new_none(), false, span)
                         } else {
                             return Err(err);
                         }
@@ -729,7 +729,7 @@ impl<I: Tokens> Parser<I> {
                     Ok(cooked) => (raw, cooked.into(), true, span),
                     Err(err) => {
                         if is_tagged_tpl {
-                            (raw, OptionalWtf8AtomRef::new_none(), true, span)
+                            (raw, OptionalWtf8Ref::new_none(), true, span)
                         } else {
                             return Err(err);
                         }
@@ -1405,7 +1405,7 @@ impl<I: Tokens> Parser<I> {
             self.mark_found_module_item();
 
             let (_, sym) = self.parse_ident_name()?;
-            match self.ast.get_atom(sym).as_str() {
+            match self.ast.get_utf8(sym).as_str() {
                 "meta" => {
                     let span = self.span(start);
                     if !self.ctx().contains(Context::CanBeModule) {
@@ -1829,7 +1829,7 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(span, SyntaxError::InvalidIdentInAsync);
             }
 
-            let sym = self.ast.add_atom_ref(atom!("await"));
+            let sym = self.ast.add_utf8(atom!("await"));
             return Ok(self.ast.expr_ident(span, sym, false));
         }
 
@@ -2277,7 +2277,7 @@ impl<I: Tokens> Parser<I> {
         }
         if let Some(async_span) = async_span {
             // It's a call expression
-            let sym = self.ast.add_atom_ref(atom!("async"));
+            let sym = self.ast.add_utf8(atom!("async"));
             let callee = self.ast.callee_expr_ident(async_span, sym, false);
             let expr_or_spreads = expr_or_spreads.end(self);
             return Ok(self.ast.expr_call_expr(

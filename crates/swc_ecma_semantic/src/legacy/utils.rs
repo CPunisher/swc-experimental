@@ -1,6 +1,6 @@
+use swc_atoms::Atom;
 use swc_experimental_ecma_ast::{Ast, Expr, Ident, PropName};
 use swc_experimental_ecma_visit::{Visit, VisitWith};
-use swc_atoms::Atom;
 
 pub struct DestructuringFinder {
     pub found: Vec<Atom>,
@@ -18,7 +18,7 @@ impl Visit for DestructuringFinder {
     fn visit_expr(&mut self, _: Expr, ast: &Ast) {}
 
     fn visit_ident(&mut self, i: Ident, ast: &Ast) {
-        self.found.push(ast.get_atom(i.sym(ast)).clone());
+        self.found.push(ast.get_utf8(i.sym(ast)).clone());
     }
 
     // fn visit_jsx_member_expr(&mut self, n: &JSXMemberExpr) {
