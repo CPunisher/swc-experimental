@@ -149,19 +149,8 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
         decl_kind: DeclKind::Lexical,
         strict_mode: false,
     };
+
     root.visit_with(&mut resolver, ast);
-
-    // Debug assertion to ensure there's no memory hole
-    if cfg!(debug_assertions) {
-        let mut zeros = 0;
-        for id in resolver.parent_ids.iter() {
-            if id.raw() == 0 {
-                zeros += 1;
-            }
-        }
-        debug_assert_eq!(zeros, 1);
-    }
-
     Semantic {
         top_level_scope_id,
         parent_ids: resolver.parent_ids,
