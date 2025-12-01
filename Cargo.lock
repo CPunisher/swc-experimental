@@ -1316,7 +1316,6 @@ dependencies = [
  "bitflags",
  "oxc_index",
  "rustc-hash",
- "swc_atoms",
  "swc_common",
  "swc_experimental_ecma_ast",
  "swc_experimental_ecma_visit",

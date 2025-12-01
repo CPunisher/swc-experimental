@@ -1,4 +1,3 @@
-use swc_atoms::Atom;
 use swc_experimental_ecma_ast::{Ast, Expr, Ident, PropName};
 use swc_experimental_ecma_visit::{Visit, VisitWith};
 

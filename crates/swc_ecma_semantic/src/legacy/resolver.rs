@@ -1,6 +1,5 @@
 use oxc_index::IndexVec;
 use rustc_hash::{FxHashMap, FxHashSet};
-use swc_atoms::Atom;
 use swc_experimental_ecma_ast::*;
 use swc_experimental_ecma_visit::{Visit, VisitMut, VisitMutWith, VisitWith};
 // use swc_ecma_utils::{find_pat_ids, stack_size::maybe_grow_default};
@@ -971,7 +970,7 @@ impl<'ast> Visit for Resolver<'ast> {
                 //     debug!("IdentRef (type = {}) {}{:?}", self.in_type, sym, ctxt);
                 // }
 
-                if let Some(scope_id) = self.mark_for_ref(&Atom::new(ast.get_utf8(i.sym(ast)))) {
+                if let Some(scope_id) = self.mark_for_ref(ast.get_utf8(i.sym(ast))) {
                     // if cfg!(debug_assertions) && LOG {
                     //     debug!("\t -> {:?}", ctxt);
                     // }
@@ -1813,7 +1812,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
             // If we are in nested block, and variable named `foo` is lexically declared or
             // a parameter, we should ignore function foo while handling upper scopes.
             if let Some(DeclKind::Lexical | DeclKind::Param) = self.resolver.is_declared(
-                &Atom::new(ast.get_utf8(node.ident(ast).sym(ast))),
+                ast.get_utf8(node.ident(ast).sym(ast)),
                 self.resolver.current,
             ) {
                 return;
