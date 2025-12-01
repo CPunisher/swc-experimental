@@ -394,14 +394,22 @@ impl Ast {
         self.nodes.free_node(node_id);
     }
 
+    #[inline]
+    pub fn get_node(&self, node_id: NodeId) -> &AstNode {
+        &self.nodes[node_id]
+    }
+
+    #[inline]
     pub fn nodes(&self) -> impl Iterator<Item = (NodeId, &AstNode)> {
         self.nodes.iter()
     }
 
+    #[inline]
     pub fn nodes_len(&self) -> u32 {
         self.nodes.len()
     }
 
+    #[inline]
     pub fn nodes_capacity(&self) -> usize {
         self.nodes.capacity()
     }

@@ -320,7 +320,7 @@ impl<I: Tokens> Parser<I> {
 
         let decls = decls.end(self);
         for decl in decls.iter() {
-            let decl = self.ast.get_node(decl);
+            let decl = self.ast.get_node_in_sub_range(decl);
             match decl.name(&self.ast) {
                 Pat::Ident(..) => {}
                 _ => {
@@ -353,7 +353,7 @@ impl<I: Tokens> Parser<I> {
             if cur == Token::Of || cur == Token::In {
                 if decl.decls(&self.ast).len() != 1 {
                     for d in decl.decls(&self.ast).iter().skip(1) {
-                        let d = self.ast.get_node(d);
+                        let d = self.ast.get_node_in_sub_range(d);
                         self.emit_err(
                             d.name(&self.ast).span(&self.ast),
                             SyntaxError::TooManyVarInForInHead,
@@ -361,7 +361,7 @@ impl<I: Tokens> Parser<I> {
                     }
                 } else {
                     let decls = decl.decls(&self.ast);
-                    let decl = self.ast.get_node(decls.get(0));
+                    let decl = self.ast.get_node_in_sub_range(decls.get(0));
                     if (self.ctx().contains(Context::Strict) || self.input().is(Token::Of))
                         && decl.init(&self.ast).is_some()
                     {

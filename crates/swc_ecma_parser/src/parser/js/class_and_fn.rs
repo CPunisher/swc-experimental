@@ -270,7 +270,7 @@ impl<I: Tokens> Parser<I> {
                 for param in params.iter() {
                     // TODO: Search deeply for assignment pattern using a Visitor
 
-                    let param = p.ast.get_node(param);
+                    let param = p.ast.get_node_in_sub_range(param);
                     let span = match param.pat(&p.ast) {
                         Pat::Assign(pat) => Some(pat.span(&p.ast)),
                         _ => None,
@@ -1150,7 +1150,7 @@ impl<I: Tokens> Parser<I> {
 
                         if params
                             .iter()
-                            .any(|param| is_not_this(&p.ast, p.ast.get_node(param)))
+                            .any(|param| is_not_this(&p.ast, p.ast.get_node_in_sub_range(param)))
                         {
                             p.emit_err(key_span, SyntaxError::GetterParam);
                         }
@@ -1177,7 +1177,9 @@ impl<I: Tokens> Parser<I> {
 
                         if params
                             .iter()
-                            .filter(|param| is_not_this(&p.ast, p.ast.get_node(*param)))
+                            .filter(|param| {
+                                is_not_this(&p.ast, p.ast.get_node_in_sub_range(*param))
+                            })
                             .count()
                             != 1
                         {
@@ -1185,7 +1187,9 @@ impl<I: Tokens> Parser<I> {
                         }
 
                         if !params.is_empty() {
-                            if let Pat::Rest(rest) = p.ast.get_node(params.get(0)).pat(&p.ast) {
+                            if let Pat::Rest(rest) =
+                                p.ast.get_node_in_sub_range(params.get(0)).pat(&p.ast)
+                            {
                                 p.emit_err(rest.span(&p.ast), SyntaxError::RestPatInSetter);
                             }
                         }
@@ -1702,7 +1706,7 @@ fn has_use_strict(ast: &Ast, block: BlockStmt) -> Option<Span> {
     block
         .stmts(ast)
         .iter()
-        .map(|id| ast.get_node(id))
+        .map(|id| ast.get_node_in_sub_range(id))
         .take_while(|s| s.can_precede_directive(ast))
         .find_map(|s| {
             if s.is_use_strict(ast) {

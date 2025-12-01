@@ -238,7 +238,7 @@ impl<I: Tokens> Parser<I> {
         let has_module_item = self.found_module_item
             || body
                 .iter()
-                .map(|id| self.ast.get_node(id))
+                .map(|id| self.ast.get_node_in_sub_range(id))
                 .any(|item| matches!(item, ModuleItem::ModuleDecl(..)));
         if has_module_item && !self.ctx().contains(Context::Module) {
             let ctx = self.ctx()
@@ -255,7 +255,7 @@ impl<I: Tokens> Parser<I> {
         } else {
             let mut stmts = self.scratch_start();
             for item in body.iter() {
-                let item = self.ast.get_node(item);
+                let item = self.ast.get_node_in_sub_range(item);
                 match item {
                     ModuleItem::Stmt(stmt) => stmts.push(&mut self, stmt),
                     ModuleItem::ModuleDecl(_) => {

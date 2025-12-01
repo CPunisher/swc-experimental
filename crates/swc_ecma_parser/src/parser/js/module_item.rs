@@ -667,7 +667,7 @@ impl<I: Tokens> Parser<I> {
                 Some(self.parse_from_clause_and_semi()?)
             } else {
                 for s in specifiers.iter() {
-                    let s = self.ast.get_node(s);
+                    let s = self.ast.get_node_in_sub_range(s);
                     match s {
                         ExportSpecifier::Default(default) => {
                             self.emit_err(

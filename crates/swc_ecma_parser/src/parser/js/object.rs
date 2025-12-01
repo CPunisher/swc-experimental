@@ -106,7 +106,7 @@ impl<I: Tokens> Parser<I> {
     ) -> PResult<Pat> {
         let len = props.len();
         for (i, prop) in props.iter().enumerate() {
-            let prop = self.ast.get_node(prop);
+            let prop = self.ast.get_node_in_sub_range(prop);
             if i == len - 1 {
                 if let ObjectPatProp::Rest(rest) = prop {
                     match rest.arg(&self.ast) {
@@ -330,7 +330,7 @@ impl<I: Tokens> Parser<I> {
 
                                     if params
                                         .iter()
-                                        .any(|param| is_not_this(&p.ast, p.ast.get_node(param)))
+                                        .any(|param| is_not_this(&p.ast, p.ast.get_node_in_sub_range(param)))
                                     {
                                         p.emit_err(key_span, SyntaxError::GetterParam);
                                     }
@@ -365,7 +365,7 @@ impl<I: Tokens> Parser<I> {
 
                                     if params
                                         .iter()
-                                        .filter(|param| is_not_this(&p.ast, p.ast.get_node(*param)))
+                                        .filter(|param| is_not_this(&p.ast, p.ast.get_node_in_sub_range(*param)))
                                         .count()
                                         != 1
                                     {
@@ -374,7 +374,7 @@ impl<I: Tokens> Parser<I> {
 
                                     if !params.is_empty() {
                                         if let Pat::Rest(rest) =
-                                            p.ast.get_node(params.get(0)).pat(&p.ast)
+                                            p.ast.get_node_in_sub_range(params.get(0)).pat(&p.ast)
                                         {
                                             p.emit_err(
                                                 rest.span(&p.ast),
@@ -398,7 +398,7 @@ impl<I: Tokens> Parser<I> {
                                 let mut this = None;
                                 let mut params = function.params(&p.ast);
                                 if params.len() >= 2 {
-                                    this = Some(p.ast.get_node(params.remove_first()).pat(&p.ast));
+                                    this = Some(p.ast.get_node_in_sub_range(params.remove_first()).pat(&p.ast));
                                 }
 
                                 if params.len() != 1 {
@@ -407,7 +407,7 @@ impl<I: Tokens> Parser<I> {
 
                                 let param = match params.iter().next() {
                                     Some(param) => {
-                                        let param = p.ast.get_node(param);
+                                        let param = p.ast.get_node_in_sub_range(param);
                                         let pat = param.pat(&p.ast);
                                         p.ast.free_node(param.node_id());
                                         pat

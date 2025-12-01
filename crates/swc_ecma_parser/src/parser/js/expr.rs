@@ -2262,7 +2262,7 @@ impl<I: Tokens> Parser<I> {
                     if let Expr::Object(o) = e.expr(&self.ast) {
                         let mut errors = Vec::new();
                         for prop in o.props(&self.ast).iter() {
-                            let prop = self.ast.get_node(prop);
+                            let prop = self.ast.get_node_in_sub_range(prop);
                             if let PropOrSpread::Prop(prop) = prop {
                                 if prop.is_assign() {
                                     errors
@@ -2314,7 +2314,7 @@ impl<I: Tokens> Parser<I> {
 
         // ParenthesizedExpression cannot contain spread.
         if expr_or_spreads.len() == 1 {
-            let expr_or_spread = self.ast.get_node(expr_or_spreads.iter().next().unwrap());
+            let expr_or_spread = self.ast.get_node_in_sub_range(expr_or_spreads.iter().next().unwrap());
             let expr = match expr_or_spread.spread(&self.ast) {
                 Some(_) => {
                     syntax_error!(
@@ -2332,7 +2332,7 @@ impl<I: Tokens> Parser<I> {
 
             let mut exprs = self.scratch_start();
             for expr in expr_or_spreads.iter() {
-                let expr_or_spread = self.ast.get_node(expr);
+                let expr_or_spread = self.ast.get_node_in_sub_range(expr);
                 match expr_or_spread.spread(&self.ast) {
                     Some(_) => {
                         syntax_error!(
@@ -2349,8 +2349,8 @@ impl<I: Tokens> Parser<I> {
             debug_assert!(exprs.len() >= 2);
 
             // span of sequence expression should not include '(', ')'
-            let span_lo = self.ast.get_node(exprs.first().unwrap()).span_lo(&self.ast);
-            let span_hi = self.ast.get_node(exprs.last().unwrap()).span_hi(&self.ast);
+            let span_lo = self.ast.get_node_in_sub_range(exprs.first().unwrap()).span_lo(&self.ast);
+            let span_hi = self.ast.get_node_in_sub_range(exprs.last().unwrap()).span_hi(&self.ast);
             let seq_expr = self
                 .ast
                 .expr_seq_expr(Span::new_with_checked(span_lo, span_hi), exprs);

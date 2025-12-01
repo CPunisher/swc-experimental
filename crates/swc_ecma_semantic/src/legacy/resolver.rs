@@ -553,8 +553,8 @@ impl<'ast> Visit for Resolver<'ast> {
                 let params = e
                     .params(ast)
                     .iter()
-                    .filter(|p| !ast.get_node(*p).is_rest())
-                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node(p)));
+                    .filter(|p| !ast.get_node_in_sub_range(*p).is_rest())
+                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node_in_sub_range(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -575,7 +575,7 @@ impl<'ast> Visit for Resolver<'ast> {
                         child.strict_mode = s
                             .stmts(ast)
                             .first()
-                            .map(|stmt| ast.get_node(stmt).is_use_strict(ast))
+                            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
                             .unwrap_or(false);
                     }
                     // Prevent creating new scope.
@@ -748,13 +748,13 @@ impl<'ast> Visit for Resolver<'ast> {
                     .params(ast)
                     .iter()
                     .filter(|p| {
-                        let p = ast.get_node(*p);
+                        let p = ast.get_node_in_sub_range(*p);
                         match p {
                             // ParamOrTsParamProp::TsParamProp(_) => false,
                             ParamOrTsParamProp::Param(p) => !p.pat(ast).is_rest(),
                         }
                     })
-                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node(p)));
+                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node_in_sub_range(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -918,8 +918,8 @@ impl<'ast> Visit for Resolver<'ast> {
             let params = f
                 .params(ast)
                 .iter()
-                .filter(|p| !ast.get_node(*p).pat(ast).is_rest())
-                .flat_map(|p| find_pat_ids(self.ast, ast.get_node(p)));
+                .filter(|p| !ast.get_node_in_sub_range(*p).pat(ast).is_rest())
+                .flat_map(|p| find_pat_ids(self.ast, ast.get_node_in_sub_range(p)));
 
             for id in params {
                 self.scopes[self.current]
@@ -940,7 +940,7 @@ impl<'ast> Visit for Resolver<'ast> {
                 self.strict_mode = body
                     .stmts(ast)
                     .first()
-                    .map(|stmt| ast.get_node(stmt).is_use_strict(ast))
+                    .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
                     .unwrap_or(false);
             }
             // Prevent creating new scope.
@@ -1166,7 +1166,7 @@ impl<'ast> Visit for Resolver<'ast> {
         self.strict_mode = script
             .body(ast)
             .first()
-            .map(|stmt| ast.get_node(stmt).is_use_strict(ast))
+            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
             .unwrap_or(false);
         script.visit_children_with(self, ast)
     }
@@ -2023,7 +2023,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         let others = stmts
             .iter()
             .filter_map(|item| {
-                let item = ast.get_node(item);
+                let item = ast.get_node_in_sub_range(item);
                 match item {
                     Stmt::Decl(Decl::Var(..)) => {
                         item.visit_with(self, ast);

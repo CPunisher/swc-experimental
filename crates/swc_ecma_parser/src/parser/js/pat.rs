@@ -49,7 +49,7 @@ impl<I: Tokens> Parser<I> {
             }
             Pat::Array(arr) => {
                 for pat in arr.elems(&self.ast).iter() {
-                    let pat = self.ast.get_opt_node(pat);
+                    let pat = self.ast.get_opt_node_in_sub_range(pat);
                     if let Some(pat) = pat {
                         self.pat_is_valid_argument_in_strict(pat);
                     }
@@ -58,7 +58,7 @@ impl<I: Tokens> Parser<I> {
             Pat::Rest(r) => self.pat_is_valid_argument_in_strict(r.arg(&self.ast)),
             Pat::Object(obj) => {
                 for prop in obj.props(&self.ast).iter() {
-                    let prop = self.ast.get_node(prop);
+                    let prop = self.ast.get_node_in_sub_range(prop);
                     match prop {
                         ObjectPatProp::KeyValue(key_value) => {
                             self.pat_is_valid_argument_in_strict(key_value.value(&self.ast))
@@ -233,7 +233,7 @@ impl<I: Tokens> Parser<I> {
 
                 let mut obj_props = self.scratch_start();
                 for (idx, prop) in props.iter().enumerate() {
-                    let prop = self.ast.get_node(prop);
+                    let prop = self.ast.get_node_in_sub_range(prop);
                     let span = prop.span(&self.ast);
                     let prop = match prop {
                         PropOrSpread::Prop(prop) => match prop {
@@ -326,7 +326,7 @@ impl<I: Tokens> Parser<I> {
                 let count_of_trailing_comma = exprs
                     .iter()
                     .rev()
-                    .take_while(|e| self.ast.get_opt_node(*e).is_none())
+                    .take_while(|e| self.ast.get_opt_node_in_sub_range(*e).is_none())
                     .count();
                 let len = exprs.len();
                 let mut params = Vec::with_capacity(exprs.len() - count_of_trailing_comma);
@@ -340,7 +340,7 @@ impl<I: Tokens> Parser<I> {
 
                 let after = exprs.split_off(idx_of_rest_not_allowed);
                 for expr in exprs.iter() {
-                    let expr = self.ast.get_opt_node(expr);
+                    let expr = self.ast.get_opt_node_in_sub_range(expr);
                     match expr {
                         Some(expr_or_spread) => match expr_or_spread.spread(&self.ast) {
                             Some(_) => self.emit_err(
@@ -362,7 +362,9 @@ impl<I: Tokens> Parser<I> {
 
                 let exprs = after;
                 if count_of_trailing_comma == 0 {
-                    let expr = self.ast.get_opt_node(exprs.iter().next().unwrap());
+                    let expr = self
+                        .ast
+                        .get_opt_node_in_sub_range(exprs.iter().next().unwrap());
                     let last = match expr {
                         // Rest
                         Some(expr_or_spread) => {
@@ -867,7 +869,7 @@ impl<I: Tokens> Parser<I> {
         let params = params.end(self);
         if self.ctx().contains(Context::Strict) {
             for param in params.iter() {
-                let param = self.ast.get_node(param);
+                let param = self.ast.get_node_in_sub_range(param);
                 self.pat_is_valid_argument_in_strict(param)
             }
         }

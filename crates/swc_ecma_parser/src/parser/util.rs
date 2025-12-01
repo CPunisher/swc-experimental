@@ -13,7 +13,7 @@ impl IsSimpleParameterList for TypedSubRange<Param> {
     #[inline]
     fn is_simple_parameter_list(self, ast: &Ast) -> bool {
         self.iter().all(|param| {
-            let param = ast.get_node(param);
+            let param = ast.get_node_in_sub_range(param);
             matches!(param.pat(ast), Pat::Ident(_))
         })
     }
@@ -23,7 +23,7 @@ impl IsSimpleParameterList for TypedSubRange<Pat> {
     #[inline]
     fn is_simple_parameter_list(self, ast: &Ast) -> bool {
         self.iter().all(|pat| {
-            let pat = ast.get_node(pat);
+            let pat = ast.get_node_in_sub_range(pat);
             matches!(pat, Pat::Ident(_))
         })
     }
@@ -33,7 +33,7 @@ impl IsSimpleParameterList for TypedSubRange<ParamOrTsParamProp> {
     #[inline]
     fn is_simple_parameter_list(self, ast: &Ast) -> bool {
         self.iter().all(|param| {
-            let param = ast.get_node(param);
+            let param = ast.get_node_in_sub_range(param);
             match param {
                 ParamOrTsParamProp::Param(param) => matches!(param.pat(ast), Pat::Ident(_)),
             }

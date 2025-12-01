@@ -77,7 +77,7 @@ impl Visit for SemanticBuilder {
             .body(ast)
             .iter()
             .next()
-            .map(|stmt| ast.get_node(stmt).is_use_strict(ast))
+            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
             .unwrap_or(false);
 
         let mut flags = ScopeFlags::Fn;
