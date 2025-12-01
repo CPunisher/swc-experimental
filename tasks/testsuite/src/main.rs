@@ -8,7 +8,7 @@ use crate::{
     },
     runner::{
         misc_parser::MiscParserRunner, no_memory_hole::NoMemoryHoleRunner,
-        test262_parser::Test262ParserRunner,
+        semantic::SemanticRunner, test262_parser::Test262ParserRunner,
     },
     suite::TestResult,
 };
@@ -37,6 +37,8 @@ pub fn main() {
     results.extend(Test262ParserRunner::run(&args, &test262_parser_cases));
     results.extend(NoMemoryHoleRunner::run(&args, &misc_cases));
     results.extend(NoMemoryHoleRunner::run(&args, &test262_parser_cases));
+    results.extend(SemanticRunner::run(&args, &misc_cases));
+    results.extend(SemanticRunner::run(&args, &test262_parser_cases));
 
     // Collect results
     let mut passed = 0;
