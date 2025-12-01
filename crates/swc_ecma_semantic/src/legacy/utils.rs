@@ -18,7 +18,7 @@ impl Visit for DestructuringFinder {
     fn visit_expr(&mut self, _: Expr, ast: &Ast) {}
 
     fn visit_ident(&mut self, i: Ident, ast: &Ast) {
-        self.found.push(ast.get_utf8(i.sym(ast)).clone());
+        self.found.push(Atom::new(ast.get_utf8(i.sym(ast))));
     }
 
     // fn visit_jsx_member_expr(&mut self, n: &JSXMemberExpr) {
