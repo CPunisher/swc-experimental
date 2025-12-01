@@ -14,6 +14,7 @@ use crate::{
         state::{State, WithState},
         util::{ExprExt, ScratchIndex},
     },
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
     syntax::SyntaxFlags,
 };
 
@@ -96,6 +97,16 @@ impl<I: Tokens> Parser<I> {
     #[inline]
     fn scratch_start<N: GetNodeId>(&self) -> ScratchIndex<N> {
         ScratchIndex::new(self.scratch.len())
+    }
+
+    #[inline]
+    fn to_utf8_ref(&mut self, maybe: MaybeSubUtf8) -> Utf8Ref {
+        self.ast.add_utf8(self.input.iter.get_maybe_sub_utf8(maybe))
+    }
+
+    #[inline]
+    fn to_wtf8_ref(&mut self, maybe: MaybeSubWtf8) -> Wtf8Ref {
+        self.ast.add_wtf8(self.input.iter.get_maybe_sub_wtf8(maybe))
     }
 }
 

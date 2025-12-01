@@ -1,5 +1,5 @@
 use swc_atoms::wtf8::{CodePoint, Wtf8, Wtf8Buf};
-use swc_common::BytePos;
+use swc_common::{BytePos, Span};
 
 /// If `start` <= `end`, it means that the string is from source.
 /// If `start` > `end`, it means that the string is allocated.
@@ -14,6 +14,13 @@ impl MaybeSubUtf8 {
         Self {
             start: start.0,
             end: end.0,
+        }
+    }
+
+    pub(crate) fn new_from_span(span: Span) -> Self {
+        Self {
+            start: span.lo.0,
+            end: span.hi.0,
         }
     }
 
@@ -55,6 +62,18 @@ impl MaybeSubWtf8 {
             start: start.0,
             end: end.0,
         }
+    }
+
+    pub(crate) fn is_allocated(&self) -> bool {
+        self.start > self.end
+    }
+
+    pub(crate) fn start(&self) -> u32 {
+        self.start
+    }
+
+    pub(crate) fn end(&self) -> u32 {
+        self.end
     }
 
     fn new_from_allocated(start: u32, end: u32) -> Self {

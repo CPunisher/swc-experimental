@@ -1,6 +1,5 @@
 use either::Either;
 use rustc_hash::FxHashMap;
-use swc_atoms::atom;
 use swc_common::{BytePos, Span, source_map::SmallPos};
 use swc_experimental_ecma_ast::*;
 
@@ -620,8 +619,9 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(matches!(cur, Token::NoSubstitutionTemplateLiteral));
 
         let (cooked, raw) = cur.take_template(self.input_mut());
+        let raw = self.to_utf8_ref(raw);
         let (raw, cooked) = match cooked {
-            Ok(cooked) => (raw, cooked.into()),
+            Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into()),
             Err(err) => {
                 if is_tagged_tpl {
                     (raw, OptionalWtf8Ref::new_none())
@@ -658,8 +658,9 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(matches!(cur, Token::TemplateHead));
 
         let (cooked, raw) = cur.take_template(self.input_mut());
+        let raw = self.to_utf8_ref(raw);
         let (raw, cooked) = match cooked {
-            Ok(cooked) => (raw, cooked.into()),
+            Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into()),
             Err(err) => {
                 if is_tagged_tpl {
                     (raw, OptionalWtf8Ref::new_none())
@@ -706,8 +707,9 @@ impl<I: Tokens> Parser<I> {
                 // case: ___${
                 // `pos.0 - 2` means skip '${'
                 let span = Span::new_with_checked(start, BytePos::from_u32(pos.0 - 2));
+                let raw = self.to_utf8_ref(raw);
                 match cooked {
-                    Ok(cooked) => (raw, cooked.into(), false, span),
+                    Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into(), false, span),
                     Err(err) => {
                         if is_tagged_tpl {
                             (raw, OptionalWtf8Ref::new_none(), false, span)
@@ -725,8 +727,9 @@ impl<I: Tokens> Parser<I> {
                 // case: ____`
                 // `pos.0 - 1` means skip '`'
                 let span = Span::new_with_checked(start, BytePos::from_u32(pos.0 - 1));
+                let raw = self.to_utf8_ref(raw);
                 match cooked {
-                    Ok(cooked) => (raw, cooked.into(), true, span),
+                    Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into(), true, span),
                     Err(err) => {
                         if is_tagged_tpl {
                             (raw, OptionalWtf8Ref::new_none(), true, span)
@@ -841,6 +844,8 @@ impl<I: Tokens> Parser<I> {
         let token_and_span = self.input().get_cur();
         let start = token_and_span.span.lo;
         let (value, raw) = self.input_mut().expect_string_token_and_bump();
+        let value = self.to_wtf8_ref(value);
+        let raw = self.to_utf8_ref(raw);
         self.ast.str(self.span(start), value, raw.into())
     }
 
@@ -861,11 +866,13 @@ impl<I: Tokens> Parser<I> {
             Lit::Str(self.parse_str_lit())
         } else if cur == Token::Num {
             let (value, raw) = self.input_mut().expect_number_token_and_bump();
+            let raw = self.to_utf8_ref(raw);
             self.ast.lit_number(self.span(start), value, raw.into())
         } else if cur == Token::BigInt {
             let (value, raw) = self.input_mut().expect_bigint_token_and_bump();
 
             let value = self.ast.add_bigint(*value);
+            let raw = self.to_utf8_ref(raw);
             self.ast.lit_big_int(self.span(start), value, raw.into())
         } else if cur == Token::Error {
             let err = self.input_mut().expect_error_token_and_bump();
@@ -1234,7 +1241,10 @@ impl<I: Tokens> Parser<I> {
         if question_dot || self.input_mut().eat(Token::Dot) {
             let prop = self.parse_maybe_private_name().map(|e| match e {
                 Either::Left(p) => MemberProp::PrivateName(p),
-                Either::Right((span, sym)) => MemberProp::Ident(self.ast.ident_name(span, sym)),
+                Either::Right((span, sym)) => {
+                    let sym = self.to_utf8_ref(sym);
+                    MemberProp::Ident(self.ast.ident_name(span, sym))
+                }
             })?;
             let span = self.span(callee.span_lo(&self.ast));
             debug_assert_eq!(callee.span_lo(&self.ast), span.lo());
@@ -1340,7 +1350,10 @@ impl<I: Tokens> Parser<I> {
                 self.bump();
                 let prop = self.parse_maybe_private_name().map(|e| match e {
                     Either::Left(p) => MemberProp::PrivateName(p),
-                    Either::Right((span, sym)) => MemberProp::Ident(self.ast.ident_name(span, sym)),
+                    Either::Right((span, sym)) => {
+                        let sym = self.to_utf8_ref(sym);
+                        MemberProp::Ident(self.ast.ident_name(span, sym))
+                    }
                 })?;
                 let span = self.span(lhs.span_lo(&self.ast));
                 debug_assert_eq!(lhs.span_lo(&self.ast), span.lo());
@@ -1405,7 +1418,7 @@ impl<I: Tokens> Parser<I> {
             self.mark_found_module_item();
 
             let (_, sym) = self.parse_ident_name()?;
-            match self.ast.get_utf8(sym).as_str() {
+            match self.input.iter.get_maybe_sub_utf8(sym) {
                 "meta" => {
                     let span = self.span(start);
                     if !self.ctx().contains(Context::CanBeModule) {
@@ -1829,7 +1842,7 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(span, SyntaxError::InvalidIdentInAsync);
             }
 
-            let sym = self.ast.add_utf8(atom!("await"));
+            let sym = self.ast.add_utf8("await");
             return Ok(self.ast.expr_ident(span, sym, false));
         }
 
@@ -2277,7 +2290,7 @@ impl<I: Tokens> Parser<I> {
         }
         if let Some(async_span) = async_span {
             // It's a call expression
-            let sym = self.ast.add_utf8(atom!("async"));
+            let sym = self.ast.add_utf8("async");
             let callee = self.ast.callee_expr_ident(async_span, sym, false);
             let expr_or_spreads = expr_or_spreads.end(self);
             return Ok(self.ast.expr_call_expr(
@@ -2463,19 +2476,23 @@ impl<I: Tokens> Parser<I> {
         } else if cur == Token::Hash {
             self.bump(); // consume `#`
             let (_, sym) = self.parse_ident_name()?;
+            let sym = self.to_utf8_ref(sym);
             Ok(self.ast.expr_private_name(self.span(start), sym))
         } else if cur == Token::Ident {
             let word = self.input_mut().expect_word_token_and_bump();
             if self.ctx().contains(Context::InClassField)
-                && self.input.iter.get_atom_str(word) == "arguments"
+                && self.input.iter.get_maybe_sub_utf8(word) == "arguments"
             {
                 self.emit_err(self.input().prev_span(), SyntaxError::ArgumentsInClassField)
             };
+
+            let word = self.to_utf8_ref(word);
             let id = self.ast.ident(self.span(token_start), word, false);
             try_parse_arrow_expr(self, id, false)
         } else if self.is_ident_ref() {
             let id_is_async = self.input().cur() == Token::Async;
             let word = self.input_mut().expect_word_token_and_bump();
+            let word = self.to_utf8_ref(word);
             let id = self.ast.ident(self.span(token_start), word, false);
             try_parse_arrow_expr(self, id, id_is_async)
         } else {
@@ -2497,7 +2514,7 @@ impl<I: Tokens> Parser<I> {
             let (exp, flags) = self.input_mut().expect_regex_token_and_bump();
             let span = self.span(start);
 
-            let mut flags_count = self.input.iter.get_atom_str(flags).chars().fold(
+            let mut flags_count = self.input.iter.get_maybe_sub_utf8(flags).chars().fold(
                 FxHashMap::<char, usize>::default(),
                 |mut map, flag| {
                     let key = match flag {
@@ -2518,6 +2535,8 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(span, SyntaxError::DuplicatedRegExpFlags(*flag));
             }
 
+            let exp = self.to_utf8_ref(exp);
+            let flags = self.to_utf8_ref(flags);
             Some(self.ast.expr_lit_regex(span, exp, flags))
         } else {
             None

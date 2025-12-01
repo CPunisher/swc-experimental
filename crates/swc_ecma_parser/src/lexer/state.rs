@@ -1,6 +1,6 @@
 use std::mem::take;
 
-use swc_atoms::wtf8::CodePoint;
+use swc_atoms::wtf8::{CodePoint, Wtf8};
 use swc_experimental_ecma_ast::EsVersion;
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;
@@ -75,12 +75,25 @@ impl crate::input::Tokens for Lexer<'_> {
     }
 
     #[inline]
-    fn get_atom_str(&self, maybe: MaybeSubUtf8) -> &str {
+    fn get_maybe_sub_utf8(&self, maybe: MaybeSubUtf8) -> &str {
         match maybe.is_allocated() {
             true => self.string_allocator.get_utf8(maybe),
             false => unsafe {
                 self.input
                     .slice(BytePos(maybe.start()), BytePos(maybe.end()))
+            },
+        }
+    }
+
+    #[inline]
+    fn get_maybe_sub_wtf8(&self, maybe: MaybeSubWtf8) -> &Wtf8 {
+        match maybe.is_allocated() {
+            true => self.string_allocator.get_wtf8(maybe),
+            false => unsafe {
+                Wtf8::from_str(
+                    self.input
+                        .slice(BytePos(maybe.start()), BytePos(maybe.end())),
+                )
             },
         }
     }
@@ -269,7 +282,7 @@ impl crate::input::Tokens for Lexer<'_> {
                 builder.push_str(&mut self.string_allocator, &token.to_string());
                 builder.push_str(&mut self.string_allocator, &v);
             } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
-                let value = self.get_atom_str(value).to_string();
+                let value = self.get_maybe_sub_utf8(value).to_string();
                 builder.push_str(&mut self.string_allocator, &value);
                 builder.push_str(&mut self.string_allocator, &v);
             } else {

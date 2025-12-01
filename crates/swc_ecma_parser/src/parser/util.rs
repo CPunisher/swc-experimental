@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use swc_experimental_ecma_ast::*;
 use swc_common::Span;
+use swc_experimental_ecma_ast::*;
 
 use crate::{Parser, input::Tokens};
 
@@ -47,7 +47,7 @@ pub trait IsInvalidClassName {
 
 impl IsInvalidClassName for Ident {
     fn invalid_class_name(&self, ast: &Ast) -> Option<Span> {
-        match ast.get_utf8(self.sym(ast)).as_str() {
+        match ast.get_utf8(self.sym(ast)) {
             "string" | "null" | "number" | "object" | "any" | "unknown" | "boolean" | "bigint"
             | "symbol" | "void" | "never" | "intrinsic" => Some(self.span(ast)),
             _ => None,

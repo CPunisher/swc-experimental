@@ -2214,7 +2214,7 @@ impl<'a> Lexer<'a> {
 
         let start = self.cur_pos();
         let (s, has_escape) = self.read_keyword_as_str_with()?;
-        if let Some(word) = convert(self.get_atom_str(s)) {
+        if let Some(word) = convert(self.get_maybe_sub_utf8(s)) {
             // Note: ctx is store in lexer because of this error.
             // 'await' and 'yield' may have semantic of reserved word, which means lexer
             // should know context or parser should handle this error. Our approach to this
@@ -2223,7 +2223,7 @@ impl<'a> Lexer<'a> {
                 self.error(
                     start,
                     SyntaxError::EscapeInReservedWord {
-                        word: Atom::new(self.get_atom_str(s)),
+                        word: Atom::new(self.get_maybe_sub_utf8(s)),
                     },
                 )
             } else {

@@ -1,3 +1,4 @@
+use swc_atoms::Atom;
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::*;
 
@@ -11,6 +12,7 @@ use crate::{
         js::pat::PatType,
         util::{FromStmt, ScratchIndex},
     },
+    string_alloc::MaybeSubUtf8,
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -692,7 +694,7 @@ impl<I: Tokens> Parser<I> {
         self.do_inside_of_context(Context::IsBreakAllowed, |p| {
             p.do_outside_of_context(Context::AllowUsingDecl, |p| {
                 let start = l.span_lo(&p.ast);
-                let atom = p.ast.get_utf8(l.sym(&p.ast)).clone();
+                let atom = Atom::new(p.ast.get_utf8(l.sym(&p.ast)));
 
                 let mut errors = Vec::new();
                 for lb in &p.state().labels {
@@ -956,10 +958,9 @@ impl<I: Tokens> Parser<I> {
             let span = self.span(start);
             if is_break {
                 if label.is_some()
-                    && !self
-                        .state()
-                        .labels
-                        .contains(self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)))
+                    && !self.state().labels.contains(&Atom::new(
+                        self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)),
+                    ))
                 {
                     self.emit_err(span, SyntaxError::TS1116);
                 } else if !self.ctx().contains(Context::IsBreakAllowed) {
@@ -968,10 +969,9 @@ impl<I: Tokens> Parser<I> {
             } else if !self.ctx().contains(Context::IsContinueAllowed) {
                 self.emit_err(span, SyntaxError::TS1115);
             } else if label.is_some()
-                && !self
-                    .state()
-                    .labels
-                    .contains(self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)))
+                && !self.state().labels.contains(&Atom::new(
+                    self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)),
+                ))
             {
                 self.emit_err(span, SyntaxError::TS1107);
             }
@@ -1112,10 +1112,10 @@ impl<I: Tokens> Parser<I> {
 
         if let Expr::Ident(ref ident) = expr {
             let ident_sym = self.ast.get_utf8(ident.sym(&self.ast));
-            if ident_sym.as_str() == "interface" && self.input().had_line_break_before_cur() {
+            if ident_sym == "interface" && self.input().had_line_break_before_cur() {
                 self.emit_strict_mode_err(
                     ident.span(&self.ast),
-                    SyntaxError::InvalidIdentInStrict(ident_sym.clone()),
+                    SyntaxError::InvalidIdentInStrict(Atom::new(ident_sym)),
                 );
 
                 self.eat_general_semi();
@@ -1184,8 +1184,10 @@ impl<I: Tokens> Parser<I> {
 
         let mut stmts = self.scratch_start();
 
-        let cur_atom = Utf8Ref::new_from_span(self.input.cur_span());
-        let cur_str = self.input.iter.get_atom_str(cur_atom);
+        let cur_str = self
+            .input
+            .iter
+            .get_maybe_sub_utf8(MaybeSubUtf8::new_from_span(self.input.cur_span()));
         let has_strict_directive =
             allow_directives && (cur_str == "\"use strict\"" || cur_str == "'use strict'");
 
@@ -1233,7 +1235,7 @@ impl<I: Tokens> Parser<I> {
         let cur = self.input().cur();
         Ok(if cur == Token::Shebang {
             let atom = self.input_mut().expect_shebang_token_and_bump();
-            atom.into()
+            self.to_utf8_ref(atom).into()
         } else {
             OptionalUtf8Ref::new_none()
         })
