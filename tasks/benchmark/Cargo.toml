@@ -4,9 +4,10 @@ name    = "benchmark"
 version = "0.1.0"
 
 [dev-dependencies]
-swc_experimental_ecma_ast    = { workspace = true }
-swc_experimental_ecma_parser = { workspace = true }
-swc_experimental_ecma_visit  = { workspace = true }
+swc_experimental_ecma_ast      = { workspace = true }
+swc_experimental_ecma_parser   = { workspace = true }
+swc_experimental_ecma_semantic = { workspace = true }
+swc_experimental_ecma_visit    = { workspace = true }
 
 criterion       = { workspace = true }
 mimalloc        = { workspace = true }
@@ -22,3 +23,7 @@ name    = "parser"
 [[bench]]
 harness = false
 name    = "visit_compare"
+
+[[bench]]
+harness = false
+name    = "semantic"
