@@ -2,23 +2,30 @@ use swc_atoms::Atom;
 use swc_experimental_ecma_ast::{Ast, Expr, Ident, PropName};
 use swc_experimental_ecma_visit::{Visit, VisitWith};
 
-pub struct DestructuringFinder {
-    pub found: Vec<Atom>,
+pub struct DestructuringFinder<'ast> {
+    ast: &'ast Ast,
+    found: Vec<&'ast str>,
 }
 
-pub fn find_pat_ids<N: VisitWith<DestructuringFinder>>(ast: &Ast, node: N) -> Vec<Atom> {
-    let mut v = DestructuringFinder { found: Vec::new() };
+pub fn find_pat_ids<'ast, N: VisitWith<DestructuringFinder<'ast>>>(
+    ast: &'ast Ast,
+    node: N,
+) -> Vec<&'ast str> {
+    let mut v = DestructuringFinder {
+        ast,
+        found: Vec::new(),
+    };
     node.visit_with(&mut v, ast);
 
     v.found
 }
 
-impl Visit for DestructuringFinder {
+impl<'ast> Visit for DestructuringFinder<'ast> {
     /// No-op (we don't care about expressions)
-    fn visit_expr(&mut self, _: Expr, ast: &Ast) {}
+    fn visit_expr(&mut self, _: Expr, _ast: &Ast) {}
 
-    fn visit_ident(&mut self, i: Ident, ast: &Ast) {
-        self.found.push(Atom::new(ast.get_utf8(i.sym(ast))));
+    fn visit_ident(&mut self, i: Ident, _ast: &Ast) {
+        self.found.push(self.ast.get_utf8(i.sym(self.ast)));
     }
 
     // fn visit_jsx_member_expr(&mut self, n: &JSXMemberExpr) {

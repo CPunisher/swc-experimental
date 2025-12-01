@@ -123,12 +123,13 @@ const LOG: bool = false && cfg!(debug_assertions);
 ///
 /// both of them have the same name, so the `(Atom, SyntaxContext)` pair will
 /// be also identical.
-pub fn resolver() -> Resolver {
+pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> Semantic {
     let top_level_scope = Scope::new(ScopeKind::Fn, None);
     let mut scopes = IndexVec::default();
     let top_level_scope_id = scopes.push(top_level_scope);
 
-    Resolver {
+    let mut resolver = Resolver {
+        ast,
         symbol_scopes: FxHashMap::default(),
         block_scopes: FxHashMap::default(),
         scopes,
@@ -142,60 +143,25 @@ pub fn resolver() -> Resolver {
         in_ts_module: false,
         decl_kind: DeclKind::Lexical,
         strict_mode: false,
+    };
+
+    root.visit_with(&mut resolver, ast);
+    Semantic {
+        top_level_scope_id,
+        symbol_scopes: resolver.symbol_scopes,
+        block_scopes: resolver.block_scopes,
     }
 }
 
 pub const UNRESOLVED_SCOPE_ID: ScopeId = ScopeId::from_raw(u32::MAX);
 
-#[derive(Debug, Clone)]
-struct Scope {
-    /// Parent scope of the scope
-    parent: Option<ScopeId>,
-
-    /// Kind of the scope.
-    kind: ScopeKind,
-
-    /// All declarations in the scope
-    declared_symbols: FxHashMap<Atom, DeclKind>,
-
-    /// All types declared in the scope
-    declared_types: FxHashSet<Atom>,
-}
-
-impl Scope {
-    pub fn new(kind: ScopeKind, parent: Option<ScopeId>) -> Self {
-        Scope {
-            parent,
-            kind,
-            declared_symbols: Default::default(),
-            declared_types: Default::default(),
-        }
-    }
-}
-
-/// # Phases
-///
-/// ## Hoisting phase
-///
-/// ## Resolving phase
-pub struct Resolver {
-    // Changed
+pub struct Semantic {
+    top_level_scope_id: ScopeId,
     symbol_scopes: FxHashMap<NodeId, ScopeId>,
     block_scopes: FxHashMap<NodeId, ScopeId>,
-
-    top_level_scope_id: ScopeId,
-    scopes: IndexVec<ScopeId, Scope>,
-    current: ScopeId,
-
-    ident_type: IdentType,
-    in_type: bool,
-    is_module: bool,
-    in_ts_module: bool,
-    decl_kind: DeclKind,
-    strict_mode: bool,
 }
 
-impl Resolver {
+impl Semantic {
     #[inline]
     pub fn node_scope(&self, ident: Ident) -> ScopeId {
         let Some(scope_id) = self.symbol_scopes.get(&ident.node_id()).cloned() else {
@@ -211,8 +177,57 @@ impl Resolver {
     }
 }
 
-impl Resolver {
-    fn is_declared(&self, symbol: &Atom, start_scope: ScopeId) -> Option<&DeclKind> {
+#[derive(Debug, Clone)]
+struct Scope<'ast> {
+    /// Parent scope of the scope
+    parent: Option<ScopeId>,
+
+    /// Kind of the scope.
+    kind: ScopeKind,
+
+    /// All declarations in the scope
+    declared_symbols: FxHashMap<&'ast str, DeclKind>,
+
+    /// All types declared in the scope
+    declared_types: FxHashSet<&'ast str>,
+}
+
+impl Scope<'_> {
+    pub fn new(kind: ScopeKind, parent: Option<ScopeId>) -> Self {
+        Scope {
+            parent,
+            kind,
+            declared_symbols: Default::default(),
+            declared_types: Default::default(),
+        }
+    }
+}
+
+/// # Phases
+///
+/// ## Hoisting phase
+///
+/// ## Resolving phase
+pub struct Resolver<'ast> {
+    // Changed
+    ast: &'ast Ast,
+    symbol_scopes: FxHashMap<NodeId, ScopeId>,
+    block_scopes: FxHashMap<NodeId, ScopeId>,
+
+    top_level_scope_id: ScopeId,
+    scopes: IndexVec<ScopeId, Scope<'ast>>,
+    current: ScopeId,
+
+    ident_type: IdentType,
+    in_type: bool,
+    is_module: bool,
+    in_ts_module: bool,
+    decl_kind: DeclKind,
+    strict_mode: bool,
+}
+
+impl<'ast> Resolver<'ast> {
+    fn is_declared(&self, symbol: &str, start_scope: ScopeId) -> Option<&DeclKind> {
         let mut scope = Some(start_scope);
         while let Some(cur_scope) = scope {
             let cur_scope = &self.scopes[cur_scope];
@@ -261,11 +276,11 @@ impl Resolver {
     }
 
     /// Returns a [Mark] for an identifier reference.
-    fn mark_for_ref(&self, sym: &Atom) -> Option<ScopeId> {
+    fn mark_for_ref(&self, sym: &'ast str) -> Option<ScopeId> {
         self.mark_for_ref_inner(sym, false)
     }
 
-    fn mark_for_ref_inner(&self, sym: &Atom, stop_an_fn_scope: bool) -> Option<ScopeId> {
+    fn mark_for_ref_inner(&self, sym: &'ast str, stop_an_fn_scope: bool) -> Option<ScopeId> {
         // if self.config.handle_types && self.in_type {
         //     let mut mark = self.current.mark;
         //     let mut scope = Some(&self.current);
@@ -295,7 +310,7 @@ impl Resolver {
         while let Some(cur) = scope {
             let cur_scope = &self.scopes[cur];
             if cur_scope.declared_symbols.contains_key(sym) {
-                return match &**sym {
+                return match sym {
                     // https://tc39.es/ecma262/multipage/global-object.html#sec-value-properties-of-the-global-object-infinity
                     // non configurable global value
                     "undefined" | "NaN" | "Infinity"
@@ -318,7 +333,7 @@ impl Resolver {
     }
 
     /// Modifies a binding identifier.
-    fn modify(&mut self, ast: &Ast, id: Ident, kind: DeclKind) {
+    fn modify(&mut self, ast: &'ast Ast, id: Ident, kind: DeclKind) {
         let node_id = id.node_id();
 
         if self.symbol_scopes.contains_key(&node_id) {
@@ -328,11 +343,11 @@ impl Resolver {
         if self.in_type {
             self.scopes[self.current]
                 .declared_types
-                .insert(Atom::new(ast.get_utf8(id.sym(ast))));
+                .insert(ast.get_utf8(id.sym(ast)));
         } else {
             self.scopes[self.current]
                 .declared_symbols
-                .insert(Atom::new(ast.get_utf8(id.sym(ast))), kind);
+                .insert(ast.get_utf8(id.sym(ast)), kind);
         }
 
         let scope_id = self.current;
@@ -421,7 +436,7 @@ impl Resolver {
 //     };
 // }
 
-impl Visit for Resolver {
+impl<'ast> Visit for Resolver<'ast> {
     // noop!(visit_accessibility, Accessibility);
 
     // noop!(visit_true_plus_minus, TruePlusMinus);
@@ -516,7 +531,7 @@ impl Visit for Resolver {
                     .params(ast)
                     .iter()
                     .filter(|p| !ast.get_node(*p).is_rest())
-                    .flat_map(|p| find_pat_ids(ast, ast.get_node(p)));
+                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -629,7 +644,7 @@ impl Visit for Resolver {
         // if n.declare && !self.config.handle_types {
         //     return;
         // }
-        self.modify(ast, n.ident(ast), DeclKind::Lexical);
+        self.modify(self.ast, n.ident(ast), DeclKind::Lexical);
 
         // n.class(ast).decorators.visit_with(self);
 
@@ -716,7 +731,7 @@ impl Visit for Resolver {
                             ParamOrTsParamProp::Param(p) => !p.pat(ast).is_rest(),
                         }
                     })
-                    .flat_map(|p| find_pat_ids(ast, ast.get_node(p)));
+                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -826,7 +841,7 @@ impl Visit for Resolver {
 
         if let Some(ident) = e.ident(ast) {
             self.with_child(ScopeKind::Fn, |child| {
-                child.modify(ast, ident, DeclKind::Function);
+                child.modify(child.ast, ident, DeclKind::Function);
                 child.with_child(ScopeKind::Fn, |child| {
                     e.function(ast).visit_with(child, ast);
                 });
@@ -881,7 +896,7 @@ impl Visit for Resolver {
                 .params(ast)
                 .iter()
                 .filter(|p| !ast.get_node(*p).pat(ast).is_rest())
-                .flat_map(|p| find_pat_ids(ast, ast.get_node(p)));
+                .flat_map(|p| find_pat_ids(self.ast, ast.get_node(p)));
 
             for id in params {
                 self.scopes[self.current]
@@ -950,7 +965,7 @@ impl Visit for Resolver {
         }
 
         match self.ident_type {
-            IdentType::Binding => self.modify(ast, i, self.decl_kind),
+            IdentType::Binding => self.modify(self.ast, i, self.decl_kind),
             IdentType::Ref => {
                 // if cfg!(debug_assertions) && LOG {
                 //     debug!("IdentRef (type = {}) {}{:?}", self.in_type, sym, ctxt);
@@ -972,7 +987,7 @@ impl Visit for Resolver {
 
                     self.symbol_scopes.insert(i.node_id(), UNRESOLVED_SCOPE_ID);
                     // Support hoisting
-                    self.modify(ast, i, self.decl_kind)
+                    self.modify(self.ast, i, self.decl_kind)
                 }
             }
             // We currently does not touch labels
@@ -1551,22 +1566,22 @@ fn leftmost(ast: &Ast, expr: Expr) -> Option<Ident> {
 }
 
 /// The folder which handles var / function hoisting.
-struct Hoister<'a> {
-    resolver: &'a mut Resolver,
+struct Hoister<'resolver, 'ast> {
+    resolver: &'resolver mut Resolver<'ast>,
     kind: DeclKind,
     /// Hoister should not touch let / const in the block.
     in_block: bool,
 
     in_catch_body: bool,
 
-    excluded_from_catch: FxHashSet<Atom>,
-    catch_param_decls: FxHashSet<Atom>,
+    excluded_from_catch: FxHashSet<&'ast str>,
+    catch_param_decls: FxHashSet<&'ast str>,
 }
 
-impl Hoister<'_> {
-    fn add_pat_id(&mut self, ast: &Ast, id: BindingIdent) {
+impl<'resolver, 'ast> Hoister<'resolver, 'ast> {
+    fn add_pat_id(&mut self, ast: &'ast Ast, id: BindingIdent) {
         let id = id.id(ast);
-        let sym = Atom::new(ast.get_utf8(id.sym(ast)));
+        let sym = ast.get_utf8(id.sym(ast));
         if self.in_catch_body {
             // If we have a binding, it's different variable.
             if self.resolver.mark_for_ref_inner(&sym, true).is_some()
@@ -1575,7 +1590,7 @@ impl Hoister<'_> {
                 return;
             }
 
-            self.excluded_from_catch.insert(sym.clone());
+            self.excluded_from_catch.insert(sym);
         } else {
             // Behavior is different
             if self.catch_param_decls.contains(&sym) && !self.excluded_from_catch.contains(&sym) {
@@ -1587,7 +1602,7 @@ impl Hoister<'_> {
     }
 }
 
-impl Visit for Hoister<'_> {
+impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     // noop_visit_type!();
 
     #[inline]
@@ -1596,7 +1611,7 @@ impl Visit for Hoister<'_> {
     fn visit_assign_pat_prop(&mut self, node: AssignPatProp, ast: &Ast) {
         node.visit_children_with(self, ast);
 
-        self.add_pat_id(ast, node.key(ast));
+        self.add_pat_id(self.resolver.ast, node.key(ast));
     }
 
     fn visit_block_stmt(&mut self, n: BlockStmt, ast: &Ast) {
@@ -1646,7 +1661,7 @@ impl Visit for Hoister<'_> {
 
         let old_in_catch_body = self.in_catch_body;
 
-        let params = find_pat_ids(ast, c.param(ast));
+        let params = find_pat_ids(self.resolver.ast, c.param(ast));
 
         let orig = self.catch_param_decls.clone();
 
@@ -1681,7 +1696,7 @@ impl Visit for Hoister<'_> {
             return;
         }
         self.resolver
-            .modify(ast, node.ident(ast), DeclKind::Lexical);
+            .modify(self.resolver.ast, node.ident(ast), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -1756,14 +1771,15 @@ impl Visit for Hoister<'_> {
         match node.decl(ast) {
             DefaultDecl::Fn(f) => {
                 if let Some(id) = f.ident(ast) {
-                    self.resolver.modify(ast, id, DeclKind::Var);
+                    self.resolver.modify(self.resolver.ast, id, DeclKind::Var);
                 }
 
                 f.visit_with(self, ast)
             }
             DefaultDecl::Class(c) => {
                 if let Some(id) = c.ident(ast) {
-                    self.resolver.modify(ast, id, DeclKind::Lexical);
+                    self.resolver
+                        .modify(self.resolver.ast, id, DeclKind::Lexical);
                 }
 
                 c.visit_with(self, ast)
@@ -1784,7 +1800,7 @@ impl Visit for Hoister<'_> {
 
         if self
             .catch_param_decls
-            .contains(&Atom::new(ast.get_utf8(node.ident(ast).sym(ast))))
+            .contains(self.resolver.ast.get_utf8(node.ident(ast).sym(ast)))
         {
             return;
         }
@@ -1805,7 +1821,7 @@ impl Visit for Hoister<'_> {
         }
 
         self.resolver
-            .modify(ast, node.ident(ast), DeclKind::Function);
+            .modify(self.resolver.ast, node.ident(ast), DeclKind::Function);
     }
 
     #[inline]
@@ -1814,7 +1830,8 @@ impl Visit for Hoister<'_> {
     fn visit_import_default_specifier(&mut self, n: ImportDefaultSpecifier, ast: &Ast) {
         n.visit_children_with(self, ast);
 
-        self.resolver.modify(ast, n.local(ast), DeclKind::Lexical);
+        self.resolver
+            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -1827,7 +1844,8 @@ impl Visit for Hoister<'_> {
     fn visit_import_named_specifier(&mut self, n: ImportNamedSpecifier, ast: &Ast) {
         n.visit_children_with(self, ast);
 
-        self.resolver.modify(ast, n.local(ast), DeclKind::Lexical);
+        self.resolver
+            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -1840,7 +1858,8 @@ impl Visit for Hoister<'_> {
     fn visit_import_star_as_specifier(&mut self, n: ImportStarAsSpecifier, ast: &Ast) {
         n.visit_children_with(self, ast);
 
-        self.resolver.modify(ast, n.local(ast), DeclKind::Lexical);
+        self.resolver
+            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -1856,7 +1875,7 @@ impl Visit for Hoister<'_> {
     fn visit_pat(&mut self, node: Pat, ast: &Ast) {
         match node {
             Pat::Ident(i) => {
-                self.add_pat_id(ast, i);
+                self.add_pat_id(self.resolver.ast, i);
             }
 
             _ => node.visit_children_with(self, ast),
