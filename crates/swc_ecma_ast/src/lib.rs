@@ -25,8 +25,8 @@ pub use common::*;
 pub use derive::*;
 pub use generated::ast_visitor::*;
 pub use node_id::{
-    BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalNodeId, OptionalUtf8Ref,
-    OptionalWtf8Ref, SubRange, TypedSubRange, Utf8Ref, Wtf8Ref,
+    BigIntId, ExtraDataId, FromNodeId, GetNodeId, GetOptionalNodeId, NodeId, OptionalNodeId,
+    OptionalUtf8Ref, OptionalWtf8Ref, SubRange, TypedSubRange, Utf8Ref, Wtf8Ref,
 };
 
 use crate::ast_list::NodeList;
