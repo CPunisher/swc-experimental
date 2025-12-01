@@ -1,7 +1,7 @@
 use std::mem::take;
 
-use swc_atoms::wtf8::{CodePoint, Wtf8Buf};
-use swc_experimental_ecma_ast::{AtomRef, EsVersion, Wtf8AtomRef};
+use swc_atoms::wtf8::CodePoint;
+use swc_experimental_ecma_ast::EsVersion;
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;
 
@@ -15,6 +15,7 @@ use crate::{
         comments_buffer::{BufferedCommentKind, CommentsBufferCheckpoint},
         token::{Token, TokenAndSpan, TokenValue},
     },
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
     syntax::SyntaxFlags,
 };
 
@@ -74,11 +75,13 @@ impl crate::input::Tokens for Lexer<'_> {
     }
 
     #[inline]
-    fn get_atom_str(&self, atom_ref: AtomRef) -> &str {
-        match atom_ref.get_atom_id() {
-            Some(atom_id) => self.string_allocator.get_utf8(atom_id),
-            // TODO: Safety guarantee
-            None => unsafe { self.input.slice(atom_ref.lo, atom_ref.hi) },
+    fn get_atom_str(&self, maybe: MaybeSubUtf8) -> &str {
+        match maybe.is_allocated() {
+            true => self.string_allocator.get_utf8(maybe),
+            false => unsafe {
+                self.input
+                    .slice(BytePos(maybe.start()), BytePos(maybe.end()))
+            },
         }
     }
 
@@ -261,17 +264,23 @@ impl crate::input::Tokens for Lexer<'_> {
             }
         }
         let v = if !v.is_empty() {
-            let v = if token.is_known_ident() || token.is_keyword() {
-                format!("{}{}", token.to_string(), v)
+            let mut builder = self.string_allocator.alloc_utf8();
+            if token.is_known_ident() || token.is_keyword() {
+                builder.push_str(&mut self.string_allocator, &token.to_string());
+                builder.push_str(&mut self.string_allocator, &v);
             } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
-                let value = self.get_atom_str(value);
-                format!("{value}{v}")
+                let value = self.get_atom_str(value).to_string();
+                builder.push_str(&mut self.string_allocator, &value);
+                builder.push_str(&mut self.string_allocator, &v);
             } else {
-                format!("{}{}", token.to_string(), v)
+                builder.push_str(&mut self.string_allocator, &token.to_string());
+                builder.push_str(&mut self.string_allocator, &v);
             };
-            AtomRef::new_alloc(self.string_allocator.alloc_utf8(v))
+            builder.finish(&mut self.string_allocator)
         } else if token.is_known_ident() || token.is_keyword() {
-            AtomRef::new_alloc(self.string_allocator.alloc_utf8(token.to_string()))
+            let mut builder = self.string_allocator.alloc_utf8();
+            builder.push_str(&mut self.string_allocator, &token.to_string());
+            builder.finish(&mut self.string_allocator)
         } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
             value
         } else {
@@ -378,7 +387,7 @@ impl Lexer<'_> {
         }
 
         if self.state.is_first {
-            if let Some(shebang) = self.read_shebang()?.to_option() {
+            if let Some(shebang) = self.read_shebang()? {
                 self.state.set_token_value(TokenValue::Word(shebang));
                 return Ok(Token::Shebang);
             }
@@ -419,7 +428,7 @@ impl Lexer<'_> {
         let start = self.input.cur_pos();
         let mut first_non_whitespace = 0;
         let mut chunk_start = start;
-        let mut value = Wtf8Buf::new();
+        let mut value = self.string_allocator.alloc_wtf8();
 
         while let Some(ch) = self.input_mut().peek() {
             if ch == b'{' {
@@ -461,10 +470,10 @@ impl Lexer<'_> {
                     // Safety: We already checked for the range
                     self.input_slice_to_cur(chunk_start)
                 };
-                value.push_str(s);
+                value.push_str(&mut self.string_allocator, s);
 
                 if let Ok(jsx_entity) = self.read_jsx_entity() {
-                    value.push_char(jsx_entity.0);
+                    value.push_char(&mut self.string_allocator, jsx_entity.0);
 
                     chunk_start = self.input.cur_pos();
                 }
@@ -473,16 +482,16 @@ impl Lexer<'_> {
             }
         }
 
-        let raw = AtomRef::new_ref(start, self.cur_pos());
-        let value = if value.is_empty() {
-            Wtf8AtomRef::new_ref(start, self.cur_pos())
+        let raw = MaybeSubUtf8::new_from_source(start, self.cur_pos());
+        let value = if value.is_empty(&self.string_allocator) {
+            MaybeSubWtf8::new_from_source(start, self.cur_pos())
         } else {
             let s = unsafe {
                 // Safety: We already checked for the range
                 self.input_slice_to_cur(chunk_start)
             };
-            value.push_str(s);
-            Wtf8AtomRef::new_alloc(self.string_allocator.alloc_wtf8(value))
+            value.push_str(&mut self.string_allocator, s);
+            value.finish(&mut self.string_allocator)
         };
 
         self.state.set_token_value(TokenValue::Str { raw, value });

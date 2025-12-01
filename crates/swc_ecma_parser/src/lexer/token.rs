@@ -1,39 +1,40 @@
 use num_bigint::BigInt;
 use swc_common::Span;
-use swc_experimental_ecma_ast::{AssignOp, AtomRef, OptionalAtomRef, Wtf8AtomRef};
+use swc_experimental_ecma_ast::AssignOp;
 
 use super::LexResult;
 use crate::{
     Context, Lexer,
     error::Error,
     input::{Buffer, Tokens},
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
 };
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {
     /// unknown ident, jsx name and shebang
-    Word(AtomRef),
+    Word(MaybeSubUtf8),
     Template {
-        raw: AtomRef,
-        cooked: LexResult<Wtf8AtomRef>,
+        raw: MaybeSubUtf8,
+        cooked: LexResult<MaybeSubWtf8>,
     },
     // string, jsx text
     Str {
-        value: Wtf8AtomRef,
-        raw: AtomRef,
+        value: MaybeSubWtf8,
+        raw: MaybeSubUtf8,
     },
     // regexp
     Regex {
-        value: AtomRef,
-        flags: AtomRef,
+        value: MaybeSubUtf8,
+        flags: MaybeSubUtf8,
     },
     Num {
         value: f64,
-        raw: AtomRef,
+        raw: MaybeSubUtf8,
     },
     BigInt {
         value: Box<num_bigint::BigInt>,
-        raw: AtomRef,
+        raw: MaybeSubUtf8,
     },
     Error(crate::error::Error),
 }
@@ -332,20 +333,20 @@ impl Token {
 
 impl<'a> Token {
     #[inline(always)]
-    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
+    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn str(value: Wtf8AtomRef, raw: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn str(value: MaybeSubWtf8, raw: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::Str
     }
 
     #[inline(always)]
     pub fn template(
-        cooked: LexResult<Wtf8AtomRef>,
-        raw: AtomRef,
+        cooked: LexResult<MaybeSubWtf8>,
+        raw: MaybeSubUtf8,
         lexer: &mut crate::Lexer<'a>,
     ) -> Self {
         lexer.set_token_value(Some(TokenValue::Template { cooked, raw }));
@@ -353,7 +354,11 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn regexp(content: AtomRef, flags: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn regexp(
+        content: MaybeSubUtf8,
+        flags: MaybeSubUtf8,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::Regex {
             value: content,
             flags,
@@ -362,7 +367,7 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn num(value: f64, raw: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn num(value: f64, raw: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Num { value, raw }));
         Self::Num
     }
@@ -370,7 +375,7 @@ impl<'a> Token {
     #[inline(always)]
     pub fn bigint(
         value: Box<num_bigint::BigInt>,
-        raw: AtomRef,
+        raw: MaybeSubUtf8,
         lexer: &mut crate::Lexer<'a>,
     ) -> Self {
         lexer.set_token_value(Some(TokenValue::BigInt { value, raw }));
@@ -378,7 +383,7 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn unknown_ident(value: AtomRef, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn unknown_ident(value: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Ident
     }
@@ -389,33 +394,33 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Wtf8AtomRef, AtomRef) {
+    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubWtf8, MaybeSubUtf8) {
         buffer.expect_string_token_value()
     }
 
     #[inline(always)]
-    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, AtomRef) {
+    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, MaybeSubUtf8) {
         buffer.expect_number_token_value()
     }
 
     #[inline(always)]
-    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, AtomRef) {
+    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, MaybeSubUtf8) {
         buffer.expect_bigint_token_value()
     }
 
     #[inline]
-    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> OptionalAtomRef {
+    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> MaybeSubUtf8 {
         let span = buffer.cur.span;
-        AtomRef::new_from_span(span).into()
+        MaybeSubUtf8::new_from_source(span.lo, span.hi)
     }
 
     #[inline(always)]
-    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
+    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> AtomRef {
+    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value_ref()
     }
 
@@ -423,29 +428,29 @@ impl<'a> Token {
     pub fn take_template<I: Tokens>(
         self,
         buffer: &mut Buffer<I>,
-    ) -> (LexResult<Wtf8AtomRef>, AtomRef) {
+    ) -> (LexResult<MaybeSubWtf8>, MaybeSubUtf8) {
         buffer.expect_template_token_value()
     }
 
     #[inline(always)]
-    pub fn jsx_text(value: Wtf8AtomRef, raw: AtomRef, lexer: &mut Lexer) -> Self {
+    pub fn jsx_text(value: MaybeSubWtf8, raw: MaybeSubUtf8, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::JSXText
     }
 
     #[inline(always)]
-    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (AtomRef, AtomRef) {
+    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubUtf8, MaybeSubUtf8) {
         buffer.expect_regex_token_value()
     }
 
     #[inline(always)]
-    pub fn shebang(value: AtomRef, lexer: &mut Lexer) -> Self {
+    pub fn shebang(value: MaybeSubUtf8, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Shebang
     }
 
     #[inline(always)]
-    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> AtomRef {
+    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 }
