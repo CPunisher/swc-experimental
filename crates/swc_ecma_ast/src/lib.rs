@@ -35,7 +35,7 @@ pub struct Ast {
     nodes: NodeList,
     extra_data: IndexVec<ExtraDataId, ExtraData>,
     bigint: IndexVec<BigIntId, BigIntValue>,
-    allocated_atom: String,
+    allocated_utf8: String,
     allocated_wtf8: Wtf8Buf,
 }
 
@@ -280,7 +280,7 @@ impl Ast {
             nodes: NodeList::default(),
             extra_data: IndexVec::new(),
             bigint: IndexVec::new(),
-            allocated_atom: String::with_capacity(source_len / 2),
+            allocated_utf8: String::with_capacity(source_len / 2),
             allocated_wtf8: Wtf8Buf::new(),
         }
     }
@@ -328,9 +328,9 @@ impl Ast {
 
     #[inline]
     pub fn add_utf8(&mut self, s: &str) -> Utf8Ref {
-        let lo = self.allocated_atom.len() as u32;
-        self.allocated_atom.push_str(s);
-        let hi = self.allocated_atom.len() as u32;
+        let lo = self.allocated_utf8.len() as u32;
+        self.allocated_utf8.push_str(s);
+        let hi = self.allocated_utf8.len() as u32;
         Utf8Ref::new_ref(lo, hi)
     }
 
@@ -360,7 +360,7 @@ impl Ast {
 
     #[inline]
     pub fn get_utf8(&self, id: Utf8Ref) -> &str {
-        &self.allocated_atom[id.lo() as usize..id.hi() as usize]
+        &self.allocated_utf8[id.lo() as usize..id.hi() as usize]
     }
 
     #[inline]
