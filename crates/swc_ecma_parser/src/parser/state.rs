@@ -1,14 +1,14 @@
 use std::ops::{Deref, DerefMut};
 
 use rustc_hash::FxHashMap;
-use swc_atoms::Atom;
 use swc_common::{BytePos, Span};
+use swc_experimental_ecma_ast::Utf8Ref;
 
-use crate::{input::Tokens, Parser};
+use crate::{Parser, input::Tokens};
 
 #[derive(Clone, Default)]
 pub struct State {
-    pub labels: Vec<Atom>,
+    pub labels: Vec<Utf8Ref>,
     /// Start position of an assignment expression.
     pub potential_arrow_start: Option<BytePos>,
     /// Start position of an AST node and the span of its trailing comma.

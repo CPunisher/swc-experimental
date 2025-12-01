@@ -694,18 +694,20 @@ impl<I: Tokens> Parser<I> {
         self.do_inside_of_context(Context::IsBreakAllowed, |p| {
             p.do_outside_of_context(Context::AllowUsingDecl, |p| {
                 let start = l.span_lo(&p.ast);
-                let atom = Atom::new(p.ast.get_utf8(l.sym(&p.ast)));
+                let sym = l.sym(&p.ast);
+                let atom = p.ast.get_utf8(sym);
 
                 let mut errors = Vec::new();
                 for lb in &p.state().labels {
-                    if &atom == lb {
+                    let lb = p.ast.get_utf8(*lb);
+                    if atom == lb {
                         errors.push(Error::new(
                             l.span(&p.ast),
-                            SyntaxError::DuplicateLabel(atom.clone()),
+                            SyntaxError::DuplicateLabel(Atom::new(atom)),
                         ));
                     }
                 }
-                p.state_mut().labels.push(atom.clone());
+                p.state_mut().labels.push(sym);
 
                 let body = if p.input().is(Token::Function) {
                     let f = p.parse_fn_decl(TypedSubRange::empty())?;
@@ -729,7 +731,11 @@ impl<I: Tokens> Parser<I> {
                 }
 
                 {
-                    let pos = p.state().labels.iter().position(|v| v == &atom);
+                    let pos = p
+                        .state()
+                        .labels
+                        .iter()
+                        .position(|v| p.ast.get_utf8(*v) == p.ast.get_utf8(sym));
                     if let Some(pos) = pos {
                         p.state_mut().labels.remove(pos);
                     }
@@ -958,9 +964,15 @@ impl<I: Tokens> Parser<I> {
             let span = self.span(start);
             if is_break {
                 if label.is_some()
-                    && !self.state().labels.contains(&Atom::new(
-                        self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)),
-                    ))
+                    && !self
+                        .state()
+                        .labels
+                        .iter()
+                        .find(|l| {
+                            self.ast.get_utf8(**l)
+                                == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                        })
+                        .is_some()
                 {
                     self.emit_err(span, SyntaxError::TS1116);
                 } else if !self.ctx().contains(Context::IsBreakAllowed) {
@@ -969,9 +981,15 @@ impl<I: Tokens> Parser<I> {
             } else if !self.ctx().contains(Context::IsContinueAllowed) {
                 self.emit_err(span, SyntaxError::TS1115);
             } else if label.is_some()
-                && !self.state().labels.contains(&Atom::new(
-                    self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast)),
-                ))
+                && !self
+                    .state()
+                    .labels
+                    .iter()
+                    .find(|l| {
+                        self.ast.get_utf8(**l)
+                            == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                    })
+                    .is_some()
             {
                 self.emit_err(span, SyntaxError::TS1107);
             }
