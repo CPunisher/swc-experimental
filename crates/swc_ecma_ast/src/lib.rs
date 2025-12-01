@@ -31,13 +31,12 @@ pub use node_id::{
 
 use crate::ast_list::NodeList;
 
-#[derive(Default)]
 pub struct Ast {
     nodes: NodeList,
     extra_data: IndexVec<ExtraDataId, ExtraData>,
+    bigint: IndexVec<BigIntId, BigIntValue>,
     allocated_atom: String,
     allocated_wtf8: Wtf8Buf,
-    bigint: IndexVec<BigIntId, BigIntValue>,
 }
 
 pub struct AstNode {
@@ -276,6 +275,16 @@ pub enum NodeKind {
 }
 
 impl Ast {
+    pub fn new(source_len: usize) -> Self {
+        Self {
+            nodes: NodeList::default(),
+            extra_data: IndexVec::new(),
+            bigint: IndexVec::new(),
+            allocated_atom: String::with_capacity(source_len / 2),
+            allocated_wtf8: Wtf8Buf::new(),
+        }
+    }
+
     #[inline]
     fn add_node(&mut self, node: AstNode) -> NodeId {
         self.nodes.add_node(node)
