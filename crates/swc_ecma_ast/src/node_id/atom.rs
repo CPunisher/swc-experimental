@@ -1,73 +1,53 @@
-use swc_common::{BytePos, Span};
-
-oxc_index::define_index_type! {
-    pub struct AtomId = u32;
-}
-
-const STR_REF_ATOM_LO: BytePos = BytePos(0x80000000);
+use swc_common::Span;
 
 #[derive(Debug, Clone, Copy)]
 pub struct AtomRef {
-    pub lo: BytePos,
-    pub hi: BytePos,
+    lo: u32,
+    hi: u32,
 }
 
 impl AtomRef {
-    pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {
+    pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
     }
 
     pub const fn new_from_span(span: Span) -> Self {
-        Self::new_ref(span.lo, span.hi)
-    }
-
-    pub const fn new_alloc(atom: AtomId) -> Self {
-        Self {
-            lo: BytePos(atom.0),
-            hi: STR_REF_ATOM_LO,
-        }
+        Self::new_ref(span.lo.0, span.hi.0)
     }
 
     pub const fn new_empty() -> Self {
-        Self {
-            lo: BytePos(0),
-            hi: BytePos(0),
-        }
+        Self { lo: 0, hi: 0 }
     }
 
-    #[inline]
-    pub fn get_atom_id(&self) -> Option<AtomId> {
-        (self.hi == STR_REF_ATOM_LO).then_some(AtomId(self.lo.0))
+    pub const fn lo(&self) -> u32 {
+        self.lo
+    }
+
+    pub const fn hi(&self) -> u32 {
+        self.hi
     }
 }
 
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct OptionalAtomRef {
-    pub lo: BytePos,
-    pub hi: BytePos,
+    lo: u32,
+    hi: u32,
 }
 
 impl OptionalAtomRef {
-    pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {
+    pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
-    }
-
-    pub const fn new_alloc(atom: AtomId) -> Self {
-        Self {
-            lo: STR_REF_ATOM_LO,
-            hi: BytePos(atom.0),
-        }
     }
 
     pub const fn new_none() -> Self {
         Self {
-            lo: BytePos(0),
-            hi: BytePos(u32::MAX),
+            lo: 0,
+            hi: u32::MAX,
         }
     }
 
     pub const fn to_option(self) -> Option<AtomRef> {
-        if self.hi.0 == u32::MAX {
+        if self.hi == u32::MAX {
             return None;
         }
 

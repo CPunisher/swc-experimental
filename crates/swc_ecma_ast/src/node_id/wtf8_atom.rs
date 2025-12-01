@@ -1,57 +1,42 @@
-use swc_common::BytePos;
-
-oxc_index::define_index_type! {
-    pub struct Wtf8AtomId = u32;
-}
-
-const STR_REF_ATOM_LO: BytePos = BytePos(0x80000000);
-
 #[derive(Debug, Clone, Copy)]
 pub struct Wtf8AtomRef {
-    pub lo: BytePos,
-    pub hi: BytePos,
+    lo: u32,
+    hi: u32,
 }
 
 impl Wtf8AtomRef {
-    pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {
+    pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
     }
 
-    pub const fn new_alloc(atom: Wtf8AtomId) -> Self {
-        Self {
-            lo: BytePos(atom.0),
-            hi: STR_REF_ATOM_LO,
-        }
+    pub const fn lo(&self) -> u32 {
+        self.lo
+    }
+
+    pub const fn hi(&self) -> u32 {
+        self.hi
     }
 }
 
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct OptionalWtf8AtomRef {
-    pub lo: BytePos,
-    pub hi: BytePos,
+    lo: u32,
+    hi: u32,
 }
-
 impl OptionalWtf8AtomRef {
-    pub const fn new_ref(lo: BytePos, hi: BytePos) -> Self {
+    pub const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
-    }
-
-    pub const fn new_alloc(atom: Wtf8AtomId) -> Self {
-        Self {
-            lo: STR_REF_ATOM_LO,
-            hi: BytePos(atom.0),
-        }
     }
 
     pub const fn new_none() -> Self {
         Self {
-            lo: BytePos(0),
-            hi: BytePos(u32::MAX),
+            lo: 0,
+            hi: u32::MAX,
         }
     }
 
     pub const fn to_option(self) -> Option<Wtf8AtomRef> {
-        if self.hi.0 == u32::MAX {
+        if self.hi == u32::MAX {
             return None;
         }
 

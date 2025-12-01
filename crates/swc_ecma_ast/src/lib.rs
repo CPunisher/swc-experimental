@@ -18,15 +18,15 @@ use swc_common::BytePos;
 
 use num_bigint::BigInt as BigIntValue;
 use oxc_index::IndexVec;
-use swc_atoms::{Atom, Wtf8Atom};
+use swc_atoms::wtf8::{Wtf8, Wtf8Buf};
 
 pub use ast::*;
 pub use common::*;
 pub use derive::*;
 pub use generated::ast_visitor::*;
 pub use node_id::{
-    AtomId, AtomRef, BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalAtomRef,
-    OptionalNodeId, OptionalWtf8AtomRef, SubRange, TypedSubRange, Wtf8AtomId, Wtf8AtomRef,
+    AtomRef, BigIntId, ExtraDataId, GetNodeId, GetOptionalNodeId, NodeId, OptionalAtomRef,
+    OptionalNodeId, OptionalWtf8AtomRef, SubRange, TypedSubRange, Wtf8AtomRef,
 };
 
 use crate::ast_list::NodeList;
@@ -35,8 +35,8 @@ use crate::ast_list::NodeList;
 pub struct Ast {
     nodes: NodeList,
     extra_data: IndexVec<ExtraDataId, ExtraData>,
-    allocated_atom: IndexVec<AtomId, Atom>,
-    allocated_wtf8: IndexVec<Wtf8AtomId, Wtf8Atom>,
+    allocated_atom: String,
+    allocated_wtf8: Wtf8Buf,
     bigint: IndexVec<BigIntId, BigIntValue>,
 }
 
@@ -318,38 +318,59 @@ impl Ast {
     }
 
     #[inline]
-    pub fn add_atom_ref(&mut self, atom: Atom) -> AtomRef {
-        AtomRef::new_alloc(self.allocated_atom.push(atom))
+    pub fn add_atom_ref(&mut self, s: &str) -> AtomRef {
+        let lo = self.allocated_atom.len() as u32;
+        self.allocated_atom.push_str(s);
+        let hi = self.allocated_atom.len() as u32;
+        AtomRef::new_ref(lo, hi)
     }
 
     #[inline]
-    pub fn add_wtf8_atom_ref(&mut self, atom: Wtf8Atom) -> Wtf8AtomRef {
-        Wtf8AtomRef::new_alloc(self.allocated_wtf8.push(atom))
+    pub fn add_optional_atom_ref(&mut self, s: Option<&str>) -> OptionalAtomRef {
+        match s {
+            Some(s) => self.add_atom_ref(s).into(),
+            None => OptionalAtomRef::new_none(),
+        }
     }
 
     #[inline]
-    pub fn add_optional_wtf8_atom_ref(&mut self, atom: Option<Wtf8Atom>) -> OptionalWtf8AtomRef {
-        match atom {
-            Some(atom) => Wtf8AtomRef::new_alloc(self.allocated_wtf8.push(atom)).into(),
+    pub fn add_wtf8_atom_ref(&mut self, s: &Wtf8) -> Wtf8AtomRef {
+        let lo = self.allocated_wtf8.len() as u32;
+        self.allocated_wtf8.push_wtf8(s);
+        let hi = self.allocated_wtf8.len() as u32;
+        Wtf8AtomRef::new_ref(lo, hi)
+    }
+
+    #[inline]
+    pub fn add_optional_wtf8_atom_ref(&mut self, s: Option<&Wtf8>) -> OptionalWtf8AtomRef {
+        match s {
+            Some(s) => self.add_wtf8_atom_ref(s).into(),
             None => OptionalWtf8AtomRef::new_none(),
         }
     }
 
-    // TODO: support atom ref
     #[inline]
-    pub fn get_atom(&self, id: AtomRef) -> &Atom {
-        &self.allocated_atom[AtomId::from_raw(id.lo.0)]
+    pub fn get_atom(&self, id: AtomRef) -> &str {
+        &self.allocated_atom[id.lo() as usize..id.hi() as usize]
     }
 
     #[inline]
-    pub fn get_optional_atom(&self, id: OptionalAtomRef) -> Option<&Atom> {
+    pub fn get_optional_atom(&self, id: OptionalAtomRef) -> Option<&str> {
         let id = id.to_option()?;
         Some(self.get_atom(id))
     }
 
     #[inline]
-    pub fn get_wtf8_atom(&self, id: Wtf8AtomRef) -> &Wtf8Atom {
-        &self.allocated_wtf8[Wtf8AtomId::from_raw(id.lo.0)]
+    pub fn get_wtf8_atom(&self, id: Wtf8AtomRef) -> &Wtf8 {
+        &self
+            .allocated_wtf8
+            .slice(id.lo() as usize, id.hi() as usize)
+    }
+
+    #[inline]
+    pub fn get_optional_wtf8_atom(&self, id: OptionalWtf8AtomRef) -> Option<&Wtf8> {
+        let id = id.to_option()?;
+        Some(self.get_wtf8_atom(id))
     }
 
     #[inline]
