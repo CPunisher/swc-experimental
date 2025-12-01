@@ -54,6 +54,11 @@ impl NodeList {
     pub fn len(&self) -> u32 {
         self.num_elems
     }
+
+    #[inline]
+    pub fn capacity(&self) -> usize {
+        self.inner.len()
+    }
 }
 
 impl NodeList {

@@ -401,4 +401,8 @@ impl Ast {
     pub fn nodes_len(&self) -> u32 {
         self.nodes.len()
     }
+
+    pub fn nodes_capacity(&self) -> usize {
+        self.nodes.capacity()
+    }
 }

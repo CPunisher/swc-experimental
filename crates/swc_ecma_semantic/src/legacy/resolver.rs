@@ -127,9 +127,9 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
     let mut scopes = IndexVec::default();
     let top_level_scope_id = scopes.push(top_level_scope);
 
-    let node_len = ast.nodes_len() as usize;
-    let mut parent_ids = IndexVec::with_capacity(node_len);
-    parent_ids.resize(node_len, NodeId::from_raw(0));
+    let node_cap = ast.nodes_capacity() as usize;
+    let mut parent_ids = IndexVec::with_capacity(node_cap);
+    parent_ids.resize(node_cap, NodeId::from_raw(0));
 
     let mut resolver = Resolver {
         ast,
