@@ -9,15 +9,15 @@ fn main() {
     let syntax = Syntax::Es(EsSyntax::default());
     let input = StringSource::new(source);
 
-    let mut parser = Parser::new(syntax, input, None);
-    let root = parser.parse_program().unwrap();
+    let parser = Parser::new(syntax, input, None);
+    let ret = parser.parse_program().unwrap();
 
     let mut used = Use {
         used: Default::default(),
     };
-    root.visit_with(&mut used, &parser.ast);
+    ret.root.visit_with(&mut used, &ret.ast);
 
-    for (node_id, node) in parser.ast.nodes() {
+    for (node_id, node) in ret.ast.nodes() {
         if !used.used.contains(&node_id) {
             let source = &source[node.span.lo.0 as usize..node.span.hi.0 as usize];
             println!("Unused node: {:?}, source: {}", node.kind, source);
@@ -26,7 +26,7 @@ fn main() {
 
     println!(
         "Total: {}, Used: {}",
-        parser.ast.nodes().count(),
+        ret.ast.nodes().count(),
         used.used.len()
     )
 }

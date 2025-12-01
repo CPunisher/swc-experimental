@@ -77,7 +77,7 @@ impl<I: Tokens> Parser<I> {
         } else {
             if self
                 .ctx()
-                .is_reserved_word(self.ast.get_atom(key.sym(&self.ast)).as_str())
+                .is_reserved_word(self.ast.get_utf8(key.sym(&self.ast)))
             {
                 self.emit_err(
                     key.span(&self.ast),
@@ -285,7 +285,7 @@ impl<I: Tokens> Parser<I> {
         // It means we should check for invalid expressions like { for, }
         let cur = self.input().cur();
         if matches!(cur, Token::Eq | Token::Comma | Token::RBrace) {
-            if self.ctx().is_reserved_word(self.ast.get_atom(ident_sym)) {
+            if self.ctx().is_reserved_word(self.ast.get_utf8(ident_sym)) {
                 self.emit_err(ident_span, SyntaxError::ReservedWordInObjShorthandOrPat);
             }
 
@@ -303,167 +303,218 @@ impl<I: Tokens> Parser<I> {
         // set a(v){}
         // async a(){}
 
-        let ident = self.ast.get_atom(ident_sym).clone();
-        match ident.as_str() {
-            "get" | "set" | "async" => {
-                trace_cur!(self, parse_object_prop__after_accessor);
+        let ident = self.ast.get_utf8(ident_sym);
+        let is_get = ident == "get";
+        let is_set = ident == "set";
+        let is_async = ident == "async";
+        if is_get || is_set || is_async {
+            trace_cur!(self, parse_object_prop__after_accessor);
 
-                if has_modifiers {
-                    self.emit_err(modifiers_span, SyntaxError::TS1042);
-                }
+            if has_modifiers {
+                self.emit_err(modifiers_span, SyntaxError::TS1042);
+            }
 
-                let is_generator =
-                    ident.as_str() == "async" && self.input_mut().eat(Token::Asterisk);
-                let key = self.parse_prop_name()?;
-                let key_span = key.span(&self.ast);
-                self.do_inside_of_context(Context::AllowDirectSuper, |p| {
-                    p.do_outside_of_context(Context::InClassField, |p| {
-                        match ident.as_str() {
-                            "get" => p
-                                .parse_fn_args_body(
-                                    // no decorator in an object literal
-                                    TypedSubRange::empty(),
-                                    start,
-                                    |p| {
-                                        let params = p.parse_formal_params()?;
+            let is_generator = is_async && self.input_mut().eat(Token::Asterisk);
+            let key = self.parse_prop_name()?;
+            let key_span = key.span(&self.ast);
+            self.do_inside_of_context(Context::AllowDirectSuper, |p| {
+                p.do_outside_of_context(Context::InClassField, |p| {
+                    if is_get {
+                        return p
+                            .parse_fn_args_body(
+                                // no decorator in an object literal
+                                TypedSubRange::empty(),
+                                start,
+                                |p| {
+                                    let params = p.parse_formal_params()?;
 
-                                        if params
-                                            .iter()
-                                            .any(|param| is_not_this(&p.ast, p.ast.get_node(param)))
+                                    if params
+                                        .iter()
+                                        .any(|param| is_not_this(&p.ast, p.ast.get_node(param)))
+                                    {
+                                        p.emit_err(key_span, SyntaxError::GetterParam);
+                                    }
+
+                                    Ok(params)
+                                },
+                                false,
+                                false,
+                            )
+                            .map(|function| {
+                                if p.input().syntax().typescript()
+                                    && p.input().target() == EsVersion::Es3
+                                {
+                                    p.emit_err(key_span, SyntaxError::TS1056);
+                                }
+
+                                let body = function.body(&p.ast);
+                                p.ast.free_node(function.node_id());
+                                p.ast
+                                    .prop_or_spread_prop_getter_prop(p.span(start), key, body)
+                            });
+                    }
+
+                    if is_set {
+                        return p
+                            .parse_fn_args_body(
+                                // no decorator in an object literal
+                                TypedSubRange::empty(),
+                                start,
+                                |p| {
+                                    let params = p.parse_formal_params()?;
+
+                                    if params
+                                        .iter()
+                                        .filter(|param| is_not_this(&p.ast, p.ast.get_node(*param)))
+                                        .count()
+                                        != 1
+                                    {
+                                        p.emit_err(key_span, SyntaxError::SetterParam);
+                                    }
+
+                                    if !params.is_empty() {
+                                        if let Pat::Rest(rest) =
+                                            p.ast.get_node(params.get(0)).pat(&p.ast)
                                         {
-                                            p.emit_err(key_span, SyntaxError::GetterParam);
+                                            p.emit_err(
+                                                rest.span(&p.ast),
+                                                SyntaxError::RestPatInSetter,
+                                            );
                                         }
+                                    }
 
-                                        Ok(params)
-                                    },
-                                    false,
-                                    false,
-                                )
-                                .map(|function| {
                                     if p.input().syntax().typescript()
                                         && p.input().target() == EsVersion::Es3
                                     {
                                         p.emit_err(key_span, SyntaxError::TS1056);
                                     }
 
-                                    let body = function.body(&p.ast);
-                                    p.ast.free_node(function.node_id());
-                                    p.ast
-                                        .prop_or_spread_prop_getter_prop(p.span(start), key, body)
-                                }),
-                            "set" => {
-                                p.parse_fn_args_body(
-                                    // no decorator in an object literal
-                                    TypedSubRange::empty(),
-                                    start,
-                                    |p| {
-                                        let params = p.parse_formal_params()?;
+                                    Ok(params)
+                                },
+                                false,
+                                false,
+                            )
+                            .map(|function| {
+                                let mut this = None;
+                                let mut params = function.params(&p.ast);
+                                if params.len() >= 2 {
+                                    this = Some(p.ast.get_node(params.remove_first()).pat(&p.ast));
+                                }
 
-                                        if params
-                                            .iter()
-                                            .filter(|param| {
-                                                is_not_this(&p.ast, p.ast.get_node(*param))
-                                            })
-                                            .count()
-                                            != 1
-                                        {
-                                            p.emit_err(key_span, SyntaxError::SetterParam);
-                                        }
+                                if params.len() != 1 {
+                                    p.emit_err(key_span, SyntaxError::SetterParam);
+                                }
 
-                                        if !params.is_empty() {
-                                            if let Pat::Rest(rest) =
-                                                p.ast.get_node(params.get(0)).pat(&p.ast)
-                                            {
-                                                p.emit_err(
-                                                    rest.span(&p.ast),
-                                                    SyntaxError::RestPatInSetter,
-                                                );
-                                            }
-                                        }
-
-                                        if p.input().syntax().typescript()
-                                            && p.input().target() == EsVersion::Es3
-                                        {
-                                            p.emit_err(key_span, SyntaxError::TS1056);
-                                        }
-
-                                        Ok(params)
-                                    },
-                                    false,
-                                    false,
-                                )
-                                .map(|function| {
-                                    let mut this = None;
-                                    let mut params = function.params(&p.ast);
-                                    if params.len() >= 2 {
-                                        this =
-                                            Some(p.ast.get_node(params.remove_first()).pat(&p.ast));
+                                let param = match params.iter().next() {
+                                    Some(param) => {
+                                        let param = p.ast.get_node(param);
+                                        let pat = param.pat(&p.ast);
+                                        p.ast.free_node(param.node_id());
+                                        pat
                                     }
-
-                                    if params.len() != 1 {
+                                    None => {
                                         p.emit_err(key_span, SyntaxError::SetterParam);
+                                        p.ast.pat_invalid(DUMMY_SP)
                                     }
+                                };
 
-                                    let param = match params.iter().next() {
-                                        Some(param) => {
-                                            let param = p.ast.get_node(param);
-                                            let pat = param.pat(&p.ast);
-                                            p.ast.free_node(param.node_id());
-                                            pat
-                                        }
-                                        None => {
-                                            p.emit_err(key_span, SyntaxError::SetterParam);
-                                            p.ast.pat_invalid(DUMMY_SP)
-                                        }
-                                    };
-
-                                    let body = function.body(&p.ast);
-                                    p.ast.free_node(function.node_id());
-                                    p.ast.prop_or_spread_prop_setter_prop(
-                                        p.span(start),
-                                        key,
-                                        this,
-                                        param,
-                                        body,
-                                    )
-                                })
-                            }
-                            "async" => p
-                                .parse_fn_args_body(
-                                    // no decorator in an object literal
-                                    TypedSubRange::empty(),
-                                    start,
-                                    Self::parse_unique_formal_params,
-                                    true,
-                                    is_generator,
+                                let body = function.body(&p.ast);
+                                p.ast.free_node(function.node_id());
+                                p.ast.prop_or_spread_prop_setter_prop(
+                                    p.span(start),
+                                    key,
+                                    this,
+                                    param,
+                                    body,
                                 )
-                                .map(|function| {
-                                    let span = Span::new_with_checked(
-                                        key.span_lo(&p.ast),
-                                        key.span_hi(&p.ast),
-                                    );
-                                    p.ast.prop_or_spread_prop_method_prop(span, key, function)
-                                }),
-                            _ => unreachable!(),
-                        }
-                    })
+                            });
+                    }
+
+                    if is_async {
+                        return p
+                            .parse_fn_args_body(
+                                // no decorator in an object literal
+                                TypedSubRange::empty(),
+                                start,
+                                Self::parse_unique_formal_params,
+                                true,
+                                is_generator,
+                            )
+                            .map(|function| {
+                                let span = Span::new_with_checked(
+                                    key.span_lo(&p.ast),
+                                    key.span_hi(&p.ast),
+                                );
+                                p.ast.prop_or_spread_prop_method_prop(span, key, function)
+                            });
+                    }
+
+                    unreachable!()
                 })
-            }
-            _ => {
-                if self.input().syntax().typescript() {
-                    unexpected!(
-                        self,
-                        "... , *,  (, [, :, , ?, =, an identifier, public, protected, private, \
+            })
+        } else {
+            if self.input().syntax().typescript() {
+                unexpected!(
+                    self,
+                    "... , *,  (, [, :, , ?, =, an identifier, public, protected, private, \
                          readonly, <."
-                    )
-                } else {
-                    unexpected!(self, "... , *,  (, [, :, , ?, = or an identifier")
-                }
+                )
+            } else {
+                unexpected!(self, "... , *,  (, [, :, , ?, = or an identifier")
             }
         }
     }
 
     pub(crate) fn parse_object_expr(&mut self) -> PResult<Expr> {
         self.parse_object(Self::parse_expr_object_prop, Self::make_expr_object)
+    }
+
+    /// spec: 'PropertyName'
+    pub fn parse_prop_name(&mut self) -> PResult<PropName> {
+        trace_cur!(self, parse_prop_name);
+        self.do_inside_of_context(Context::InPropertyName, |p| {
+            let start = p.input().cur_pos();
+            let cur = p.input().cur();
+            let v = if cur == Token::Str {
+                PropName::Str(p.parse_str_lit())
+            } else if cur == Token::Num {
+                let (value, raw) = p.input_mut().expect_number_token_and_bump();
+                let raw = p.to_utf8_ref(raw);
+                p.ast.prop_name_number(p.span(start), value, raw.into())
+            } else if cur == Token::BigInt {
+                let (value, raw) = p.input_mut().expect_bigint_token_and_bump();
+                let value = p.ast.add_bigint(*value);
+                let raw = p.to_utf8_ref(raw);
+                p.ast.prop_name_big_int(p.span(start), value, raw.into())
+            } else if cur.is_word() {
+                let w = p.input_mut().expect_word_token_and_bump();
+                let w = p.to_utf8_ref(w);
+                p.ast.prop_name_ident_name(p.span(start), w)
+            } else if cur == Token::LBracket {
+                p.bump();
+                let inner_start = p.input().cur_pos();
+                let mut expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                if p.syntax().typescript() && p.input().is(Token::Comma) {
+                    let mut exprs = p.scratch_start();
+                    exprs.push(p, expr);
+                    while p.input_mut().eat(Token::Comma) {
+                        let expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                        exprs.push(p, expr);
+                    }
+                    p.emit_err(p.span(inner_start), SyntaxError::TS1171);
+
+                    let exprs = exprs.end(p);
+                    expr = p.ast.expr_seq_expr(p.span(inner_start), exprs);
+                }
+                expect!(p, Token::RBracket);
+                p.ast.prop_name_computed_prop_name(p.span(start), expr)
+            } else {
+                unexpected!(
+                    p,
+                    "identifier, string literal, numeric literal or [ for the computed key"
+                )
+            };
+            Ok(v)
+        })
     }
 }

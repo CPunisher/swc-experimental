@@ -25,11 +25,15 @@ impl NoMemoryHoleRunner {
             let input = StringSource::new(case.code());
             let comments = SingleThreadedComments::default();
             let lexer = Lexer::new(syntax, Default::default(), input, Some(&comments));
-            let mut parser = Parser::new_from(lexer);
+            let parser = Parser::new_from(lexer);
             let ret = match case.ext().as_str() {
                 "js" => parser.parse_program(),
-                "cjs" => parser.parse_script().map(Program::Script),
-                "mjs" => parser.parse_module().map(Program::Module),
+                "cjs" => parser
+                    .parse_script()
+                    .map(|ret| ret.map_root(Program::Script)),
+                "mjs" => parser
+                    .parse_module()
+                    .map(|ret| ret.map_root(Program::Module)),
                 "ts" | "jsx" | "tsx" => {
                     results.push(TestResult::Ignored {
                         path: case.path().to_owned(),
@@ -39,7 +43,7 @@ impl NoMemoryHoleRunner {
                 _ => unreachable!(),
             };
 
-            let Ok(program) = ret else {
+            let Ok(ret) = ret else {
                 continue;
             };
 
@@ -47,9 +51,9 @@ impl NoMemoryHoleRunner {
                 used: HashSet::new(),
             };
 
-            use_visitor.visit_program(program, &parser.ast);
+            use_visitor.visit_program(ret.root, &ret.ast);
 
-            if use_visitor.used.len() != parser.ast.nodes_len() as usize {
+            if use_visitor.used.len() != ret.ast.nodes_len() as usize {
                 results.push(TestResult::Failed {
                     path: case.path().to_owned(),
                     error: "Memory hole detected".to_string(),

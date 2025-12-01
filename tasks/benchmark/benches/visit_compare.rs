@@ -48,8 +48,8 @@ fn bench_new(b: &mut Bencher, src: &'static str) {
         input,
         None,
     );
-    let mut parser = Parser::new_from(lexer);
-    let module = parser.parse_module().unwrap();
+    let parser = Parser::new_from(lexer);
+    let ret = parser.parse_module().unwrap();
 
     struct Counter {
         count: usize,
@@ -63,7 +63,7 @@ fn bench_new(b: &mut Bencher, src: &'static str) {
 
     b.iter(|| {
         let mut counter = Counter { count: 0 };
-        module.visit_with(&mut counter, &parser.ast);
+        ret.root.visit_with(&mut counter, &ret.ast);
         std::hint::black_box(counter.count);
     });
 }
@@ -79,10 +79,11 @@ fn bench_post_order(b: &mut Bencher, src: &'static str) {
         None,
     );
     let parser = Parser::new_from(lexer);
+    let ret = parser.parse_module().unwrap();
 
     b.iter(|| {
         let mut counter: usize = 0;
-        for (_, node) in parser.ast.nodes() {
+        for (_, node) in ret.ast.nodes() {
             match node.kind {
                 NodeKind::Ident => counter += 1,
                 _ => {}

@@ -1,9 +1,12 @@
 use either::Either;
-use swc_atoms::atom;
+use swc_atoms::Atom;
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::*;
 
-use crate::{Context, PResult, Parser, error::SyntaxError, input::Tokens, lexer::Token};
+use crate::{
+    Context, PResult, Parser, error::SyntaxError, input::Tokens, lexer::Token,
+    string_alloc::MaybeSubUtf8,
+};
 
 impl<I: Tokens> Parser<I> {
     // https://tc39.es/ecma262/#prod-ModuleExportName
@@ -13,6 +16,7 @@ impl<I: Tokens> Parser<I> {
             ModuleExportName::Str(self.parse_str_lit())
         } else if cur.is_word() {
             let (span, sym) = self.parse_ident_name()?;
+            let sym = self.to_utf8_ref(sym);
             ModuleExportName::Ident(self.ast.ident(span, sym, false))
         } else {
             unexpected!(self, "identifier or string");
@@ -22,7 +26,7 @@ impl<I: Tokens> Parser<I> {
 
     /// Use this when spec says "IdentifierName".
     /// This allows idents like `catch`.
-    pub(crate) fn parse_ident_name(&mut self) -> PResult<(Span, AtomRef)> {
+    pub(crate) fn parse_ident_name(&mut self) -> PResult<(Span, MaybeSubUtf8)> {
         let token_and_span = self.input().get_cur();
         let start = token_and_span.span.lo;
         let cur = token_and_span.token;
@@ -33,13 +37,12 @@ impl<I: Tokens> Parser<I> {
         } else {
             syntax_error!(self, SyntaxError::ExpectedIdent)
         };
-        let w = self.ast.add_atom_ref(w);
         Ok((self.span(start), w))
     }
 
     pub(crate) fn parse_maybe_private_name(
         &mut self,
-    ) -> PResult<Either<PrivateName, (Span, AtomRef)>> {
+    ) -> PResult<Either<PrivateName, (Span, MaybeSubUtf8)>> {
         let is_private = self.input().is(Token::Hash);
         if is_private {
             self.parse_private_name().map(Either::Left)
@@ -60,6 +63,7 @@ impl<I: Tokens> Parser<I> {
             );
         }
         let (_, sym) = self.parse_ident_name()?;
+        let sym = self.to_utf8_ref(sym);
         Ok(self.ast.private_name(self.span(start), sym))
     }
 
@@ -91,11 +95,13 @@ impl<I: Tokens> Parser<I> {
         } else if cur == Token::Ident {
             let span = self.input().cur_span();
             let word = self.input_mut().expect_word_token_and_bump();
-            if atom!("arguments") == word || atom!("eval") == word {
+
+            let word_str = self.input.iter.get_maybe_sub_utf8(word);
+            let word = self.ast.add_utf8(word_str);
+            if "arguments" == word_str || "eval" == word_str {
                 self.emit_strict_mode_err(span, SyntaxError::EvalAndArgumentsInStrict);
             }
 
-            let word = self.ast.add_atom_ref(word);
             let ident = self.ast.ident(span, word, false);
             return Ok(ident);
         }
@@ -104,9 +110,9 @@ impl<I: Tokens> Parser<I> {
         let ident = self.parse_ident(true, true)?;
         let ctx = self.ctx();
         if (ctx.intersects(Context::InAsync.union(Context::InStaticBlock))
-            && self.ast.get_atom(ident.sym(&self.ast)) == "await")
+            && self.ast.get_utf8(ident.sym(&self.ast)) == "await")
             || (ctx.contains(Context::InGenerator)
-                && self.ast.get_atom(ident.sym(&self.ast)) == "yield")
+                && self.ast.get_utf8(ident.sym(&self.ast)) == "yield")
         {
             self.emit_err(ident.span(&self.ast), SyntaxError::ExpectedIdent);
         }
@@ -120,7 +126,7 @@ impl<I: Tokens> Parser<I> {
         let cur = token_and_span.token;
         if cur == Token::This && self.input().syntax().typescript() {
             let start = token_and_span.span.lo;
-            let sym = self.ast.add_atom_ref(atom!("this"));
+            let sym = self.ast.add_utf8("this");
             let ident = self.ast.ident(self.span(start), sym, false);
             Ok(Some(ident))
         } else if cur.is_word() && !cur.is_reserved(self.ctx()) {
@@ -150,9 +156,11 @@ impl<I: Tokens> Parser<I> {
         // "package", "private", "protected", "public", "static", or "yield".
         if t == Token::Enum {
             let word = self.input_mut().expect_word_token_and_bump();
-            self.emit_err(span, SyntaxError::InvalidIdentInStrict(word.clone()));
 
-            let word = self.ast.add_atom_ref(word);
+            let word_str = self.input.iter.get_maybe_sub_utf8(word);
+            let word = self.ast.add_utf8(word_str);
+            self.emit_err(span, SyntaxError::InvalidIdentInStrict(Atom::new(word_str)));
+
             return Ok(self.ast.ident(span, word, false));
         } else if t == Token::Yield
             || t == Token::Let
@@ -165,9 +173,11 @@ impl<I: Tokens> Parser<I> {
             || t == Token::Public
         {
             let word = self.input_mut().expect_word_token_and_bump();
-            self.emit_strict_mode_err(span, SyntaxError::InvalidIdentInStrict(word.clone()));
 
-            let word = self.ast.add_atom_ref(word);
+            let word_str = self.input.iter.get_maybe_sub_utf8(word);
+            let word = self.ast.add_utf8(word_str);
+            self.emit_strict_mode_err(span, SyntaxError::InvalidIdentInStrict(Atom::new(word_str)));
+
             return Ok(self.ast.ident(span, word, false));
         };
 
@@ -179,32 +189,33 @@ impl<I: Tokens> Parser<I> {
         if t == Token::Await {
             let ctx = self.ctx();
             if ctx.contains(Context::InDeclare) {
-                word = atom!("await");
+                word = MaybeSubUtf8::new_from_span(span)
             } else if ctx.contains(Context::InStaticBlock) {
                 syntax_error!(self, span, SyntaxError::ExpectedIdent)
             } else if ctx.contains(Context::Module) | ctx.contains(Context::InAsync) {
                 syntax_error!(self, span, SyntaxError::InvalidIdentInAsync)
             } else if incl_await {
-                word = atom!("await")
+                word = MaybeSubUtf8::new_from_span(span)
             } else {
                 syntax_error!(self, span, SyntaxError::ExpectedIdent)
             }
         } else if t == Token::This && self.input().syntax().typescript() {
-            word = atom!("this")
+            word = MaybeSubUtf8::new_from_span(span)
         } else if t == Token::Let {
-            word = atom!("let")
+            word = MaybeSubUtf8::new_from_span(span)
         } else if t.is_known_ident() {
-            let ident = t.take_known_ident();
-            word = ident
+            word = MaybeSubUtf8::new_from_span(span)
         } else if t == Token::Ident {
             let word = self.input_mut().expect_word_token_and_bump();
-            if self.ctx().contains(Context::InClassField) && word == atom!("arguments") {
+            let word_str = self.input.iter.get_maybe_sub_utf8(word);
+            let word = self.ast.add_utf8(word_str);
+            if self.ctx().contains(Context::InClassField) && word_str == "arguments" {
                 self.emit_err(span, SyntaxError::ArgumentsInClassField)
             }
-            let word = self.ast.add_atom_ref(word);
+
             return Ok(self.ast.ident(self.span(start), word, false));
         } else if t == Token::Yield && incl_yield {
-            word = atom!("yield")
+            word = MaybeSubUtf8::new_from_span(span)
         } else if t == Token::Null || t == Token::True || t == Token::False || t.is_keyword() {
             syntax_error!(self, span, SyntaxError::ExpectedIdent)
         } else {
@@ -212,7 +223,7 @@ impl<I: Tokens> Parser<I> {
         }
         self.bump();
 
-        let word = self.ast.add_atom_ref(word);
+        let word = self.to_utf8_ref(word);
         Ok(self.ast.ident(self.span(start), word, false))
     }
 }

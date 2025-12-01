@@ -1,4 +1,6 @@
-use swc_atoms::atom;
+use std::borrow::Cow;
+
+use swc_atoms::Atom;
 use swc_common::Span;
 use swc_experimental_ecma_ast::*;
 
@@ -58,13 +60,14 @@ impl<I: Tokens> Parser<I> {
                 // `export { type as as }`
                 // `export { type as as as }`
                 if self.syntax().typescript()
-                    && self.ast.get_atom(orig_ident.sym(&self.ast)) == "type"
+                    && self.ast.get_utf8(orig_ident.sym(&self.ast)) == "type"
                     && self.input().cur().is_word()
                 {
-                    let possibly_orig = self
-                        .parse_ident_name()
-                        .map(|(span, sym)| self.ast.ident(span, sym, false))?;
-                    if self.ast.get_atom(possibly_orig.sym(&self.ast)) == "as" {
+                    let possibly_orig = self.parse_ident_name().map(|(span, sym)| {
+                        let sym = self.to_utf8_ref(sym);
+                        self.ast.ident(span, sym, false)
+                    })?;
+                    if self.ast.get_utf8(possibly_orig.sym(&self.ast)) == "as" {
                         // `export { type as }`
                         if !self.input().cur().is_word() {
                             if type_only {
@@ -79,16 +82,18 @@ impl<I: Tokens> Parser<I> {
                             ));
                         }
 
-                        let maybe_as = self
-                            .parse_ident_name()
-                            .map(|(span, sym)| self.ast.ident(span, sym, false))?;
-                        if self.ast.get_atom(maybe_as.sym(&self.ast)) == "as" {
+                        let maybe_as = self.parse_ident_name().map(|(span, sym)| {
+                            let sym = self.to_utf8_ref(sym);
+                            self.ast.ident(span, sym, false)
+                        })?;
+                        if self.ast.get_utf8(maybe_as.sym(&self.ast)) == "as" {
                             if self.input().cur().is_word() {
                                 // `export { type as as as }`
                                 // `export { type as as foo }`
-                                let exported = self
-                                    .parse_ident_name()
-                                    .map(|(span, sym)| self.ast.ident(span, sym, false))?;
+                                let exported = self.parse_ident_name().map(|(span, sym)| {
+                                    let sym = self.to_utf8_ref(sym);
+                                    self.ast.ident(span, sym, false)
+                                })?;
 
                                 if type_only {
                                     self.emit_err(orig_ident.span(&self.ast), SyntaxError::TS2207);
@@ -172,15 +177,16 @@ impl<I: Tokens> Parser<I> {
                 // `import { type as as } from 'mod'`
                 // `import { type as as as } from 'mod'`
                 if self.syntax().typescript()
-                    && self.ast.get_atom(orig_name.sym(&self.ast)) == "type"
+                    && self.ast.get_utf8(orig_name.sym(&self.ast)) == "type"
                     && self.input().cur().is_word()
                 {
-                    let possibly_orig_name = self
-                        .parse_ident_name()
-                        .map(|(span, sym)| self.ast.ident(span, sym, false))?;
+                    let possibly_orig_name = self.parse_ident_name().map(|(span, sym)| {
+                        let sym = self.to_utf8_ref(sym);
+                        self.ast.ident(span, sym, false)
+                    })?;
 
                     let possibly_orig_name_str =
-                        self.ast.get_atom(possibly_orig_name.sym(&self.ast));
+                        self.ast.get_utf8(possibly_orig_name.sym(&self.ast));
                     if possibly_orig_name_str == "as" {
                         // `import { type as } from 'mod'`
                         if !self.input().cur().is_word() {
@@ -205,7 +211,7 @@ impl<I: Tokens> Parser<I> {
                         }
 
                         let maybe_as: Ident = self.parse_binding_ident(false)?;
-                        if self.ast.get_atom(maybe_as.sym(&self.ast)) == "as" {
+                        if self.ast.get_utf8(maybe_as.sym(&self.ast)) == "as" {
                             if self.input().cur().is_word() {
                                 // `import { type as as as } from 'mod'`
                                 // `import { type as as foo } from 'mod'`
@@ -267,7 +273,7 @@ impl<I: Tokens> Parser<I> {
                 // 'IdentifierName' as 'ImportedBinding'
                 if self
                     .ctx()
-                    .is_reserved_word(&self.ast.get_atom(orig_name.sym(&self.ast)))
+                    .is_reserved_word(&self.ast.get_utf8(orig_name.sym(&self.ast)))
                 {
                     syntax_error!(
                         self,
@@ -299,7 +305,7 @@ impl<I: Tokens> Parser<I> {
                         orig_str.span(&self.ast),
                         SyntaxError::ImportBindingIsString(
                             self.ast
-                                .get_wtf8_atom(orig_str.value(&self.ast))
+                                .get_wtf8(orig_str.value(&self.ast))
                                 .to_string_lossy()
                                 .into()
                         )
@@ -482,7 +488,7 @@ impl<I: Tokens> Parser<I> {
                         && (peek!(self)
                             .is_some_and(|peek| matches!(peek, Token::Asterisk | Token::LBrace)))))
             {
-                let sym = self.ast.add_atom_ref(atom!("default"));
+                let sym = self.ast.add_utf8("default");
                 export_default = Some(self.ast.ident(self.input().prev_span(), sym, false));
             } else {
                 let expr = self.allow_in_expr(Self::parse_assignment_expr)?;
@@ -666,38 +672,35 @@ impl<I: Tokens> Parser<I> {
                         ExportSpecifier::Default(default) => {
                             self.emit_err(
                                 default.exported(&self.ast).span(&self.ast),
-                                SyntaxError::ExportExpectFrom(
+                                SyntaxError::ExportExpectFrom(Atom::new(
                                     self.ast
-                                        .get_atom(default.exported(&self.ast).sym(&self.ast))
-                                        .clone(),
-                                ),
+                                        .get_utf8(default.exported(&self.ast).sym(&self.ast)),
+                                )),
                             );
                         }
                         ExportSpecifier::Namespace(namespace) => {
                             let export_name = match namespace.name(&self.ast) {
                                 ModuleExportName::Ident(i) => {
-                                    self.ast.get_atom(i.sym(&self.ast)).clone()
+                                    Cow::Borrowed(self.ast.get_utf8(i.sym(&self.ast)))
                                 }
-                                ModuleExportName::Str(s) => self
-                                    .ast
-                                    .get_wtf8_atom(s.value(&self.ast))
-                                    .to_string_lossy()
-                                    .into(),
+                                ModuleExportName::Str(s) => {
+                                    self.ast.get_wtf8(s.value(&self.ast)).to_string_lossy()
+                                }
                                 #[cfg(swc_ast_unknown)]
                                 _ => unreachable!(),
                             };
                             self.emit_err(
                                 namespace.span(&self.ast),
-                                SyntaxError::ExportExpectFrom(export_name),
+                                SyntaxError::ExportExpectFrom(Atom::new(export_name)),
                             );
                         }
                         ExportSpecifier::Named(named) => match named.orig(&self.ast) {
                             ModuleExportName::Ident(id) if id.is_reserved(&self.ast) => {
                                 self.emit_err(
                                     id.span(&self.ast),
-                                    SyntaxError::ExportExpectFrom(
-                                        self.ast.get_atom(id.sym(&self.ast)).clone(),
-                                    ),
+                                    SyntaxError::ExportExpectFrom(Atom::new(
+                                        self.ast.get_utf8(id.sym(&self.ast)),
+                                    )),
                                 );
                             }
                             ModuleExportName::Str(s) => {
@@ -738,7 +741,7 @@ impl<I: Tokens> Parser<I> {
         let start = self.cur_pos();
 
         if peek!(self).is_some_and(|cur| cur == Token::Dot) {
-            let expr = self.parse_expr()?;
+            let expr = self.parse_expr_inner()?;
 
             self.eat_general_semi();
 
@@ -746,7 +749,7 @@ impl<I: Tokens> Parser<I> {
         }
 
         if peek!(self).is_some_and(|cur| cur == Token::LParen) {
-            let expr = self.parse_expr()?;
+            let expr = self.parse_expr_inner()?;
 
             self.eat_general_semi();
 
@@ -796,7 +799,9 @@ impl<I: Tokens> Parser<I> {
         'import_maybe_ident: {
             if self.is_ident_ref() {
                 let mut local = self.parse_imported_default_binding()?;
-                let local_sym = self.ast.get_atom(local.sym(&self.ast)).clone();
+                let local_sym = self.ast.get_utf8(local.sym(&self.ast));
+                let is_source = local_sym == "source";
+                let is_defer = local_sym == "defer";
 
                 if self.input().syntax().typescript() && local_sym == "type" {
                     let cur = self.input().cur();
@@ -813,9 +818,10 @@ impl<I: Tokens> Parser<I> {
                             local = self.parse_imported_default_binding()?;
                         } else if peek!(self).is_some_and(|cur| cur == Token::Eq) {
                             type_only = true;
-                            local = self
-                                .parse_ident_name()
-                                .map(|(span, sym)| self.ast.ident(span, sym, false))?;
+                            local = self.parse_ident_name().map(|(span, sym)| {
+                                let sym = self.to_utf8_ref(sym);
+                                self.ast.ident(span, sym, false)
+                            })?;
                         }
                     }
                 }
@@ -827,11 +833,11 @@ impl<I: Tokens> Parser<I> {
                 //         .map(ModuleItem::from);
                 // }
 
-                if matches!(local_sym.as_str(), "source" | "defer") {
-                    let new_phase = match local_sym.as_str() {
-                        "source" => ImportPhase::Source,
-                        "defer" => ImportPhase::Defer,
-                        _ => unreachable!(),
+                if is_source || is_defer {
+                    let new_phase = if is_source {
+                        ImportPhase::Source
+                    } else {
+                        ImportPhase::Defer
                     };
 
                     let cur = self.input().cur();

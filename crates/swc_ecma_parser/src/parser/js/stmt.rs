@@ -1,3 +1,4 @@
+use swc_atoms::Atom;
 use swc_common::BytePos;
 use swc_experimental_ecma_ast::*;
 
@@ -11,6 +12,7 @@ use crate::{
         js::pat::PatType,
         util::{FromStmt, ScratchIndex},
     },
+    string_alloc::MaybeSubUtf8,
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -35,7 +37,7 @@ impl<I: Tokens> Parser<I> {
         let test = if self.input_mut().eat(Token::Semi) {
             None
         } else {
-            let test = self.allow_in_expr(|p| p.parse_expr()).map(Some)?;
+            let test = self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?;
             self.input_mut().eat(Token::Semi);
             test
         };
@@ -43,7 +45,7 @@ impl<I: Tokens> Parser<I> {
         let update = if self.input().is(Token::RParen) {
             None
         } else {
-            self.allow_in_expr(|p| p.parse_expr()).map(Some)?
+            self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
         };
 
         Ok(TempForHead::For { init, test, update })
@@ -62,7 +64,7 @@ impl<I: Tokens> Parser<I> {
                     SyntaxError::UsingDeclNotAllowedForForInLoop,
                 )
             }
-            let right = self.allow_in_expr(|p| p.parse_expr())?;
+            let right = self.allow_in_expr(|p| p.parse_expr_inner())?;
             Ok(TempForHead::ForIn { left, right })
         }
     }
@@ -75,7 +77,7 @@ impl<I: Tokens> Parser<I> {
         let arg = if self.is_general_semi() {
             None
         } else {
-            self.allow_in_expr(|p| p.parse_expr()).map(Some)?
+            self.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
         };
         self.expect_general_semi()?;
         let stmt = self.ast.stmt_return_stmt(self.span(start), arg);
@@ -259,7 +261,7 @@ impl<I: Tokens> Parser<I> {
         if !for_loop && !self.eat_general_semi() {
             self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
 
-            let _ = self.parse_expr();
+            let _ = self.parse_expr_inner();
 
             while !self.eat_general_semi() {
                 self.bump();
@@ -542,16 +544,18 @@ impl<I: Tokens> Parser<I> {
 
         expect!(self, Token::LParen);
 
-        let test = self.allow_in_expr(|p| p.parse_expr()).map_err(|err| {
-            Error::new(
-                err.span(),
-                SyntaxError::WithLabel {
-                    inner: Box::new(err),
-                    span: if_token,
-                    note: "Tried to parse the condition for an if statement",
-                },
-            )
-        })?;
+        let test = self
+            .allow_in_expr(|p| p.parse_expr_inner())
+            .map_err(|err| {
+                Error::new(
+                    err.span(),
+                    SyntaxError::WithLabel {
+                        inner: Box::new(err),
+                        span: if_token,
+                        note: "Tried to parse the condition for an if statement",
+                    },
+                )
+            })?;
         expect!(self, Token::RParen);
 
         let cons = self.parse_stmt()?;
@@ -575,7 +579,7 @@ impl<I: Tokens> Parser<I> {
             syntax_error!(self, SyntaxError::LineBreakInThrow);
         }
 
-        let arg = self.allow_in_expr(|p| p.parse_expr())?;
+        let arg = self.allow_in_expr(|p| p.parse_expr_inner())?;
         self.expect_general_semi()?;
 
         let span = self.span(start);
@@ -598,7 +602,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::With);
 
         expect!(self, Token::LParen);
-        let obj = self.allow_in_expr(|p| p.parse_expr())?;
+        let obj = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let body = self.do_inside_of_context(Context::InFunction, |p| {
@@ -615,7 +619,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::While);
 
         expect!(self, Token::LParen);
-        let test = self.allow_in_expr(|p| p.parse_expr())?;
+        let test = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let body = self.do_inside_of_context(
@@ -674,7 +678,7 @@ impl<I: Tokens> Parser<I> {
         expect!(self, Token::While);
         expect!(self, Token::LParen);
 
-        let test = self.allow_in_expr(|p| p.parse_expr())?;
+        let test = self.allow_in_expr(|p| p.parse_expr_inner())?;
 
         expect!(self, Token::RParen);
 
@@ -690,18 +694,20 @@ impl<I: Tokens> Parser<I> {
         self.do_inside_of_context(Context::IsBreakAllowed, |p| {
             p.do_outside_of_context(Context::AllowUsingDecl, |p| {
                 let start = l.span_lo(&p.ast);
-                let atom = p.ast.get_atom(l.sym(&p.ast)).clone();
+                let sym = l.sym(&p.ast);
+                let atom = p.ast.get_utf8(sym);
 
                 let mut errors = Vec::new();
                 for lb in &p.state().labels {
-                    if &atom == lb {
+                    let lb = p.ast.get_utf8(*lb);
+                    if atom == lb {
                         errors.push(Error::new(
                             l.span(&p.ast),
-                            SyntaxError::DuplicateLabel(atom.clone()),
+                            SyntaxError::DuplicateLabel(Atom::new(atom)),
                         ));
                     }
                 }
-                p.state_mut().labels.push(atom.clone());
+                p.state_mut().labels.push(sym);
 
                 let body = if p.input().is(Token::Function) {
                     let f = p.parse_fn_decl(TypedSubRange::empty())?;
@@ -725,7 +731,11 @@ impl<I: Tokens> Parser<I> {
                 }
 
                 {
-                    let pos = p.state().labels.iter().position(|v| v == &atom);
+                    let pos = p
+                        .state()
+                        .labels
+                        .iter()
+                        .position(|v| p.ast.get_utf8(*v) == p.ast.get_utf8(sym));
                     if let Some(pos) = pos {
                         p.state_mut().labels.remove(pos);
                     }
@@ -796,7 +806,7 @@ impl<I: Tokens> Parser<I> {
         self.assert_and_bump(Token::Switch);
 
         expect!(self, Token::LParen);
-        let discriminant = self.allow_in_expr(|p| p.parse_expr())?;
+        let discriminant = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
         let mut cases = self.scratch_start();
@@ -814,7 +824,7 @@ impl<I: Tokens> Parser<I> {
                 let case_start = p.cur_pos();
                 p.bump();
                 let test = if is_case {
-                    p.allow_in_expr(|p| p.parse_expr()).map(Some)?
+                    p.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
                 } else {
                     if let Some(previous) = span_of_previous_default {
                         syntax_error!(p, SyntaxError::MultipleDefault { previous });
@@ -957,7 +967,12 @@ impl<I: Tokens> Parser<I> {
                     && !self
                         .state()
                         .labels
-                        .contains(self.ast.get_atom(label.as_ref().unwrap().sym(&self.ast)))
+                        .iter()
+                        .find(|l| {
+                            self.ast.get_utf8(**l)
+                                == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                        })
+                        .is_some()
                 {
                     self.emit_err(span, SyntaxError::TS1116);
                 } else if !self.ctx().contains(Context::IsBreakAllowed) {
@@ -969,7 +984,12 @@ impl<I: Tokens> Parser<I> {
                 && !self
                     .state()
                     .labels
-                    .contains(self.ast.get_atom(label.as_ref().unwrap().sym(&self.ast)))
+                    .iter()
+                    .find(|l| {
+                        self.ast.get_utf8(**l)
+                            == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                    })
+                    .is_some()
             {
                 self.emit_err(span, SyntaxError::TS1107);
             }
@@ -1096,7 +1116,7 @@ impl<I: Tokens> Parser<I> {
         // simply start parsing an expression, and afterwards, if the
         // next token is a colon and the expression was a simple
         // Identifier node, we switch to interpreting it as a label.
-        let expr = self.allow_in_expr(|p| p.parse_expr())?;
+        let expr = self.allow_in_expr(|p| p.parse_expr_inner())?;
 
         let expr = match expr {
             Expr::Ident(ident) => {
@@ -1109,11 +1129,11 @@ impl<I: Tokens> Parser<I> {
         };
 
         if let Expr::Ident(ref ident) = expr {
-            let ident_sym = self.ast.get_atom(ident.sym(&self.ast));
-            if ident_sym.as_str() == "interface" && self.input().had_line_break_before_cur() {
+            let ident_sym = self.ast.get_utf8(ident.sym(&self.ast));
+            if ident_sym == "interface" && self.input().had_line_break_before_cur() {
                 self.emit_strict_mode_err(
                     ident.span(&self.ast),
-                    SyntaxError::InvalidIdentInStrict(ident_sym.clone()),
+                    SyntaxError::InvalidIdentInStrict(Atom::new(ident_sym)),
                 );
 
                 self.eat_general_semi();
@@ -1182,15 +1202,12 @@ impl<I: Tokens> Parser<I> {
 
         let mut stmts = self.scratch_start();
 
-        let has_strict_directive = allow_directives
-            && (self
-                .input()
-                .cur()
-                .is_str_raw_content("\"use strict\"", self.input())
-                || self
-                    .input()
-                    .cur()
-                    .is_str_raw_content("'use strict'", self.input()));
+        let cur_str = self
+            .input
+            .iter
+            .get_maybe_sub_utf8(MaybeSubUtf8::new_from_span(self.input.cur_span()));
+        let has_strict_directive =
+            allow_directives && (cur_str == "\"use strict\"" || cur_str == "'use strict'");
 
         let parse_stmts = |p: &mut Self, stmts: &mut ScratchIndex<Type>| -> PResult<()> {
             let is_stmt_start = |p: &mut Self| {
@@ -1231,6 +1248,16 @@ impl<I: Tokens> Parser<I> {
         let stmts = stmts.end(self);
         Ok(stmts)
     }
+
+    pub(crate) fn parse_shebang(&mut self) -> PResult<OptionalUtf8Ref> {
+        let cur = self.input().cur();
+        Ok(if cur == Token::Shebang {
+            let atom = self.input_mut().expect_shebang_token_and_bump();
+            self.to_utf8_ref(atom).into()
+        } else {
+            OptionalUtf8Ref::new_none()
+        })
+    }
 }
 
 fn handle_import_export<I: Tokens>(
@@ -1239,7 +1266,7 @@ fn handle_import_export<I: Tokens>(
 ) -> PResult<Stmt> {
     let start = p.cur_pos();
     if p.input().is(Token::Import) && peek!(p).is_some_and(|peek| peek == Token::LParen) {
-        let expr = p.parse_expr()?;
+        let expr = p.parse_expr_inner()?;
 
         p.eat_general_semi();
 
@@ -1247,7 +1274,7 @@ fn handle_import_export<I: Tokens>(
     }
 
     if p.input().is(Token::Import) && peek!(p).is_some_and(|peek| peek == Token::Dot) {
-        let expr = p.parse_expr()?;
+        let expr = p.parse_expr_inner()?;
 
         p.eat_general_semi();
 

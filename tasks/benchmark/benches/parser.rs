@@ -30,7 +30,7 @@ fn bench_new(b: &mut Bencher, src: &'static str) {
             input,
             None,
         );
-        let mut parser = Parser::new_from(lexer);
+        let parser = Parser::new_from(lexer);
         parser.parse_module().unwrap();
     });
 }

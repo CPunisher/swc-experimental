@@ -1,6 +1,5 @@
 use either::Either;
 use rustc_hash::FxHashMap;
-use swc_atoms::atom;
 use swc_common::{BytePos, Span, source_map::SmallPos};
 use swc_experimental_ecma_ast::*;
 
@@ -42,7 +41,7 @@ impl CloneIn for AssignTargetOrSpread {
 }
 
 impl<I: Tokens> Parser<I> {
-    pub fn parse_expr(&mut self) -> PResult<Expr> {
+    pub(crate) fn parse_expr_inner(&mut self) -> PResult<Expr> {
         trace_cur!(self, parse_expr);
         debug_tracing!(self, "parse_expr");
         let expr = self.parse_assignment_expr()?;
@@ -576,7 +575,7 @@ impl<I: Tokens> Parser<I> {
         let mut quasis = vec![cur_elem.node_id()];
 
         while !is_tail {
-            exprs.push(self.allow_in_expr(|p| p.parse_expr())?.node_id());
+            exprs.push(self.allow_in_expr(|p| p.parse_expr_inner())?.node_id());
             let elem = self.parse_tpl_element(is_tagged_tpl)?;
             is_tail = elem.tail(&self.ast);
             quasis.push(elem.node_id());
@@ -620,11 +619,12 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(matches!(cur, Token::NoSubstitutionTemplateLiteral));
 
         let (cooked, raw) = cur.take_template(self.input_mut());
+        let raw = self.to_utf8_ref(raw);
         let (raw, cooked) = match cooked {
-            Ok(cooked) => (raw, Some(cooked)),
+            Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into()),
             Err(err) => {
                 if is_tagged_tpl {
-                    (raw, None)
+                    (raw, OptionalWtf8Ref::new_none())
                 } else {
                     return Err(err);
                 }
@@ -635,8 +635,6 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(start <= pos);
         let span = Span::new_with_checked(start, pos);
 
-        let cooked = self.ast.add_optional_wtf8_atom_ref(cooked);
-        let raw = self.ast.add_atom_ref(raw);
         let tpl_element = self.ast.tpl_element(
             // `____`
             // `start.0 + 1` means skip the first backtick
@@ -660,11 +658,12 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(matches!(cur, Token::TemplateHead));
 
         let (cooked, raw) = cur.take_template(self.input_mut());
+        let raw = self.to_utf8_ref(raw);
         let (raw, cooked) = match cooked {
-            Ok(cooked) => (raw, Some(cooked)),
+            Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into()),
             Err(err) => {
                 if is_tagged_tpl {
-                    (raw, None)
+                    (raw, OptionalWtf8Ref::new_none())
                 } else {
                     return Err(err);
                 }
@@ -680,9 +679,6 @@ impl<I: Tokens> Parser<I> {
         debug_assert!(start.0 <= pos.0 - 3);
         let span =
             Span::new_with_checked(BytePos::from_u32(start.0 + 1), BytePos::from_u32(pos.0 - 2));
-
-        let cooked = self.ast.add_optional_wtf8_atom_ref(cooked);
-        let raw = self.ast.add_atom_ref(raw);
         Ok(self.ast.tpl_element(span, false, cooked, raw))
     }
 
@@ -711,11 +707,12 @@ impl<I: Tokens> Parser<I> {
                 // case: ___${
                 // `pos.0 - 2` means skip '${'
                 let span = Span::new_with_checked(start, BytePos::from_u32(pos.0 - 2));
+                let raw = self.to_utf8_ref(raw);
                 match cooked {
-                    Ok(cooked) => (raw, Some(cooked), false, span),
+                    Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into(), false, span),
                     Err(err) => {
                         if is_tagged_tpl {
-                            (raw, None, false, span)
+                            (raw, OptionalWtf8Ref::new_none(), false, span)
                         } else {
                             return Err(err);
                         }
@@ -730,11 +727,12 @@ impl<I: Tokens> Parser<I> {
                 // case: ____`
                 // `pos.0 - 1` means skip '`'
                 let span = Span::new_with_checked(start, BytePos::from_u32(pos.0 - 1));
+                let raw = self.to_utf8_ref(raw);
                 match cooked {
-                    Ok(cooked) => (raw, Some(cooked), true, span),
+                    Ok(cooked) => (raw, self.to_wtf8_ref(cooked).into(), true, span),
                     Err(err) => {
                         if is_tagged_tpl {
-                            (raw, None, true, span)
+                            (raw, OptionalWtf8Ref::new_none(), true, span)
                         } else {
                             return Err(err);
                         }
@@ -751,8 +749,6 @@ impl<I: Tokens> Parser<I> {
             }
         };
 
-        let cooked = self.ast.add_optional_wtf8_atom_ref(cooked);
-        let raw = self.ast.add_atom_ref(raw);
         Ok(self.ast.tpl_element(span, tail, cooked, raw))
     }
 
@@ -848,10 +844,9 @@ impl<I: Tokens> Parser<I> {
         let token_and_span = self.input().get_cur();
         let start = token_and_span.span.lo;
         let (value, raw) = self.input_mut().expect_string_token_and_bump();
-
-        let value = self.ast.add_wtf8_atom_ref(value);
-        let raw = self.ast.add_atom_ref(raw).into();
-        self.ast.str(self.span(start), value, raw)
+        let value = self.to_wtf8_ref(value);
+        let raw = self.to_utf8_ref(raw);
+        self.ast.str(self.span(start), value, raw.into())
     }
 
     pub(crate) fn parse_lit(&mut self) -> PResult<Lit> {
@@ -871,15 +866,14 @@ impl<I: Tokens> Parser<I> {
             Lit::Str(self.parse_str_lit())
         } else if cur == Token::Num {
             let (value, raw) = self.input_mut().expect_number_token_and_bump();
-
-            let raw = self.ast.add_atom_ref(raw).into();
-            self.ast.lit_number(self.span(start), value, raw)
+            let raw = self.to_utf8_ref(raw);
+            self.ast.lit_number(self.span(start), value, raw.into())
         } else if cur == Token::BigInt {
             let (value, raw) = self.input_mut().expect_bigint_token_and_bump();
 
             let value = self.ast.add_bigint(*value);
-            let raw = self.ast.add_atom_ref(raw).into();
-            self.ast.lit_big_int(self.span(start), value, raw)
+            let raw = self.to_utf8_ref(raw);
+            self.ast.lit_big_int(self.span(start), value, raw.into())
         } else if cur == Token::Error {
             let err = self.input_mut().expect_error_token_and_bump();
             return Err(err);
@@ -1174,7 +1168,7 @@ impl<I: Tokens> Parser<I> {
         // $obj[name()]
         if !no_computed_member && self.input_mut().eat(Token::LBracket) {
             let bracket_lo = self.input().prev_span().lo;
-            let prop = self.allow_in_expr(|p| p.parse_expr())?;
+            let prop = self.allow_in_expr(|p| p.parse_expr_inner())?;
             expect!(self, Token::RBracket);
             let span = Span::new_with_checked(callee.span_lo(&self.ast), self.input().last_pos());
             debug_assert_eq!(callee.span_lo(&self.ast), span.lo());
@@ -1247,7 +1241,10 @@ impl<I: Tokens> Parser<I> {
         if question_dot || self.input_mut().eat(Token::Dot) {
             let prop = self.parse_maybe_private_name().map(|e| match e {
                 Either::Left(p) => MemberProp::PrivateName(p),
-                Either::Right((span, sym)) => MemberProp::Ident(self.ast.ident_name(span, sym)),
+                Either::Right((span, sym)) => {
+                    let sym = self.to_utf8_ref(sym);
+                    MemberProp::Ident(self.ast.ident_name(span, sym))
+                }
             })?;
             let span = self.span(callee.span_lo(&self.ast));
             debug_assert_eq!(callee.span_lo(&self.ast), span.lo());
@@ -1324,7 +1321,7 @@ impl<I: Tokens> Parser<I> {
             Token::LBracket => {
                 self.bump();
                 let bracket_lo = self.input().prev_span().lo;
-                let prop = self.allow_in_expr(|p| p.parse_expr())?;
+                let prop = self.allow_in_expr(|p| p.parse_expr_inner())?;
                 expect!(self, Token::RBracket);
                 let span = Span::new_with_checked(lhs.span_lo(&self.ast), self.input().last_pos());
                 debug_assert_eq!(lhs.span_lo(&self.ast), span.lo());
@@ -1353,7 +1350,10 @@ impl<I: Tokens> Parser<I> {
                 self.bump();
                 let prop = self.parse_maybe_private_name().map(|e| match e {
                     Either::Left(p) => MemberProp::PrivateName(p),
-                    Either::Right((span, sym)) => MemberProp::Ident(self.ast.ident_name(span, sym)),
+                    Either::Right((span, sym)) => {
+                        let sym = self.to_utf8_ref(sym);
+                        MemberProp::Ident(self.ast.ident_name(span, sym))
+                    }
                 })?;
                 let span = self.span(lhs.span_lo(&self.ast));
                 debug_assert_eq!(lhs.span_lo(&self.ast), span.lo());
@@ -1418,7 +1418,7 @@ impl<I: Tokens> Parser<I> {
             self.mark_found_module_item();
 
             let (_, sym) = self.parse_ident_name()?;
-            match self.ast.get_atom(sym).as_str() {
+            match self.input.iter.get_maybe_sub_utf8(sym) {
                 "meta" => {
                     let span = self.span(start);
                     if !self.ctx().contains(Context::CanBeModule) {
@@ -1842,7 +1842,7 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(span, SyntaxError::InvalidIdentInAsync);
             }
 
-            let sym = self.ast.add_atom_ref(atom!("await"));
+            let sym = self.ast.add_utf8("await");
             return Ok(self.ast.expr_ident(span, sym, false));
         }
 
@@ -1867,7 +1867,7 @@ impl<I: Tokens> Parser<I> {
     }
 
     pub(crate) fn parse_for_head_prefix(&mut self) -> PResult<Expr> {
-        self.parse_expr()
+        self.parse_expr_inner()
     }
 
     // Returns (args_or_pats, trailing_comma)
@@ -2290,7 +2290,7 @@ impl<I: Tokens> Parser<I> {
         }
         if let Some(async_span) = async_span {
             // It's a call expression
-            let sym = self.ast.add_atom_ref(atom!("async"));
+            let sym = self.ast.add_utf8("async");
             let callee = self.ast.callee_expr_ident(async_span, sym, false);
             let expr_or_spreads = expr_or_spreads.end(self);
             return Ok(self.ast.expr_call_expr(
@@ -2476,19 +2476,23 @@ impl<I: Tokens> Parser<I> {
         } else if cur == Token::Hash {
             self.bump(); // consume `#`
             let (_, sym) = self.parse_ident_name()?;
+            let sym = self.to_utf8_ref(sym);
             Ok(self.ast.expr_private_name(self.span(start), sym))
         } else if cur == Token::Ident {
             let word = self.input_mut().expect_word_token_and_bump();
-            if self.ctx().contains(Context::InClassField) && word == atom!("arguments") {
+            if self.ctx().contains(Context::InClassField)
+                && self.input.iter.get_maybe_sub_utf8(word) == "arguments"
+            {
                 self.emit_err(self.input().prev_span(), SyntaxError::ArgumentsInClassField)
             };
-            let word = self.ast.add_atom_ref(word);
+
+            let word = self.to_utf8_ref(word);
             let id = self.ast.ident(self.span(token_start), word, false);
             try_parse_arrow_expr(self, id, false)
         } else if self.is_ident_ref() {
             let id_is_async = self.input().cur() == Token::Async;
             let word = self.input_mut().expect_word_token_and_bump();
-            let word = self.ast.add_atom_ref(word);
+            let word = self.to_utf8_ref(word);
             let id = self.ast.ident(self.span(token_start), word, false);
             try_parse_arrow_expr(self, id, id_is_async)
         } else {
@@ -2510,18 +2514,18 @@ impl<I: Tokens> Parser<I> {
             let (exp, flags) = self.input_mut().expect_regex_token_and_bump();
             let span = self.span(start);
 
-            let mut flags_count =
-                flags
-                    .chars()
-                    .fold(FxHashMap::<char, usize>::default(), |mut map, flag| {
-                        let key = match flag {
-                            // https://tc39.es/ecma262/#sec-isvalidregularexpressionliteral
-                            'd' | 'g' | 'i' | 'm' | 's' | 'u' | 'v' | 'y' => flag,
-                            _ => '\u{0000}', // special marker for unknown flags
-                        };
-                        map.entry(key).and_modify(|count| *count += 1).or_insert(1);
-                        map
-                    });
+            let mut flags_count = self.input.iter.get_maybe_sub_utf8(flags).chars().fold(
+                FxHashMap::<char, usize>::default(),
+                |mut map, flag| {
+                    let key = match flag {
+                        // https://tc39.es/ecma262/#sec-isvalidregularexpressionliteral
+                        'd' | 'g' | 'i' | 'm' | 's' | 'u' | 'v' | 'y' => flag,
+                        _ => '\u{0000}', // special marker for unknown flags
+                    };
+                    map.entry(key).and_modify(|count| *count += 1).or_insert(1);
+                    map
+                },
+            );
 
             if flags_count.remove(&'\u{0000}').is_some() {
                 self.emit_err(span, SyntaxError::UnknownRegExpFlags);
@@ -2531,8 +2535,8 @@ impl<I: Tokens> Parser<I> {
                 self.emit_err(span, SyntaxError::DuplicatedRegExpFlags(*flag));
             }
 
-            let exp = self.ast.add_atom_ref(exp);
-            let flags = self.ast.add_atom_ref(flags);
+            let exp = self.to_utf8_ref(exp);
+            let flags = self.to_utf8_ref(flags);
             Some(self.ast.expr_lit_regex(span, exp, flags))
         } else {
             None

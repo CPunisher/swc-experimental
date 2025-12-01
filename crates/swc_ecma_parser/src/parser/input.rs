@@ -1,4 +1,4 @@
-use swc_atoms::{Atom, Wtf8Atom};
+use swc_atoms::wtf8::Wtf8;
 use swc_common::{BytePos, Span};
 use swc_experimental_ecma_ast::EsVersion;
 
@@ -6,6 +6,7 @@ use crate::{
     Context,
     error::Error,
     lexer::{LexResult, NextTokenAndSpan, Token, TokenAndSpan, TokenFlags, TokenValue},
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
     syntax::SyntaxFlags,
 };
 
@@ -22,6 +23,9 @@ pub trait Tokens: Clone + Iterator<Item = TokenAndSpan> {
 
     fn checkpoint_save(&self) -> Self::Checkpoint;
     fn checkpoint_load(&mut self, checkpoint: Self::Checkpoint);
+
+    fn get_maybe_sub_utf8(&self, atom_ref: MaybeSubUtf8) -> &str;
+    fn get_maybe_sub_wtf8(&self, atom_ref: MaybeSubWtf8) -> &Wtf8;
 
     fn start_pos(&self) -> BytePos {
         BytePos(0)
@@ -80,21 +84,21 @@ pub struct Buffer<I> {
 }
 
 impl<I: Tokens> Buffer<I> {
-    pub fn expect_word_token_value(&mut self) -> Atom {
+    pub fn expect_word_token_value(&mut self) -> MaybeSubUtf8 {
         let Some(crate::lexer::TokenValue::Word(word)) = self.iter.take_token_value() else {
             unreachable!()
         };
         word
     }
 
-    pub fn expect_word_token_value_ref(&self) -> &Atom {
+    pub fn expect_word_token_value_ref(&self) -> MaybeSubUtf8 {
         let Some(crate::lexer::TokenValue::Word(word)) = self.iter.get_token_value() else {
             unreachable!("token_value: {:?}", self.iter.get_token_value())
         };
-        word
+        *word
     }
 
-    pub fn expect_number_token_value(&mut self) -> (f64, Atom) {
+    pub fn expect_number_token_value(&mut self) -> (f64, MaybeSubUtf8) {
         let Some(crate::lexer::TokenValue::Num { value, raw }) = self.iter.take_token_value()
         else {
             unreachable!()
@@ -102,7 +106,7 @@ impl<I: Tokens> Buffer<I> {
         (value, raw)
     }
 
-    pub fn expect_string_token_value(&mut self) -> (Wtf8Atom, Atom) {
+    pub fn expect_string_token_value(&mut self) -> (MaybeSubWtf8, MaybeSubUtf8) {
         let Some(crate::lexer::TokenValue::Str { value, raw }) = self.iter.take_token_value()
         else {
             unreachable!()
@@ -110,7 +114,7 @@ impl<I: Tokens> Buffer<I> {
         (value, raw)
     }
 
-    pub fn expect_bigint_token_value(&mut self) -> (Box<num_bigint::BigInt>, Atom) {
+    pub fn expect_bigint_token_value(&mut self) -> (Box<num_bigint::BigInt>, MaybeSubUtf8) {
         let Some(crate::lexer::TokenValue::BigInt { value, raw }) = self.iter.take_token_value()
         else {
             unreachable!()
@@ -118,7 +122,7 @@ impl<I: Tokens> Buffer<I> {
         (value, raw)
     }
 
-    pub fn expect_regex_token_value(&mut self) -> (Atom, Atom) {
+    pub fn expect_regex_token_value(&mut self) -> (MaybeSubUtf8, MaybeSubUtf8) {
         let Some(crate::lexer::TokenValue::Regex { value, flags }) = self.iter.take_token_value()
         else {
             unreachable!()
@@ -126,7 +130,7 @@ impl<I: Tokens> Buffer<I> {
         (value, flags)
     }
 
-    pub fn expect_template_token_value(&mut self) -> (LexResult<Wtf8Atom>, Atom) {
+    pub fn expect_template_token_value(&mut self) -> (LexResult<MaybeSubWtf8>, MaybeSubUtf8) {
         let Some(crate::lexer::TokenValue::Template { cooked, raw }) = self.iter.take_token_value()
         else {
             unreachable!()
@@ -295,63 +299,56 @@ impl<I: Tokens> Buffer<I> {
         self.set_cur(next);
     }
 
-    pub fn expect_word_token_and_bump(&mut self) -> Atom {
+    pub fn expect_word_token_and_bump(&mut self) -> MaybeSubUtf8 {
         let cur = self.cur();
-        let word = cur.take_word(self).unwrap();
+        let word = cur.take_word(self);
         self.bump();
         word
     }
 
-    pub fn expect_shebang_token_and_bump(&mut self) -> swc_atoms::Atom {
+    pub fn expect_shebang_token_and_bump(&mut self) -> MaybeSubUtf8 {
         let cur = self.cur();
         let ret = cur.take_shebang(self);
         self.bump();
         ret
     }
 
-    pub fn expect_jsx_name_token_and_bump(&mut self) -> Atom {
+    pub fn expect_jsx_name_token_and_bump(&mut self) -> MaybeSubUtf8 {
         let cur = self.cur();
         let word = cur.take_jsx_name(self);
         self.bump();
         word
     }
 
-    pub fn expect_jsx_text_token_and_bump(&mut self) -> (Atom, Atom) {
-        let cur = self.cur();
-        let ret = cur.take_jsx_text(self);
-        self.bump();
-        ret
-    }
-
-    pub fn expect_number_token_and_bump(&mut self) -> (f64, Atom) {
+    pub fn expect_number_token_and_bump(&mut self) -> (f64, MaybeSubUtf8) {
         let cur = self.cur();
         let ret = cur.take_num(self);
         self.bump();
         ret
     }
 
-    pub fn expect_string_token_and_bump(&mut self) -> (Wtf8Atom, Atom) {
+    pub fn expect_string_token_and_bump(&mut self) -> (MaybeSubWtf8, MaybeSubUtf8) {
         let cur = self.cur();
         let ret = cur.take_str(self);
         self.bump();
         ret
     }
 
-    pub fn expect_bigint_token_and_bump(&mut self) -> (Box<num_bigint::BigInt>, Atom) {
+    pub fn expect_bigint_token_and_bump(&mut self) -> (Box<num_bigint::BigInt>, MaybeSubUtf8) {
         let cur = self.cur();
         let ret = cur.take_bigint(self);
         self.bump();
         ret
     }
 
-    pub fn expect_regex_token_and_bump(&mut self) -> (Atom, Atom) {
+    pub fn expect_regex_token_and_bump(&mut self) -> (MaybeSubUtf8, MaybeSubUtf8) {
         let cur = self.cur();
         let ret = cur.take_regexp(self);
         self.bump();
         ret
     }
 
-    pub fn expect_template_token_and_bump(&mut self) -> (LexResult<Wtf8Atom>, Atom) {
+    pub fn expect_template_token_and_bump(&mut self) -> (LexResult<MaybeSubWtf8>, MaybeSubUtf8) {
         let cur = self.cur();
         let ret = cur.take_template(self);
         self.bump();
@@ -369,7 +366,7 @@ impl<I: Tokens> Buffer<I> {
     #[inline(never)]
     pub fn dump_cur(&self) -> String {
         let cur = self.cur();
-        cur.to_string(self.get_token_value())
+        cur.to_string()
     }
 }
 

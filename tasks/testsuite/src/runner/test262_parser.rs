@@ -33,20 +33,22 @@ impl Test262ParserRunner {
             let input = StringSource::new(&case.code());
             let comments = SingleThreadedComments::default();
             let lexer = Lexer::new(case.syntax(), Default::default(), input, Some(&comments));
-            let mut parser = Parser::new_from(lexer);
+            let parser = Parser::new_from(lexer);
             let ret = if filename.ends_with(".module.js") {
-                parser.parse_module().map(Program::Module)
+                parser
+                    .parse_module()
+                    .map(|ret| ret.map_root(Program::Module))
             } else {
-                parser.parse_script().map(Program::Script)
+                parser
+                    .parse_script()
+                    .map(|ret| ret.map_root(Program::Script))
             };
 
-            let mut errors = parser.take_errors();
-            if let Err(err) = ret {
-                errors.push(err);
-            }
-
-            let failed = !errors.is_empty();
-            match (case.should_fail(), failed) {
+            let errors = match ret {
+                Ok(ret) => ret.errors,
+                Err(e) => vec![e],
+            };
+            match (case.should_fail(), !errors.is_empty()) {
                 (true, false) => results.push(TestResult::Failed {
                     path: case.relative_path().to_path_buf(),
                     error: "Expected failure, but parsed successfully".to_string(),

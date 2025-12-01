@@ -1,6 +1,6 @@
 use crate::{
-    AssignOp, AtomRef, BigIntId, BinaryOp, ImportPhase, MetaPropKind, MethodKind, OptionalAtomRef,
-    OptionalWtf8AtomId, UnaryOp, UpdateOp, VarDeclKind, Wtf8AtomId,
+    AssignOp, BigIntId, BinaryOp, ImportPhase, MetaPropKind, MethodKind, OptionalUtf8Ref,
+    OptionalWtf8Ref, UnaryOp, UpdateOp, Utf8Ref, VarDeclKind, Wtf8Ref,
 };
 use swc_common::Span;
 
@@ -30,10 +30,10 @@ dummy_visit_mut_impl!(bool);
 dummy_visit_mut_impl!(f64);
 dummy_visit_mut_impl!(Span);
 dummy_visit_mut_impl!(BigIntId);
-dummy_visit_mut_impl!(AtomRef);
-dummy_visit_mut_impl!(OptionalAtomRef);
-dummy_visit_mut_impl!(Wtf8AtomId);
-dummy_visit_mut_impl!(OptionalWtf8AtomId);
+dummy_visit_mut_impl!(Utf8Ref);
+dummy_visit_mut_impl!(OptionalUtf8Ref);
+dummy_visit_mut_impl!(Wtf8Ref);
+dummy_visit_mut_impl!(OptionalWtf8Ref);
 dummy_visit_mut_impl!(ImportPhase);
 dummy_visit_mut_impl!(VarDeclKind);
 dummy_visit_mut_impl!(UnaryOp);

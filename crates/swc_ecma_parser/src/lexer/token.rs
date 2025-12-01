@@ -1,40 +1,40 @@
 use num_bigint::BigInt;
-use swc_experimental_ecma_ast::AssignOp;
-use swc_atoms::{Atom, Wtf8Atom, atom};
 use swc_common::Span;
+use swc_experimental_ecma_ast::AssignOp;
 
 use super::LexResult;
 use crate::{
     Context, Lexer,
     error::Error,
     input::{Buffer, Tokens},
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
 };
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {
     /// unknown ident, jsx name and shebang
-    Word(Atom),
+    Word(MaybeSubUtf8),
     Template {
-        raw: Atom,
-        cooked: LexResult<Wtf8Atom>,
+        raw: MaybeSubUtf8,
+        cooked: LexResult<MaybeSubWtf8>,
     },
     // string, jsx text
     Str {
-        value: Wtf8Atom,
-        raw: Atom,
+        value: MaybeSubWtf8,
+        raw: MaybeSubUtf8,
     },
     // regexp
     Regex {
-        value: Atom,
-        flags: Atom,
+        value: MaybeSubUtf8,
+        flags: MaybeSubUtf8,
     },
     Num {
         value: f64,
-        raw: Atom,
+        raw: MaybeSubUtf8,
     },
     BigInt {
         value: Box<num_bigint::BigInt>,
-        raw: Atom,
+        raw: MaybeSubUtf8,
     },
     Error(crate::error::Error),
 }
@@ -333,31 +333,32 @@ impl Token {
 
 impl<'a> Token {
     #[inline(always)]
-    pub fn jsx_name(name: &str, lexer: &mut crate::Lexer) -> Self {
-        let name = lexer.atoms.atom(name);
-        lexer.set_token_value(Some(TokenValue::Word(name)));
-        Token::JSXName
-    }
-
-    #[inline(always)]
-    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_jsx_name<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn str(value: Wtf8Atom, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn str(value: MaybeSubWtf8, raw: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::Str
     }
 
     #[inline(always)]
-    pub fn template(cooked: LexResult<Wtf8Atom>, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn template(
+        cooked: LexResult<MaybeSubWtf8>,
+        raw: MaybeSubUtf8,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::Template { cooked, raw }));
         Token::Template
     }
 
     #[inline(always)]
-    pub fn regexp(content: Atom, flags: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn regexp(
+        content: MaybeSubUtf8,
+        flags: MaybeSubUtf8,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::Regex {
             value: content,
             flags,
@@ -366,27 +367,25 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn num(value: f64, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn num(value: f64, raw: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Num { value, raw }));
         Self::Num
     }
 
     #[inline(always)]
-    pub fn bigint(value: Box<num_bigint::BigInt>, raw: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn bigint(
+        value: Box<num_bigint::BigInt>,
+        raw: MaybeSubUtf8,
+        lexer: &mut crate::Lexer<'a>,
+    ) -> Self {
         lexer.set_token_value(Some(TokenValue::BigInt { value, raw }));
         Self::BigInt
     }
 
     #[inline(always)]
-    pub fn unknown_ident(value: Atom, lexer: &mut crate::Lexer<'a>) -> Self {
+    pub fn unknown_ident(value: MaybeSubUtf8, lexer: &mut crate::Lexer<'a>) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Ident
-    }
-
-    #[inline(always)]
-    pub fn into_atom(self, lexer: &mut crate::Lexer<'a>) -> Option<Atom> {
-        let value = lexer.get_token_value();
-        self.as_word_atom(value)
     }
 
     #[inline(always)]
@@ -395,81 +394,63 @@ impl<'a> Token {
     }
 
     #[inline(always)]
-    pub fn is_str_raw_content<I: Tokens>(self, content: &str, buffer: &Buffer<I>) -> bool {
-        self == Token::Str
-            && if let Some(TokenValue::Str { raw, .. }) = buffer.get_token_value() {
-                raw == content
-            } else {
-                unreachable!()
-            }
-    }
-
-    #[inline(always)]
-    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Wtf8Atom, Atom) {
+    pub fn take_str<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubWtf8, MaybeSubUtf8) {
         buffer.expect_string_token_value()
     }
 
     #[inline(always)]
-    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, Atom) {
+    pub fn take_num<I: Tokens>(self, buffer: &mut Buffer<I>) -> (f64, MaybeSubUtf8) {
         buffer.expect_number_token_value()
     }
 
     #[inline(always)]
-    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, Atom) {
+    pub fn take_bigint<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Box<BigInt>, MaybeSubUtf8) {
         buffer.expect_bigint_token_value()
     }
 
     #[inline]
-    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> Option<Atom> {
-        self.as_word_atom(buffer.get_token_value())
+    pub fn take_word<I: Tokens>(self, buffer: &Buffer<I>) -> MaybeSubUtf8 {
+        let span = buffer.cur.span;
+        MaybeSubUtf8::new_from_source(span.lo, span.hi)
     }
 
     #[inline(always)]
-    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_unknown_ident<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 
     #[inline(always)]
-    pub fn take_known_ident(self) -> Atom {
-        self.as_known_ident_atom().unwrap()
-    }
-
-    #[inline(always)]
-    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> &'b Atom {
+    pub fn take_unknown_ident_ref<'b, I: Tokens>(&'b self, buffer: &'b Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value_ref()
     }
 
     #[inline(always)]
-    pub fn take_template<I: Tokens>(self, buffer: &mut Buffer<I>) -> (LexResult<Wtf8Atom>, Atom) {
+    pub fn take_template<I: Tokens>(
+        self,
+        buffer: &mut Buffer<I>,
+    ) -> (LexResult<MaybeSubWtf8>, MaybeSubUtf8) {
         buffer.expect_template_token_value()
     }
 
     #[inline(always)]
-    pub fn jsx_text(value: Wtf8Atom, raw: Atom, lexer: &mut Lexer) -> Self {
+    pub fn jsx_text(value: MaybeSubWtf8, raw: MaybeSubUtf8, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Str { value, raw }));
         Token::JSXText
     }
 
     #[inline(always)]
-    pub fn take_jsx_text<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Atom, Atom) {
-        let (value, raw) = buffer.expect_string_token_value();
-        // SAFETY: We set value as Atom in `jsx_text` method.
-        (value.as_atom().cloned().unwrap(), raw)
-    }
-
-    #[inline(always)]
-    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (Atom, Atom) {
+    pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubUtf8, MaybeSubUtf8) {
         buffer.expect_regex_token_value()
     }
 
     #[inline(always)]
-    pub fn shebang(value: Atom, lexer: &mut Lexer) -> Self {
+    pub fn shebang(value: MaybeSubUtf8, lexer: &mut Lexer) -> Self {
         lexer.set_token_value(Some(TokenValue::Word(value)));
         Token::Shebang
     }
 
     #[inline(always)]
-    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> Atom {
+    pub fn take_shebang<I: Tokens>(self, buffer: &mut Buffer<I>) -> MaybeSubUtf8 {
         buffer.expect_word_token_value()
     }
 }
@@ -489,7 +470,7 @@ impl std::fmt::Debug for Token {
             Token::JSXText => "<jsx text>",
             Token::Ident => "<identifier>",
             Token::Error => "<error>",
-            _ => &self.to_string(None),
+            _ => &self.to_string(),
         };
         f.write_str(s)
     }
@@ -561,7 +542,7 @@ impl Token {
     }
 
     #[cold]
-    pub fn to_string(self, value: Option<&TokenValue>) -> String {
+    pub fn to_string(self) -> String {
         match self {
             Token::LParen => "(",
             Token::RParen => ")",
@@ -626,69 +607,19 @@ impl Token {
             Token::DollarLBrace => "${",
             Token::JSXTagStart => "jsx tag start",
             Token::JSXTagEnd => "jsx tag end",
-            Token::JSXText => {
-                let Some(TokenValue::Str { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("jsx text ({raw})");
-            }
-            Token::Str => {
-                let Some(TokenValue::Str { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("string literal ({value:?}, {raw})");
-            }
-            Token::Num => {
-                let Some(TokenValue::Num { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("numeric literal ({value}, {raw})");
-            }
-            Token::BigInt => {
-                let Some(TokenValue::BigInt { value, raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("bigint literal ({value}, {raw})");
-            }
-            Token::Regex => {
-                let Some(TokenValue::Regex { value, flags, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("regexp literal ({value}, {flags})");
-            }
-            Token::Template => {
-                let Some(TokenValue::Template { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("template token ({raw})");
-            }
-            Token::JSXName => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("jsx name ({w})");
-            }
-            Token::Error => {
-                let Some(TokenValue::Error(e)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                return format!("<lexing error: {e:?}>");
-            }
-            Token::Ident => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                w.as_ref()
-            }
-            Token::NoSubstitutionTemplateLiteral
-            | Token::TemplateHead
-            | Token::TemplateMiddle
-            | Token::TemplateTail => {
-                let Some(TokenValue::Template { raw, .. }) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                raw
-            }
+            Token::JSXText => "jsx text",
+            Token::Str => "string literal",
+            Token::Num => "numeric literal",
+            Token::BigInt => "bigint literal",
+            Token::Regex => "regexp literal",
+            Token::Template => "template token",
+            Token::JSXName => "jsx name",
+            Token::Error => "<lexing error>",
+            Token::Ident => "ident",
+            Token::NoSubstitutionTemplateLiteral => "no substitution template literal",
+            Token::TemplateHead => "template head",
+            Token::TemplateMiddle => "template middle",
+            Token::TemplateTail => "template tail",
             Token::Await => "await",
             Token::Break => "break",
             Token::Case => "case",
@@ -781,106 +712,10 @@ impl Token {
         .to_string()
     }
 
-    pub fn as_keyword_atom(self) -> Option<Atom> {
-        let atom = match self {
-            Token::Await => atom!("await"),
-            Token::Break => atom!("break"),
-            Token::Case => atom!("case"),
-            Token::Catch => atom!("catch"),
-            Token::Class => atom!("class"),
-            Token::Const => atom!("const"),
-            Token::Continue => atom!("continue"),
-            Token::Debugger => atom!("debugger"),
-            Token::Default => atom!("default"),
-            Token::Delete => atom!("delete"),
-            Token::Do => atom!("do"),
-            Token::Else => atom!("else"),
-            Token::Export => atom!("export"),
-            Token::Extends => atom!("extends"),
-            Token::Finally => atom!("finally"),
-            Token::For => atom!("for"),
-            Token::Function => atom!("function"),
-            Token::If => atom!("if"),
-            Token::Import => atom!("import"),
-            Token::In => atom!("in"),
-            Token::InstanceOf => atom!("instanceof"),
-            Token::Let => atom!("let"),
-            Token::New => atom!("new"),
-            Token::Return => atom!("return"),
-            Token::Super => atom!("super"),
-            Token::Switch => atom!("switch"),
-            Token::This => atom!("this"),
-            Token::Throw => atom!("throw"),
-            Token::Try => atom!("try"),
-            Token::TypeOf => atom!("typeof"),
-            Token::Var => atom!("var"),
-            Token::Void => atom!("void"),
-            Token::While => atom!("while"),
-            Token::With => atom!("with"),
-            Token::Yield => atom!("yield"),
-            Token::Module => atom!("module"),
-            _ => return None,
-        };
-        Some(atom)
-    }
-
     #[inline(always)]
     pub const fn is_keyword(self) -> bool {
         let t = self as u8;
         t >= Token::Await as u8 && t <= Token::Module as u8
-    }
-
-    pub fn as_known_ident_atom(self) -> Option<Atom> {
-        let atom = match self {
-            Token::Abstract => atom!("abstract"),
-            Token::Any => atom!("any"),
-            Token::As => atom!("as"),
-            Token::Asserts => atom!("asserts"),
-            Token::Assert => atom!("assert"),
-            Token::Async => atom!("async"),
-            Token::Bigint => atom!("bigint"),
-            Token::Boolean => atom!("boolean"),
-            Token::Constructor => atom!("constructor"),
-            Token::Declare => atom!("declare"),
-            Token::Enum => atom!("enum"),
-            Token::From => atom!("from"),
-            Token::Get => atom!("get"),
-            Token::Global => atom!("global"),
-            Token::Implements => atom!("implements"),
-            Token::Interface => atom!("interface"),
-            Token::Intrinsic => atom!("intrinsic"),
-            Token::Is => atom!("is"),
-            Token::Keyof => atom!("keyof"),
-            Token::Namespace => atom!("namespace"),
-            Token::Never => atom!("never"),
-            Token::Number => atom!("number"),
-            Token::Object => atom!("object"),
-            Token::Of => atom!("of"),
-            Token::Out => atom!("out"),
-            Token::Override => atom!("override"),
-            Token::Package => atom!("package"),
-            Token::Private => atom!("private"),
-            Token::Protected => atom!("protected"),
-            Token::Public => atom!("public"),
-            Token::Readonly => atom!("readonly"),
-            Token::Require => atom!("require"),
-            Token::Set => atom!("set"),
-            Token::Static => atom!("static"),
-            Token::String => atom!("string"),
-            Token::Symbol => atom!("symbol"),
-            Token::Type => atom!("type"),
-            Token::Undefined => atom!("undefined"),
-            Token::Unique => atom!("unique"),
-            Token::Unknown => atom!("unknown"),
-            Token::Using => atom!("using"),
-            Token::Accessor => atom!("accessor"),
-            Token::Infer => atom!("infer"),
-            Token::Satisfies => atom!("satisfies"),
-            Token::Meta => atom!("meta"),
-            Token::Target => atom!("target"),
-            _ => return None,
-        };
-        Some(atom)
     }
 
     #[inline(always)]
@@ -895,23 +730,6 @@ impl Token {
             Token::Null | Token::True | Token::False | Token::Ident
         ) || self.is_known_ident()
             || self.is_keyword()
-    }
-
-    pub fn as_word_atom(self, value: Option<&TokenValue>) -> Option<Atom> {
-        match self {
-            Token::Null => Some(atom!("null")),
-            Token::True => Some(atom!("true")),
-            Token::False => Some(atom!("false")),
-            Token::Ident => {
-                let Some(TokenValue::Word(w)) = value else {
-                    unreachable!("{:#?}", value)
-                };
-                Some(w.clone())
-            }
-            _ => self
-                .as_known_ident_atom()
-                .or_else(|| self.as_keyword_atom()),
-        }
     }
 
     #[inline(always)]
@@ -933,9 +751,7 @@ impl Token {
             Token::GtEq => Some(swc_experimental_ecma_ast::BinaryOp::GtEq),
             Token::LShift => Some(swc_experimental_ecma_ast::BinaryOp::LShift),
             Token::RShift => Some(swc_experimental_ecma_ast::BinaryOp::RShift),
-            Token::ZeroFillRShift => {
-                Some(swc_experimental_ecma_ast::BinaryOp::ZeroFillRShift)
-            }
+            Token::ZeroFillRShift => Some(swc_experimental_ecma_ast::BinaryOp::ZeroFillRShift),
             Token::Plus => Some(swc_experimental_ecma_ast::BinaryOp::Add),
             Token::Minus => Some(swc_experimental_ecma_ast::BinaryOp::Sub),
             Token::Asterisk => Some(swc_experimental_ecma_ast::BinaryOp::Mul),

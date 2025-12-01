@@ -19,11 +19,15 @@ impl MiscParserRunner {
             let input = StringSource::new(case.code());
             let comments = SingleThreadedComments::default();
             let lexer = Lexer::new(syntax, Default::default(), input, Some(&comments));
-            let mut parser = Parser::new_from(lexer);
+            let parser = Parser::new_from(lexer);
             let ret = match case.ext().as_str() {
                 "js" => parser.parse_program(),
-                "cjs" => parser.parse_script().map(Program::Script),
-                "mjs" => parser.parse_module().map(Program::Module),
+                "cjs" => parser
+                    .parse_script()
+                    .map(|ret| ret.map_root(Program::Script)),
+                "mjs" => parser
+                    .parse_module()
+                    .map(|ret| ret.map_root(Program::Module)),
                 "ts" | "jsx" | "tsx" => {
                     results.push(TestResult::Ignored {
                         path: case.path().to_owned(),
@@ -33,9 +37,11 @@ impl MiscParserRunner {
                 _ => unreachable!(),
             };
 
-            let errors = parser.take_errors();
-            let failed = ret.is_err() || !errors.is_empty();
-            match (case.should_fail(), failed) {
+            let errors = match ret {
+                Ok(ret) => ret.errors,
+                Err(e) => vec![e],
+            };
+            match (case.should_fail(), !errors.is_empty()) {
                 (true, false) => results.push(TestResult::Failed {
                     path: case.relative_path().to_owned(),
                     error: "Expected failure, but parsed successfully".to_string(),

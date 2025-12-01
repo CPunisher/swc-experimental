@@ -1,8 +1,8 @@
 use oxc_index::IndexVec;
-use swc_experimental_ecma_ast::*;
-use swc_experimental_ecma_visit::{Visit, VisitMut, VisitMutWith, VisitWith};
 use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::Atom;
+use swc_experimental_ecma_ast::*;
+use swc_experimental_ecma_visit::{Visit, VisitMut, VisitMutWith, VisitWith};
 // use swc_ecma_utils::{find_pat_ids, stack_size::maybe_grow_default};
 
 use crate::{legacy::utils::find_pat_ids, scope::ScopeId};
@@ -328,11 +328,11 @@ impl Resolver {
         if self.in_type {
             self.scopes[self.current]
                 .declared_types
-                .insert(ast.get_atom(id.sym(ast)).clone());
+                .insert(Atom::new(ast.get_utf8(id.sym(ast))));
         } else {
             self.scopes[self.current]
                 .declared_symbols
-                .insert(ast.get_atom(id.sym(ast)).clone(), kind);
+                .insert(Atom::new(ast.get_utf8(id.sym(ast))), kind);
         }
 
         let scope_id = self.current;
@@ -956,7 +956,7 @@ impl Visit for Resolver {
                 //     debug!("IdentRef (type = {}) {}{:?}", self.in_type, sym, ctxt);
                 // }
 
-                if let Some(scope_id) = self.mark_for_ref(ast.get_atom(i.sym(ast))) {
+                if let Some(scope_id) = self.mark_for_ref(&Atom::new(ast.get_utf8(i.sym(ast)))) {
                     // if cfg!(debug_assertions) && LOG {
                     //     debug!("\t -> {:?}", ctxt);
                     // }
@@ -1566,11 +1566,11 @@ struct Hoister<'a> {
 impl Hoister<'_> {
     fn add_pat_id(&mut self, ast: &Ast, id: BindingIdent) {
         let id = id.id(ast);
-        let sym = ast.get_atom(id.sym(ast));
+        let sym = Atom::new(ast.get_utf8(id.sym(ast)));
         if self.in_catch_body {
             // If we have a binding, it's different variable.
-            if self.resolver.mark_for_ref_inner(sym, true).is_some()
-                && self.catch_param_decls.contains(sym)
+            if self.resolver.mark_for_ref_inner(&sym, true).is_some()
+                && self.catch_param_decls.contains(&sym)
             {
                 return;
             }
@@ -1578,7 +1578,7 @@ impl Hoister<'_> {
             self.excluded_from_catch.insert(sym.clone());
         } else {
             // Behavior is different
-            if self.catch_param_decls.contains(sym) && !self.excluded_from_catch.contains(sym) {
+            if self.catch_param_decls.contains(&sym) && !self.excluded_from_catch.contains(&sym) {
                 return;
             }
         }
@@ -1784,7 +1784,7 @@ impl Visit for Hoister<'_> {
 
         if self
             .catch_param_decls
-            .contains(ast.get_atom(node.ident(ast).sym(ast)))
+            .contains(&Atom::new(ast.get_utf8(node.ident(ast).sym(ast))))
         {
             return;
         }
@@ -1797,7 +1797,7 @@ impl Visit for Hoister<'_> {
             // If we are in nested block, and variable named `foo` is lexically declared or
             // a parameter, we should ignore function foo while handling upper scopes.
             if let Some(DeclKind::Lexical | DeclKind::Param) = self.resolver.is_declared(
-                ast.get_atom(node.ident(ast).sym(ast)),
+                &Atom::new(ast.get_utf8(node.ident(ast).sym(ast))),
                 self.resolver.current,
             ) {
                 return;

@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{ast::*, node_id::*, Ast, AstNode, ExtraData, NodeData, NodeKind};
+use crate::{Ast, AstNode, ExtraData, NodeData, NodeKind, ast::*, node_id::*};
 use swc_common::Span;
 impl Ast {
     #[inline]
@@ -7,7 +7,7 @@ impl Ast {
         &mut self,
         span: Span,
         body: TypedSubRange<ModuleItem>,
-        shebang: OptionalAtomRef,
+        shebang: OptionalUtf8Ref,
     ) -> Program {
         Program::Module(self.module(span, body, shebang).into())
     }
@@ -16,7 +16,7 @@ impl Ast {
         &mut self,
         span: Span,
         body: TypedSubRange<Stmt>,
-        shebang: OptionalAtomRef,
+        shebang: OptionalUtf8Ref,
     ) -> Program {
         Program::Script(self.script(span, body, shebang).into())
     }
@@ -25,7 +25,7 @@ impl Ast {
         &mut self,
         span: Span,
         body: TypedSubRange<ModuleItem>,
-        shebang: OptionalAtomRef,
+        shebang: OptionalUtf8Ref,
     ) -> Module {
         let _f0 = self.add_extra(ExtraData {
             sub_range: body.into(),
@@ -46,7 +46,7 @@ impl Ast {
         &mut self,
         span: Span,
         body: TypedSubRange<Stmt>,
-        shebang: OptionalAtomRef,
+        shebang: OptionalUtf8Ref,
     ) -> Script {
         let _f0 = self.add_extra(ExtraData {
             sub_range: body.into(),
@@ -572,7 +572,7 @@ impl Ast {
     pub fn module_export_name_ident(
         &mut self,
         span: Span,
-        sym: AtomRef,
+        sym: Utf8Ref,
         optional: bool,
     ) -> ModuleExportName {
         ModuleExportName::Ident(self.ident(span, sym, optional).into())
@@ -581,8 +581,8 @@ impl Ast {
     pub fn module_export_name_str(
         &mut self,
         span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
     ) -> ModuleExportName {
         ModuleExportName::Str(self.str(span, value, raw).into())
     }
@@ -1365,7 +1365,7 @@ impl Ast {
         ForHead::Pat(Pat::Expr(Expr::Seq(self.seq_expr(span, exprs).into())))
     }
     #[inline]
-    pub fn for_head_pat_expr_ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> ForHead {
+    pub fn for_head_pat_expr_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Ident(
             self.ident(span, sym, optional).into(),
         )))
@@ -1374,8 +1374,8 @@ impl Ast {
     pub fn for_head_pat_expr_lit_str(
         &mut self,
         span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Str(
             self.str(span, value, raw).into(),
@@ -1396,7 +1396,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: f64,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num(
             self.number(span, value, raw).into(),
@@ -1407,7 +1407,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::BigInt(
             self.big_int(span, value, raw).into(),
@@ -1417,8 +1417,8 @@ impl Ast {
     pub fn for_head_pat_expr_lit_regex(
         &mut self,
         span: Span,
-        exp: AtomRef,
-        flags: AtomRef,
+        exp: Utf8Ref,
+        flags: Utf8Ref,
     ) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Regex(
             self.regex(span, exp, flags).into(),
@@ -1490,7 +1490,7 @@ impl Ast {
         ForHead::Pat(Pat::Expr(Expr::Paren(self.paren_expr(span, expr).into())))
     }
     #[inline]
-    pub fn for_head_pat_expr_private_name(&mut self, span: Span, name: AtomRef) -> ForHead {
+    pub fn for_head_pat_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::PrivateName(
             self.private_name(span, name).into(),
         )))
@@ -1648,7 +1648,7 @@ impl Ast {
     pub fn var_decl_or_expr_expr_ident(
         &mut self,
         span: Span,
-        sym: AtomRef,
+        sym: Utf8Ref,
         optional: bool,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
@@ -1657,8 +1657,8 @@ impl Ast {
     pub fn var_decl_or_expr_expr_lit_str(
         &mut self,
         span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
     }
@@ -1675,7 +1675,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: f64,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
@@ -1684,7 +1684,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Lit(Lit::BigInt(
             self.big_int(span, value, raw).into(),
@@ -1694,8 +1694,8 @@ impl Ast {
     pub fn var_decl_or_expr_expr_lit_regex(
         &mut self,
         span: Span,
-        exp: AtomRef,
-        flags: AtomRef,
+        exp: Utf8Ref,
+        flags: Utf8Ref,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
     }
@@ -1769,7 +1769,7 @@ impl Ast {
     pub fn var_decl_or_expr_expr_private_name(
         &mut self,
         span: Span,
-        name: AtomRef,
+        name: Utf8Ref,
     ) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
@@ -2016,11 +2016,11 @@ impl Ast {
         Expr::Seq(self.seq_expr(span, exprs).into())
     }
     #[inline]
-    pub fn expr_ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> Expr {
+    pub fn expr_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> Expr {
         Expr::Ident(self.ident(span, sym, optional).into())
     }
     #[inline]
-    pub fn expr_lit_str(&mut self, span: Span, value: Wtf8AtomId, raw: OptionalAtomRef) -> Expr {
+    pub fn expr_lit_str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> Expr {
         Expr::Lit(Lit::Str(self.str(span, value, raw).into()))
     }
     #[inline]
@@ -2032,15 +2032,15 @@ impl Ast {
         Expr::Lit(Lit::Null(self.null(span).into()))
     }
     #[inline]
-    pub fn expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Expr {
+    pub fn expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> Expr {
         Expr::Lit(Lit::Num(self.number(span, value, raw).into()))
     }
     #[inline]
-    pub fn expr_lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalAtomRef) -> Expr {
+    pub fn expr_lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalUtf8Ref) -> Expr {
         Expr::Lit(Lit::BigInt(self.big_int(span, value, raw).into()))
     }
     #[inline]
-    pub fn expr_lit_regex(&mut self, span: Span, exp: AtomRef, flags: AtomRef) -> Expr {
+    pub fn expr_lit_regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> Expr {
         Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into()))
     }
     #[inline]
@@ -2091,7 +2091,7 @@ impl Ast {
         Expr::Paren(self.paren_expr(span, expr).into())
     }
     #[inline]
-    pub fn expr_private_name(&mut self, span: Span, name: AtomRef) -> Expr {
+    pub fn expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Expr {
         Expr::PrivateName(self.private_name(span, name).into())
     }
     #[inline]
@@ -2153,7 +2153,7 @@ impl Ast {
     pub fn prop_or_spread_prop_ident(
         &mut self,
         span: Span,
-        sym: AtomRef,
+        sym: Utf8Ref,
         optional: bool,
     ) -> PropOrSpread {
         PropOrSpread::Prop(Prop::Shorthand(self.ident(span, sym, optional).into()))
@@ -2351,11 +2351,11 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn member_prop_ident_name(&mut self, span: Span, sym: AtomRef) -> MemberProp {
+    pub fn member_prop_ident_name(&mut self, span: Span, sym: Utf8Ref) -> MemberProp {
         MemberProp::Ident(self.ident_name(span, sym).into())
     }
     #[inline]
-    pub fn member_prop_private_name(&mut self, span: Span, name: AtomRef) -> MemberProp {
+    pub fn member_prop_private_name(&mut self, span: Span, name: Utf8Ref) -> MemberProp {
         MemberProp::PrivateName(self.private_name(span, name).into())
     }
     #[inline]
@@ -2379,7 +2379,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn super_prop_ident_name(&mut self, span: Span, sym: AtomRef) -> SuperProp {
+    pub fn super_prop_ident_name(&mut self, span: Span, sym: Utf8Ref) -> SuperProp {
         SuperProp::Ident(self.ident_name(span, sym).into())
     }
     #[inline]
@@ -2573,8 +2573,8 @@ impl Ast {
         &mut self,
         span: Span,
         tail: bool,
-        cooked: OptionalWtf8AtomId,
-        raw: AtomRef,
+        cooked: OptionalWtf8Ref,
+        raw: Utf8Ref,
     ) -> TplElement {
         let _f0 = self.add_extra(ExtraData { bool: tail.into() });
         let _f1 = self.add_extra(ExtraData {
@@ -2721,15 +2721,15 @@ impl Ast {
         Callee::Expr(Expr::Seq(self.seq_expr(span, exprs).into()))
     }
     #[inline]
-    pub fn callee_expr_ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> Callee {
+    pub fn callee_expr_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> Callee {
         Callee::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
     }
     #[inline]
     pub fn callee_expr_lit_str(
         &mut self,
         span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
     ) -> Callee {
         Callee::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
     }
@@ -2746,7 +2746,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: f64,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> Callee {
         Callee::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
@@ -2755,14 +2755,14 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> Callee {
         Callee::Expr(Expr::Lit(Lit::BigInt(
             self.big_int(span, value, raw).into(),
         )))
     }
     #[inline]
-    pub fn callee_expr_lit_regex(&mut self, span: Span, exp: AtomRef, flags: AtomRef) -> Callee {
+    pub fn callee_expr_lit_regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> Callee {
         Callee::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
     }
     #[inline]
@@ -2823,7 +2823,7 @@ impl Ast {
         Callee::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
     }
     #[inline]
-    pub fn callee_expr_private_name(&mut self, span: Span, name: AtomRef) -> Callee {
+    pub fn callee_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Callee {
         Callee::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
     #[inline]
@@ -3027,7 +3027,7 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_ident(
         &mut self,
         span: Span,
-        sym: AtomRef,
+        sym: Utf8Ref,
         optional: bool,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
@@ -3036,8 +3036,8 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_lit_str(
         &mut self,
         span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
     }
@@ -3054,7 +3054,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: f64,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
@@ -3063,7 +3063,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Lit(Lit::BigInt(
             self.big_int(span, value, raw).into(),
@@ -3073,8 +3073,8 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_lit_regex(
         &mut self,
         span: Span,
-        exp: AtomRef,
-        flags: AtomRef,
+        exp: Utf8Ref,
+        flags: Utf8Ref,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
     }
@@ -3152,7 +3152,7 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_private_name(
         &mut self,
         span: Span,
-        name: AtomRef,
+        name: Utf8Ref,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
@@ -3734,24 +3734,19 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn key_private_name(&mut self, span: Span, name: AtomRef) -> Key {
+    pub fn key_private_name(&mut self, span: Span, name: Utf8Ref) -> Key {
         Key::Private(self.private_name(span, name).into())
     }
     #[inline]
-    pub fn key_prop_name_ident_name(&mut self, span: Span, sym: AtomRef) -> Key {
+    pub fn key_prop_name_ident_name(&mut self, span: Span, sym: Utf8Ref) -> Key {
         Key::Public(PropName::Ident(self.ident_name(span, sym).into()))
     }
     #[inline]
-    pub fn key_prop_name_str(
-        &mut self,
-        span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
-    ) -> Key {
+    pub fn key_prop_name_str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> Key {
         Key::Public(PropName::Str(self.str(span, value, raw).into()))
     }
     #[inline]
-    pub fn key_prop_name_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Key {
+    pub fn key_prop_name_number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> Key {
         Key::Public(PropName::Num(self.number(span, value, raw).into()))
     }
     #[inline]
@@ -3765,7 +3760,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> Key {
         Key::Public(PropName::BigInt(self.big_int(span, value, raw).into()))
     }
@@ -3799,7 +3794,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn prop_ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> Prop {
+    pub fn prop_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> Prop {
         Prop::Shorthand(self.ident(span, sym, optional).into())
     }
     #[inline]
@@ -3928,20 +3923,15 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn prop_name_ident_name(&mut self, span: Span, sym: AtomRef) -> PropName {
+    pub fn prop_name_ident_name(&mut self, span: Span, sym: Utf8Ref) -> PropName {
         PropName::Ident(self.ident_name(span, sym).into())
     }
     #[inline]
-    pub fn prop_name_str(
-        &mut self,
-        span: Span,
-        value: Wtf8AtomId,
-        raw: OptionalAtomRef,
-    ) -> PropName {
+    pub fn prop_name_str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> PropName {
         PropName::Str(self.str(span, value, raw).into())
     }
     #[inline]
-    pub fn prop_name_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> PropName {
+    pub fn prop_name_number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> PropName {
         PropName::Num(self.number(span, value, raw).into())
     }
     #[inline]
@@ -3953,7 +3943,7 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> PropName {
         PropName::BigInt(self.big_int(span, value, raw).into())
     }
@@ -4094,11 +4084,11 @@ impl Ast {
         Pat::Expr(Expr::Seq(self.seq_expr(span, exprs).into()))
     }
     #[inline]
-    pub fn pat_expr_ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> Pat {
+    pub fn pat_expr_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> Pat {
         Pat::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
     }
     #[inline]
-    pub fn pat_expr_lit_str(&mut self, span: Span, value: Wtf8AtomId, raw: OptionalAtomRef) -> Pat {
+    pub fn pat_expr_lit_str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> Pat {
         Pat::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
     }
     #[inline]
@@ -4110,7 +4100,7 @@ impl Ast {
         Pat::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
     }
     #[inline]
-    pub fn pat_expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Pat {
+    pub fn pat_expr_lit_number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> Pat {
         Pat::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
     }
     #[inline]
@@ -4118,14 +4108,14 @@ impl Ast {
         &mut self,
         span: Span,
         value: BigIntId,
-        raw: OptionalAtomRef,
+        raw: OptionalUtf8Ref,
     ) -> Pat {
         Pat::Expr(Expr::Lit(Lit::BigInt(
             self.big_int(span, value, raw).into(),
         )))
     }
     #[inline]
-    pub fn pat_expr_lit_regex(&mut self, span: Span, exp: AtomRef, flags: AtomRef) -> Pat {
+    pub fn pat_expr_lit_regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> Pat {
         Pat::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
     }
     #[inline]
@@ -4176,7 +4166,7 @@ impl Ast {
         Pat::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
     }
     #[inline]
-    pub fn pat_expr_private_name(&mut self, span: Span, name: AtomRef) -> Pat {
+    pub fn pat_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Pat {
         Pat::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
     #[inline]
@@ -4333,7 +4323,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn ident(&mut self, span: Span, sym: AtomRef, optional: bool) -> Ident {
+    pub fn ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> Ident {
         let _f0 = self.add_extra(ExtraData { atom: sym.into() });
         let _f1 = self.add_extra(ExtraData {
             bool: optional.into(),
@@ -4347,7 +4337,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn ident_name(&mut self, span: Span, sym: AtomRef) -> IdentName {
+    pub fn ident_name(&mut self, span: Span, sym: Utf8Ref) -> IdentName {
         let _f0 = self.add_extra(ExtraData { atom: sym.into() });
         IdentName(self.add_node(AstNode {
             span,
@@ -4358,7 +4348,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn private_name(&mut self, span: Span, name: AtomRef) -> PrivateName {
+    pub fn private_name(&mut self, span: Span, name: Utf8Ref) -> PrivateName {
         let _f0 = self.add_extra(ExtraData { atom: name.into() });
         PrivateName(self.add_node(AstNode {
             span,
@@ -4380,7 +4370,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn lit_str(&mut self, span: Span, value: Wtf8AtomId, raw: OptionalAtomRef) -> Lit {
+    pub fn lit_str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> Lit {
         Lit::Str(self.str(span, value, raw).into())
     }
     #[inline]
@@ -4392,19 +4382,19 @@ impl Ast {
         Lit::Null(self.null(span).into())
     }
     #[inline]
-    pub fn lit_number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Lit {
+    pub fn lit_number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> Lit {
         Lit::Num(self.number(span, value, raw).into())
     }
     #[inline]
-    pub fn lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalAtomRef) -> Lit {
+    pub fn lit_big_int(&mut self, span: Span, value: BigIntId, raw: OptionalUtf8Ref) -> Lit {
         Lit::BigInt(self.big_int(span, value, raw).into())
     }
     #[inline]
-    pub fn lit_regex(&mut self, span: Span, exp: AtomRef, flags: AtomRef) -> Lit {
+    pub fn lit_regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> Lit {
         Lit::Regex(self.regex(span, exp, flags).into())
     }
     #[inline]
-    pub fn str(&mut self, span: Span, value: Wtf8AtomId, raw: OptionalAtomRef) -> Str {
+    pub fn str(&mut self, span: Span, value: Wtf8Ref, raw: OptionalUtf8Ref) -> Str {
         let _f0 = self.add_extra(ExtraData {
             wtf8_atom: value.into(),
         });
@@ -4439,7 +4429,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn number(&mut self, span: Span, value: f64, raw: OptionalAtomRef) -> Number {
+    pub fn number(&mut self, span: Span, value: f64, raw: OptionalUtf8Ref) -> Number {
         let _f0 = self.add_extra(ExtraData {
             number: value.into(),
         });
@@ -4455,7 +4445,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn big_int(&mut self, span: Span, value: BigIntId, raw: OptionalAtomRef) -> BigInt {
+    pub fn big_int(&mut self, span: Span, value: BigIntId, raw: OptionalUtf8Ref) -> BigInt {
         let _f0 = self.add_extra(ExtraData {
             bigint: value.into(),
         });
@@ -4471,7 +4461,7 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn regex(&mut self, span: Span, exp: AtomRef, flags: AtomRef) -> Regex {
+    pub fn regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> Regex {
         let _f0 = self.add_extra(ExtraData { atom: exp.into() });
         let _f1 = self.add_extra(ExtraData { atom: flags.into() });
         Regex(self.add_node(AstNode {

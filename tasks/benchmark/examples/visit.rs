@@ -42,8 +42,8 @@ fn test_new(src: &str) -> usize {
         input,
         None,
     );
-    let mut parser = Parser::new_from(lexer);
-    let module = parser.parse_module().unwrap();
+    let parser = Parser::new_from(lexer);
+    let ret = parser.parse_module().unwrap();
 
     struct Counter {
         count: usize,
@@ -56,7 +56,7 @@ fn test_new(src: &str) -> usize {
     }
 
     let mut counter = Counter { count: 0 };
-    module.visit_with(&mut counter, &parser.ast);
+    ret.root.visit_with(&mut counter, &ret.ast);
     counter.count
 }
 
@@ -70,11 +70,11 @@ fn test_post_order(src: &str) -> usize {
         input,
         None,
     );
-    let mut parser = Parser::new_from(lexer);
-    let _ = parser.parse_module().unwrap();
+    let parser = Parser::new_from(lexer);
+    let ret = parser.parse_module().unwrap();
 
     let mut counter = 0;
-    for (_, node) in parser.ast.nodes() {
+    for (_, node) in ret.ast.nodes() {
         match node.kind {
             NodeKind::Ident => counter += 1,
             _ => {}

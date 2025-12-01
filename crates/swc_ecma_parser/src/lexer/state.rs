@@ -1,6 +1,6 @@
 use std::mem::take;
 
-use swc_atoms::wtf8::CodePoint;
+use swc_atoms::wtf8::{CodePoint, Wtf8};
 use swc_experimental_ecma_ast::EsVersion;
 // use swc_atoms::wtf8::CodePoint;
 use swc_common::BytePos;
@@ -15,6 +15,7 @@ use crate::{
         comments_buffer::{BufferedCommentKind, CommentsBufferCheckpoint},
         token::{Token, TokenAndSpan, TokenValue},
     },
+    string_alloc::{MaybeSubUtf8, MaybeSubWtf8},
     syntax::SyntaxFlags,
 };
 
@@ -70,6 +71,30 @@ impl crate::input::Tokens for Lexer<'_> {
         unsafe { self.input.reset_to(checkpoint.input_cur_pos) };
         if let Some(comments_buffer) = self.comments_buffer.as_mut() {
             comments_buffer.checkpoint_load(checkpoint.comments_buffer);
+        }
+    }
+
+    #[inline]
+    fn get_maybe_sub_utf8(&self, maybe: MaybeSubUtf8) -> &str {
+        match maybe.is_allocated() {
+            true => self.string_allocator.get_utf8(maybe),
+            false => unsafe {
+                self.input
+                    .slice(BytePos(maybe.start()), BytePos(maybe.end()))
+            },
+        }
+    }
+
+    #[inline]
+    fn get_maybe_sub_wtf8(&self, maybe: MaybeSubWtf8) -> &Wtf8 {
+        match maybe.is_allocated() {
+            true => self.string_allocator.get_wtf8(maybe),
+            false => unsafe {
+                Wtf8::from_str(
+                    self.input
+                        .slice(BytePos(maybe.start()), BytePos(maybe.end())),
+                )
+            },
         }
     }
 
@@ -252,16 +277,23 @@ impl crate::input::Tokens for Lexer<'_> {
             }
         }
         let v = if !v.is_empty() {
-            let v = if token.is_known_ident() || token.is_keyword() {
-                format!("{}{}", token.to_string(None), v)
+            let mut builder = self.string_allocator.alloc_utf8();
+            if token.is_known_ident() || token.is_keyword() {
+                builder.push_str(&mut self.string_allocator, &token.to_string());
+                builder.push_str(&mut self.string_allocator, &v);
             } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
-                format!("{value}{v}")
+                let value = self.get_maybe_sub_utf8(value).to_string();
+                builder.push_str(&mut self.string_allocator, &value);
+                builder.push_str(&mut self.string_allocator, &v);
             } else {
-                format!("{}{}", token.to_string(None), v)
+                builder.push_str(&mut self.string_allocator, &token.to_string());
+                builder.push_str(&mut self.string_allocator, &v);
             };
-            self.atom(v)
+            builder.finish(&mut self.string_allocator)
         } else if token.is_known_ident() || token.is_keyword() {
-            self.atom(token.to_string(None))
+            let mut builder = self.string_allocator.alloc_utf8();
+            builder.push_str(&mut self.string_allocator, &token.to_string());
+            builder.finish(&mut self.string_allocator)
         } else if let Some(TokenValue::Word(value)) = self.state.token_value.take() {
             value
         } else {
@@ -409,7 +441,7 @@ impl Lexer<'_> {
         let start = self.input.cur_pos();
         let mut first_non_whitespace = 0;
         let mut chunk_start = start;
-        let mut value = String::new();
+        let mut value = self.string_allocator.alloc_wtf8();
 
         while let Some(ch) = self.input_mut().peek() {
             if ch == b'{' {
@@ -451,10 +483,10 @@ impl Lexer<'_> {
                     // Safety: We already checked for the range
                     self.input_slice_to_cur(chunk_start)
                 };
-                value.push_str(s);
+                value.push_str(&mut self.string_allocator, s);
 
                 if let Ok(jsx_entity) = self.read_jsx_entity() {
-                    value.push(jsx_entity.0);
+                    value.push_char(&mut self.string_allocator, jsx_entity.0);
 
                     chunk_start = self.input.cur_pos();
                 }
@@ -463,28 +495,19 @@ impl Lexer<'_> {
             }
         }
 
-        let raw = unsafe {
-            // Safety: Both of `start` and `end` are generated from `cur_pos()`
-            self.input_slice_to_cur(start)
-        };
-        let value = if value.is_empty() {
-            self.atom(raw)
+        let raw = MaybeSubUtf8::new_from_source(start, self.cur_pos());
+        let value = if value.is_empty(&self.string_allocator) {
+            MaybeSubWtf8::new_from_source(start, self.cur_pos())
         } else {
             let s = unsafe {
                 // Safety: We already checked for the range
                 self.input_slice_to_cur(chunk_start)
             };
-            value.push_str(s);
-            self.atom(value)
+            value.push_str(&mut self.string_allocator, s);
+            value.finish(&mut self.string_allocator)
         };
 
-        let raw: swc_atoms::Atom = self.atom(raw);
-
-        self.state.set_token_value(TokenValue::Str {
-            raw,
-            value: value.into(),
-        });
-
+        self.state.set_token_value(TokenValue::Str { raw, value });
         Ok(Token::JSXText)
     }
 

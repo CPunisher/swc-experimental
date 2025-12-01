@@ -5,6 +5,6 @@ fn main() {
     let syntax = Syntax::Es(EsSyntax::default());
     let input = StringSource::new(source);
 
-    let mut parser = Parser::new(syntax, input, None);
+    let parser = Parser::new(syntax, input, None);
     let _root = parser.parse_program().unwrap();
 }
