@@ -16,6 +16,7 @@ jobs:
         bench:
           - parser
           - visit_compare
+          - semantic
     steps:
       - uses: actions/checkout@v5
 
