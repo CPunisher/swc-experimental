@@ -15,6 +15,20 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
     let mut visit_mut_functions = TokenStream::new();
     let mut visit_mut_with_impls = TokenStream::new();
 
+    visit_functions.extend(quote! {
+        #[inline]
+        fn enter_node(&self, node_id: NodeId, ast: &Ast) {}
+        #[inline]
+        fn leave_node(&self, node_id: NodeId, ast: &Ast) {}
+    });
+
+    visit_mut_functions.extend(quote! {
+        #[inline]
+        fn enter_node(&mut self, node_id: NodeId, ast: &mut Ast) {}
+        #[inline]
+        fn leave_node(&mut self, node_id: NodeId, ast: &mut Ast) {}
+    });
+
     for ty in schema.types.iter() {
         match ty {
             AstType::Struct(ast) => {
@@ -39,6 +53,9 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                 // VisitWith/VisitMutWith
                 let mut visit_children = TokenStream::new();
                 let mut visit_mut_children = TokenStream::new();
+
+                visit_children.extend(quote! { visitor.enter_node(self.node_id(), ast); });
+                visit_mut_children.extend(quote! { visitor.enter_node(self.node_id(), ast); });
 
                 for (offset, field) in ast.fields.iter().enumerate() {
                     let field_ty = &schema.types[field.type_id];
@@ -72,6 +89,9 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                         <#field_ty_ident as VisitMutWith<V>>::visit_mut_with(#cast_expr, visitor, ast);
                     });
                 }
+
+                visit_children.extend(quote! { visitor.leave_node(self.node_id(), ast); });
+                visit_mut_children.extend(quote! { visitor.leave_node(self.node_id(), ast); });
 
                 visit_with_impls.extend(quote! {
                     impl<V: ?Sized + Visit> VisitWith<V> for #ty_ident {
