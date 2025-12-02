@@ -1,0 +1,10 @@
+[package]
+edition = "2024"
+name    = "swc_experimental_ecma_ast_compat"
+version = "0.1.0"
+
+[dependencies]
+swc_atoms    = { workspace = true }
+swc_ecma_ast = { workspace = true }
+
+swc_experimental_ecma_ast = { workspace = true }
