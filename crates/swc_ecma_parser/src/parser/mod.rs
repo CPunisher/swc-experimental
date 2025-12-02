@@ -24,7 +24,7 @@ use crate::error::Error;
 mod macros;
 pub mod input;
 mod js;
-// mod jsx;
+mod jsx;
 mod state;
 // #[cfg(feature = "typescript")]
 // mod typescript;

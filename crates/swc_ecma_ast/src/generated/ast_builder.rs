@@ -1531,7 +1531,7 @@ impl Ast {
     pub fn for_head_pat_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> ForHead {
@@ -1857,7 +1857,7 @@ impl Ast {
     pub fn var_decl_or_expr_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> VarDeclOrExpr {
@@ -2216,7 +2216,7 @@ impl Ast {
     pub fn expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> Expr {
@@ -2996,7 +2996,7 @@ impl Ast {
     pub fn callee_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> Callee {
@@ -3372,7 +3372,7 @@ impl Ast {
     pub fn block_stmt_or_expr_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> BlockStmtOrExpr {
@@ -4434,7 +4434,7 @@ impl Ast {
     pub fn pat_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> Pat {
@@ -5084,7 +5084,7 @@ impl Ast {
     pub fn jsx_expr_expr_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> JSXExpr {
@@ -5156,7 +5156,7 @@ impl Ast {
         &mut self,
         span: Span,
         name: JSXElementName,
-        attrs: TypedSubRange<JSXAttr>,
+        attrs: TypedSubRange<JSXAttrOrSpread>,
         self_closing: bool,
     ) -> JSXOpeningElement {
         let _f0 = self.add_extra(ExtraData {
@@ -5229,8 +5229,8 @@ impl Ast {
         }))
     }
     #[inline]
-    pub fn jsx_attr_name_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> JSXAttrName {
-        JSXAttrName::Ident(self.ident(span, sym, optional).into())
+    pub fn jsx_attr_name_ident_name(&mut self, span: Span, sym: Utf8Ref) -> JSXAttrName {
+        JSXAttrName::Ident(self.ident_name(span, sym).into())
     }
     #[inline]
     pub fn jsx_attr_name_jsx_namespaced_name(
@@ -5268,7 +5268,7 @@ impl Ast {
     pub fn jsx_attr_value_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> JSXAttrValue {
@@ -5350,7 +5350,7 @@ impl Ast {
     pub fn jsx_element_child_jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> JSXElementChild {
@@ -5360,7 +5360,7 @@ impl Ast {
     pub fn jsx_fragment(
         &mut self,
         span: Span,
-        opening: JSXOpeningElement,
+        opening: JSXOpeningFragment,
         children: TypedSubRange<JSXElementChild>,
         closing: JSXClosingFragment,
     ) -> JSXFragment {

@@ -9698,7 +9698,7 @@ impl JSXOpeningElement {
         unsafe { JSXElementName::from_node_id_unchecked(ret, ast) }
     }
     #[inline]
-    pub fn attrs(&self, ast: &crate::Ast) -> TypedSubRange<JSXAttr> {
+    pub fn attrs(&self, ast: &crate::Ast) -> TypedSubRange<JSXAttrOrSpread> {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -9739,7 +9739,7 @@ impl JSXOpeningElement {
         };
     }
     #[inline]
-    pub fn set_attrs(&self, ast: &mut crate::Ast, attrs: TypedSubRange<JSXAttr>) {
+    pub fn set_attrs(&self, ast: &mut crate::Ast, attrs: TypedSubRange<JSXAttrOrSpread>) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {
@@ -9948,7 +9948,7 @@ impl JSXAttrName {
         matches!(self, Self::JSXNamespacedName(_))
     }
     #[inline]
-    pub fn as_ident(&self) -> Option<&Ident> {
+    pub fn as_ident(&self) -> Option<&IdentName> {
         match self {
             Self::Ident(it) => Some(it),
             _ => None,
@@ -10288,7 +10288,7 @@ impl JSXFragment {
         self.span(ast).hi
     }
     #[inline]
-    pub fn opening(&self, ast: &crate::Ast) -> JSXOpeningElement {
+    pub fn opening(&self, ast: &crate::Ast) -> JSXOpeningFragment {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         let ret = unsafe {
@@ -10297,7 +10297,7 @@ impl JSXFragment {
                 .get_unchecked(offset.index())
                 .node
         };
-        unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) }
+        unsafe { JSXOpeningFragment::from_node_id_unchecked(ret, ast) }
     }
     #[inline]
     pub fn children(&self, ast: &crate::Ast) -> TypedSubRange<JSXElementChild> {
@@ -10330,7 +10330,7 @@ impl JSXFragment {
         }
     }
     #[inline]
-    pub fn set_opening(&self, ast: &mut crate::Ast, opening: JSXOpeningElement) {
+    pub fn set_opening(&self, ast: &mut crate::Ast, opening: JSXOpeningFragment) {
         let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
         debug_assert!(offset < ast.extra_data.len());
         unsafe {

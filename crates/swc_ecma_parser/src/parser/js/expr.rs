@@ -217,13 +217,13 @@ impl<I: Tokens> Parser<I> {
                 peek.is_word() || peek == Token::Gt || peek.should_rescan_into_gt_in_jsx()
             })
         {
-            // fn into_expr(e: Either<JSXFragment, JSXElement>) -> Expr {
-            //     match e {
-            //         Either::Left(l) => l.into(),
-            //         Either::Right(r) => r.into(),
-            //     }
-            // }
-            // return self.parse_jsx_element(true).map(into_expr);
+            fn into_expr(e: Either<JSXFragment, JSXElement>) -> Expr {
+                match e {
+                    Either::Left(l) => Expr::JSXFragment(l),
+                    Either::Right(r) => Expr::JSXElement(r),
+                }
+            }
+            return self.parse_jsx_element(true).map(into_expr);
         } else if matches!(cur, Token::PlusPlus | Token::MinusMinus) {
             // Parse update expression
             let op = if cur == Token::PlusPlus {

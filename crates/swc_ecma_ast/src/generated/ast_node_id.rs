@@ -5175,8 +5175,8 @@ impl FromNodeId for JSXAttrName {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Ident => {
-                JSXAttrName::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) })
+            NodeKind::IdentName => {
+                JSXAttrName::Ident(unsafe { IdentName::from_node_id_unchecked(id, ast) })
             }
             NodeKind::JSXNamespacedName => JSXAttrName::JSXNamespacedName(unsafe {
                 JSXNamespacedName::from_node_id_unchecked(id, ast)

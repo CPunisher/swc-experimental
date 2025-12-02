@@ -1,6 +1,6 @@
 use swc_experimental_ast_macros::ast;
 
-use crate::{Expr, Ident, SpreadElement, Str};
+use crate::{Expr, Ident, IdentName, SpreadElement, Str};
 
 #[ast]
 pub enum JSXObject {
@@ -49,7 +49,7 @@ pub enum JSXElementName {
 #[ast]
 pub struct JSXOpeningElement {
     name: JSXElementName,
-    attrs: Vec<JSXAttr>,
+    attrs: Vec<JSXAttrOrSpread>,
     self_closing: bool,
     // type_args: Option<Box<TsTypeParamInstantiation>>,
 }
@@ -73,7 +73,7 @@ pub struct JSXAttr {
 
 #[ast]
 pub enum JSXAttrName {
-    Ident(Ident),
+    Ident(IdentName),
     JSXNamespacedName(JSXNamespacedName),
 }
 
@@ -109,7 +109,7 @@ pub enum JSXElementChild {
 
 #[ast]
 pub struct JSXFragment {
-    opening: JSXOpeningElement,
+    opening: JSXOpeningFragment,
     children: Vec<JSXElementChild>,
     closing: JSXClosingFragment,
 }

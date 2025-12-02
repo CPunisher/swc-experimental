@@ -439,6 +439,13 @@ impl<'a> Token {
     }
 
     #[inline(always)]
+    pub fn take_jsx_text<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubWtf8, MaybeSubUtf8) {
+        let (value, raw) = buffer.expect_string_token_value();
+        // SAFETY: We set value as Atom in `jsx_text` method.
+        (value, raw)
+    }
+
+    #[inline(always)]
     pub fn take_regexp<I: Tokens>(self, buffer: &mut Buffer<I>) -> (MaybeSubUtf8, MaybeSubUtf8) {
         buffer.expect_regex_token_value()
     }
