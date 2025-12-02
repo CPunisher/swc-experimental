@@ -3,6 +3,7 @@ use pico_args::Arguments;
 
 use crate::{
     cases::{
+        Case,
         misc::MiscCase,
         test262_parser::{self},
     },
@@ -20,6 +21,7 @@ mod util;
 
 pub struct AppArgs {
     pub debug: bool,
+    pub cases: Vec<String>,
 }
 
 pub fn main() {
@@ -27,12 +29,13 @@ pub fn main() {
     let mut args = Arguments::from_env();
     let args = AppArgs {
         debug: args.contains("--debug"),
+        cases: args.values_from_str("--cases").unwrap(),
     };
 
     // Run tests
     let mut results = Vec::new();
-    let misc_cases = MiscCase::read();
-    let test262_parser_cases = test262_parser::Test262ParserCase::read();
+    let misc_cases = filter(&args, MiscCase::read());
+    let test262_parser_cases = filter(&args, test262_parser::Test262ParserCase::read());
     results.extend(MiscParserRunner::run(&args, &misc_cases));
     results.extend(Test262ParserRunner::run(&args, &test262_parser_cases));
     results.extend(NoMemoryHoleRunner::run(&args, &misc_cases));
@@ -67,4 +70,18 @@ pub fn main() {
     if failed > 0 {
         std::process::exit(1);
     }
+}
+
+fn filter<T: Case>(args: &AppArgs, list: Vec<T>) -> Vec<T> {
+    if args.cases.is_empty() {
+        return list;
+    }
+
+    list.into_iter()
+        .filter(|case| {
+            args.cases
+                .iter()
+                .any(|filter| case.path().to_string_lossy().contains(filter))
+        })
+        .collect()
 }
