@@ -4,7 +4,7 @@ use swc_common::BytePos;
 #[derive(Clone)]
 pub struct StringSource<'a> {
     source: &'a [u8],
-    /// Index that should always be on a UTF-8 character boundary, and never after end of source
+    /// One-based index that should always be on a UTF-8 character boundary, and never after end of source
     cur: BytePos,
 }
 
@@ -12,28 +12,33 @@ impl<'a> StringSource<'a> {
     pub fn new(source: &'a str) -> Self {
         Self {
             source: source.as_bytes(),
-            cur: BytePos(0),
+            cur: 0usize.byte_pos(),
         }
     }
 }
 
 impl<'a> StringSource<'a> {
     #[inline]
+    /// Note that `start` and `end` is one-based index.
     /// # Safety
     /// 1. `start` is before or equal to `end`.
     /// 2. `start` and `end` must be on UTF-8 character boundary, or come from [Self::cur_pos].
     pub(crate) unsafe fn slice(&self, start: BytePos, end: BytePos) -> &'a str {
         debug_assert!(start <= end);
-        debug_assert!(end.0 <= self.source.len() as u32);
         debug_assert!(
-            start.0 == self.source.len() as u32
-                || !is_utf8_cont_byte(self.source[start.0 as usize])
+            end.index() <= self.source.len(),
+            "end({}) index out of bounds({})",
+            end.index(),
+            self.source.len()
         );
         debug_assert!(
-            end.0 == self.source.len() as u32 || !is_utf8_cont_byte(self.source[end.0 as usize])
+            start.index() == self.source.len() || !is_utf8_cont_byte(self.source[start.index()])
+        );
+        debug_assert!(
+            end.index() == self.source.len() || !is_utf8_cont_byte(self.source[end.index()])
         );
 
-        unsafe { str::from_utf8_unchecked(&self.source[start.0 as usize..end.0 as usize]) }
+        unsafe { str::from_utf8_unchecked(&self.source[start.index()..end.index()]) }
     }
 
     #[inline]
@@ -47,13 +52,13 @@ impl<'a> StringSource<'a> {
     #[inline]
     /// This is a safe function because [StringSource] always hold a valid `cur`
     pub(crate) fn as_str(&self) -> &str {
-        debug_assert!(self.cur.0 <= self.source.len() as u32);
+        debug_assert!(self.cur.index() <= self.source.len());
         debug_assert!(
-            self.cur.0 == self.source.len() as u32
-                || !is_utf8_cont_byte(self.source[self.cur.0 as usize])
+            self.cur.index() == self.source.len()
+                || !is_utf8_cont_byte(self.source[self.cur.index()])
         );
 
-        unsafe { str::from_utf8_unchecked(&self.source[self.cur.0 as usize..]) }
+        unsafe { str::from_utf8_unchecked(&self.source[self.cur.index()..]) }
     }
 
     #[inline]
@@ -63,17 +68,17 @@ impl<'a> StringSource<'a> {
 
     #[inline]
     pub(crate) fn end_pos(&self) -> BytePos {
-        BytePos(self.source.len() as u32)
+        self.source.len().byte_pos()
     }
 
     #[inline]
     pub(crate) fn is_start(&self) -> bool {
-        self.cur.0 == 0
+        self.cur.index() == 0
     }
 
     #[inline]
     pub(crate) fn is_end(&self) -> bool {
-        self.cur.0 == self.source.len() as u32
+        self.cur.index() == self.source.len()
     }
 
     #[inline]
@@ -89,22 +94,22 @@ impl<'a> StringSource<'a> {
 
     #[inline]
     pub(crate) fn peek(&self) -> Option<u8> {
-        self.source.get(self.cur.0 as usize).copied()
+        self.source.get(self.cur.index()).copied()
     }
 
     #[inline]
     pub(crate) fn peek_2(&self) -> Option<u8> {
-        self.source.get(self.cur.0 as usize + 1).copied()
+        self.source.get(self.cur.index() + 1).copied()
     }
 
     #[inline]
     pub(crate) fn peek_3(&self) -> Option<u8> {
-        self.source.get(self.cur.0 as usize + 2).copied()
+        self.source.get(self.cur.index() + 2).copied()
     }
 
     #[inline]
     pub(crate) fn peek_ascii(&self) -> Option<u8> {
-        let byte = self.source.get(self.cur.0 as usize).copied()?;
+        let byte = self.source.get(self.cur.index()).copied()?;
         if byte.is_ascii() {
             return Some(byte);
         }
@@ -133,9 +138,9 @@ impl<'a> StringSource<'a> {
     /// # Safety
     /// 1. `to` must be less than `self.source.len()` on UTF-8 charater boundary.
     pub(crate) unsafe fn reset_to(&mut self, to: BytePos) {
-        debug_assert!(to.0 <= self.source.len() as u32);
+        debug_assert!(to.index() <= self.source.len());
         debug_assert!(
-            to.0 == self.source.len() as u32 || !is_utf8_cont_byte(self.source[to.0 as usize]),
+            to.index() == self.source.len() || !is_utf8_cont_byte(self.source[to.index()]),
         );
         self.cur = to;
     }
@@ -146,4 +151,25 @@ impl<'a> StringSource<'a> {
 const fn is_utf8_cont_byte(byte: u8) -> bool {
     // 0x80 - 0xBF are continuation bytes i.e. not 1st byte of a UTF-8 character sequence
     byte >= 0x80 && byte < 0xC0
+}
+
+trait BytePosExt {
+    fn index(self) -> usize;
+}
+
+impl BytePosExt for BytePos {
+    #[inline]
+    fn index(self) -> usize {
+        (self.0 as usize).saturating_sub(1)
+    }
+}
+
+trait IndexExt {
+    fn byte_pos(self) -> BytePos;
+}
+
+impl IndexExt for usize {
+    fn byte_pos(self) -> BytePos {
+        BytePos(self as u32 + 1)
+    }
 }
