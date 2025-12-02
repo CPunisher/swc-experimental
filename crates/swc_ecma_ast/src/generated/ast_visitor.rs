@@ -2307,6 +2307,13 @@ impl<V: ?Sized + Visit> VisitWith<V> for Expr {
             Self::MetaProp(it) => <MetaPropExpr as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Await(it) => <AwaitExpr as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Paren(it) => <ParenExpr as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXMember(it) => <JSXMemberExpr as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::JSXEmpty(it) => <JSXEmptyExpr as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXElement(it) => <JSXElement as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXFragment(it) => <JSXFragment as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::PrivateName(it) => <PrivateName as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::OptChain(it) => <OptChainExpr as VisitWith<V>>::visit_with(it, visitor, ast),
             Self::Invalid(it) => <Invalid as VisitWith<V>>::visit_with(it, visitor, ast),
@@ -7453,6 +7460,21 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Expr {
             }
             Self::Await(it) => <AwaitExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
             Self::Paren(it) => <ParenExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::JSXMember(it) => {
+                <JSXMemberExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXEmpty(it) => {
+                <JSXEmptyExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXElement(it) => {
+                <JSXElement as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXFragment(it) => {
+                <JSXFragment as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
             Self::PrivateName(it) => {
                 <PrivateName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
             }

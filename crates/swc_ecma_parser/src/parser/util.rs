@@ -119,11 +119,11 @@ impl ExprExt for Expr {
             Expr::PrivateName(..) => false,
 
             // jsx
-            // Expr::JSXMember(..)
-            // | Expr::JSXNamespacedName(..)
-            // | Expr::JSXEmpty(..)
-            // | Expr::JSXElement(..)
-            // | Expr::JSXFragment(..) => false,
+            Expr::JSXMember(..)
+            | Expr::JSXNamespacedName(..)
+            | Expr::JSXEmpty(..)
+            | Expr::JSXElement(..)
+            | Expr::JSXFragment(..) => false,
 
             // // typescript
             // Expr::TsNonNull(TsNonNullExpr { ref expr, .. })

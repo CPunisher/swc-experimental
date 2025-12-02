@@ -3469,6 +3469,11 @@ impl Expr {
             Self::MetaProp(it) => it.span(ast),
             Self::Await(it) => it.span(ast),
             Self::Paren(it) => it.span(ast),
+            Self::JSXMember(it) => it.span(ast),
+            Self::JSXNamespacedName(it) => it.span(ast),
+            Self::JSXEmpty(it) => it.span(ast),
+            Self::JSXElement(it) => it.span(ast),
+            Self::JSXFragment(it) => it.span(ast),
             Self::PrivateName(it) => it.span(ast),
             Self::OptChain(it) => it.span(ast),
             Self::Invalid(it) => it.span(ast),
@@ -3509,6 +3514,11 @@ impl Expr {
             Self::MetaProp(it) => it.set_span(ast, span),
             Self::Await(it) => it.set_span(ast, span),
             Self::Paren(it) => it.set_span(ast, span),
+            Self::JSXMember(it) => it.set_span(ast, span),
+            Self::JSXNamespacedName(it) => it.set_span(ast, span),
+            Self::JSXEmpty(it) => it.set_span(ast, span),
+            Self::JSXElement(it) => it.set_span(ast, span),
+            Self::JSXFragment(it) => it.set_span(ast, span),
             Self::PrivateName(it) => it.set_span(ast, span),
             Self::OptChain(it) => it.set_span(ast, span),
             Self::Invalid(it) => it.set_span(ast, span),
@@ -3609,6 +3619,26 @@ impl Expr {
     #[inline]
     pub fn is_paren(&self) -> bool {
         matches!(self, Self::Paren(_))
+    }
+    #[inline]
+    pub fn is_jsx_member(&self) -> bool {
+        matches!(self, Self::JSXMember(_))
+    }
+    #[inline]
+    pub fn is_jsx_namespaced_name(&self) -> bool {
+        matches!(self, Self::JSXNamespacedName(_))
+    }
+    #[inline]
+    pub fn is_jsx_empty(&self) -> bool {
+        matches!(self, Self::JSXEmpty(_))
+    }
+    #[inline]
+    pub fn is_jsx_element(&self) -> bool {
+        matches!(self, Self::JSXElement(_))
+    }
+    #[inline]
+    pub fn is_jsx_fragment(&self) -> bool {
+        matches!(self, Self::JSXFragment(_))
     }
     #[inline]
     pub fn is_private_name(&self) -> bool {
@@ -3787,6 +3817,41 @@ impl Expr {
     pub fn as_paren(&self) -> Option<&ParenExpr> {
         match self {
             Self::Paren(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_member(&self) -> Option<&JSXMemberExpr> {
+        match self {
+            Self::JSXMember(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_namespaced_name(&self) -> Option<&JSXNamespacedName> {
+        match self {
+            Self::JSXNamespacedName(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_empty(&self) -> Option<&JSXEmptyExpr> {
+        match self {
+            Self::JSXEmpty(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_element(&self) -> Option<&JSXElement> {
+        match self {
+            Self::JSXElement(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_fragment(&self) -> Option<&JSXFragment> {
+        match self {
+            Self::JSXFragment(it) => Some(it),
             _ => None,
         }
     }

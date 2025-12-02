@@ -2314,7 +2314,9 @@ impl<I: Tokens> Parser<I> {
 
         // ParenthesizedExpression cannot contain spread.
         if expr_or_spreads.len() == 1 {
-            let expr_or_spread = self.ast.get_node_in_sub_range(expr_or_spreads.iter().next().unwrap());
+            let expr_or_spread = self
+                .ast
+                .get_node_in_sub_range(expr_or_spreads.iter().next().unwrap());
             let expr = match expr_or_spread.spread(&self.ast) {
                 Some(_) => {
                     syntax_error!(
@@ -2349,8 +2351,14 @@ impl<I: Tokens> Parser<I> {
             debug_assert!(exprs.len() >= 2);
 
             // span of sequence expression should not include '(', ')'
-            let span_lo = self.ast.get_node_in_sub_range(exprs.first().unwrap()).span_lo(&self.ast);
-            let span_hi = self.ast.get_node_in_sub_range(exprs.last().unwrap()).span_hi(&self.ast);
+            let span_lo = self
+                .ast
+                .get_node_in_sub_range(exprs.first().unwrap())
+                .span_lo(&self.ast);
+            let span_hi = self
+                .ast
+                .get_node_in_sub_range(exprs.last().unwrap())
+                .span_hi(&self.ast);
             let seq_expr = self
                 .ast
                 .expr_seq_expr(Span::new_with_checked(span_lo, span_hi), exprs);

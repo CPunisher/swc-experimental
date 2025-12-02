@@ -1409,6 +1409,23 @@ impl FromNodeId for ForHead {
             NodeKind::Invalid => ForHead::Pat(Pat::Invalid(unsafe {
                 Invalid::from_node_id_unchecked(id, ast)
             })),
+            NodeKind::JSXElement => ForHead::Pat(Pat::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::JSXEmptyExpr => ForHead::Pat(Pat::Expr(Expr::JSXEmpty(unsafe {
+                JSXEmptyExpr::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::JSXFragment => ForHead::Pat(Pat::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::JSXMemberExpr => ForHead::Pat(Pat::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::JSXNamespacedName => {
+                ForHead::Pat(Pat::Expr(Expr::JSXNamespacedName(unsafe {
+                    JSXNamespacedName::from_node_id_unchecked(id, ast)
+                })))
+            }
             NodeKind::MemberExpr => ForHead::Pat(Pat::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
             }))),
@@ -1546,6 +1563,21 @@ impl FromNodeId for VarDeclOrExpr {
             })),
             NodeKind::Invalid => VarDeclOrExpr::Expr(Expr::Invalid(unsafe {
                 Invalid::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXElement => VarDeclOrExpr::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXEmptyExpr => VarDeclOrExpr::Expr(Expr::JSXEmpty(unsafe {
+                JSXEmptyExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXFragment => VarDeclOrExpr::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXMemberExpr => VarDeclOrExpr::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXNamespacedName => VarDeclOrExpr::Expr(Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
             })),
             NodeKind::MemberExpr => VarDeclOrExpr::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
@@ -1813,6 +1845,11 @@ impl GetNodeId for Expr {
             Self::MetaProp(it) => it.node_id(),
             Self::Await(it) => it.node_id(),
             Self::Paren(it) => it.node_id(),
+            Self::JSXMember(it) => it.node_id(),
+            Self::JSXNamespacedName(it) => it.node_id(),
+            Self::JSXEmpty(it) => it.node_id(),
+            Self::JSXElement(it) => it.node_id(),
+            Self::JSXFragment(it) => it.node_id(),
             Self::PrivateName(it) => it.node_id(),
             Self::OptChain(it) => it.node_id(),
             Self::Invalid(it) => it.node_id(),
@@ -1857,6 +1894,21 @@ impl FromNodeId for Expr {
             NodeKind::FnExpr => Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }),
             NodeKind::Ident => Expr::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) }),
             NodeKind::Invalid => Expr::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) }),
+            NodeKind::JSXElement => {
+                Expr::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXEmptyExpr => {
+                Expr::JSXEmpty(unsafe { JSXEmptyExpr::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXFragment => {
+                Expr::JSXFragment(unsafe { JSXFragment::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXMemberExpr => {
+                Expr::JSXMember(unsafe { JSXMemberExpr::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXNamespacedName => Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            }),
             NodeKind::MemberExpr => {
                 Expr::Member(unsafe { MemberExpr::from_node_id_unchecked(id, ast) })
             }
@@ -2726,6 +2778,21 @@ impl FromNodeId for Callee {
             NodeKind::Invalid => Callee::Expr(Expr::Invalid(unsafe {
                 Invalid::from_node_id_unchecked(id, ast)
             })),
+            NodeKind::JSXElement => Callee::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXEmptyExpr => Callee::Expr(Expr::JSXEmpty(unsafe {
+                JSXEmptyExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXFragment => Callee::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXMemberExpr => Callee::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXNamespacedName => Callee::Expr(Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            })),
             NodeKind::MemberExpr => Callee::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
             })),
@@ -2959,6 +3026,21 @@ impl FromNodeId for BlockStmtOrExpr {
             })),
             NodeKind::Invalid => BlockStmtOrExpr::Expr(Expr::Invalid(unsafe {
                 Invalid::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXElement => BlockStmtOrExpr::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXEmptyExpr => BlockStmtOrExpr::Expr(Expr::JSXEmpty(unsafe {
+                JSXEmptyExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXFragment => BlockStmtOrExpr::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXMemberExpr => BlockStmtOrExpr::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXNamespacedName => BlockStmtOrExpr::Expr(Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
             })),
             NodeKind::MemberExpr => BlockStmtOrExpr::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
@@ -4034,6 +4116,21 @@ impl FromNodeId for Pat {
                 Ident::from_node_id_unchecked(id, ast)
             })),
             NodeKind::Invalid => Pat::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) }),
+            NodeKind::JSXElement => Pat::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXEmptyExpr => Pat::Expr(Expr::JSXEmpty(unsafe {
+                JSXEmptyExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXFragment => Pat::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXMemberExpr => Pat::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXNamespacedName => Pat::Expr(Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            })),
             NodeKind::MemberExpr => Pat::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
             })),
@@ -4796,9 +4893,21 @@ impl FromNodeId for JSXExpr {
             NodeKind::Invalid => JSXExpr::Expr(Expr::Invalid(unsafe {
                 Invalid::from_node_id_unchecked(id, ast)
             })),
+            NodeKind::JSXElement => JSXExpr::Expr(Expr::JSXElement(unsafe {
+                JSXElement::from_node_id_unchecked(id, ast)
+            })),
             NodeKind::JSXEmptyExpr => {
                 JSXExpr::JSXEmptyExpr(unsafe { JSXEmptyExpr::from_node_id_unchecked(id, ast) })
             }
+            NodeKind::JSXFragment => JSXExpr::Expr(Expr::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXMemberExpr => JSXExpr::Expr(Expr::JSXMember(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXNamespacedName => JSXExpr::Expr(Expr::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            })),
             NodeKind::MemberExpr => JSXExpr::Expr(Expr::Member(unsafe {
                 MemberExpr::from_node_id_unchecked(id, ast)
             })),

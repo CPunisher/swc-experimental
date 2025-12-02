@@ -1490,6 +1490,56 @@ impl Ast {
         ForHead::Pat(Pat::Expr(Expr::Paren(self.paren_expr(span, expr).into())))
     }
     #[inline]
+    pub fn for_head_pat_expr_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> ForHead {
+        ForHead::Pat(Pat::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        )))
+    }
+    #[inline]
+    pub fn for_head_pat_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> ForHead {
+        ForHead::Pat(Pat::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        )))
+    }
+    #[inline]
+    pub fn for_head_pat_expr_jsx_empty_expr(&mut self, span: Span) -> ForHead {
+        ForHead::Pat(Pat::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into())))
+    }
+    #[inline]
+    pub fn for_head_pat_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> ForHead {
+        ForHead::Pat(Pat::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        )))
+    }
+    #[inline]
+    pub fn for_head_pat_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> ForHead {
+        ForHead::Pat(Pat::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        )))
+    }
+    #[inline]
     pub fn for_head_pat_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> ForHead {
         ForHead::Pat(Pat::Expr(Expr::PrivateName(
             self.private_name(span, name).into(),
@@ -1764,6 +1814,56 @@ impl Ast {
     #[inline]
     pub fn var_decl_or_expr_expr_paren_expr(&mut self, span: Span, expr: Expr) -> VarDeclOrExpr {
         VarDeclOrExpr::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
+    }
+    #[inline]
+    pub fn var_decl_or_expr_expr_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> VarDeclOrExpr {
+        VarDeclOrExpr::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn var_decl_or_expr_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> VarDeclOrExpr {
+        VarDeclOrExpr::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        ))
+    }
+    #[inline]
+    pub fn var_decl_or_expr_expr_jsx_empty_expr(&mut self, span: Span) -> VarDeclOrExpr {
+        VarDeclOrExpr::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into()))
+    }
+    #[inline]
+    pub fn var_decl_or_expr_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> VarDeclOrExpr {
+        VarDeclOrExpr::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
+    pub fn var_decl_or_expr_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> VarDeclOrExpr {
+        VarDeclOrExpr::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        ))
     }
     #[inline]
     pub fn var_decl_or_expr_expr_private_name(
@@ -2089,6 +2189,38 @@ impl Ast {
     #[inline]
     pub fn expr_paren_expr(&mut self, span: Span, expr: Expr) -> Expr {
         Expr::Paren(self.paren_expr(span, expr).into())
+    }
+    #[inline]
+    pub fn expr_jsx_member_expr(&mut self, span: Span, obj: JSXObject, prop: IdentName) -> Expr {
+        Expr::JSXMember(self.jsx_member_expr(span, obj, prop).into())
+    }
+    #[inline]
+    pub fn expr_jsx_namespaced_name(&mut self, span: Span, ns: IdentName, name: IdentName) -> Expr {
+        Expr::JSXNamespacedName(self.jsx_namespaced_name(span, ns, name).into())
+    }
+    #[inline]
+    pub fn expr_jsx_empty_expr(&mut self, span: Span) -> Expr {
+        Expr::JSXEmpty(self.jsx_empty_expr(span).into())
+    }
+    #[inline]
+    pub fn expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> Expr {
+        Expr::JSXElement(self.jsx_element(span, opening, children, closing).into())
+    }
+    #[inline]
+    pub fn expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> Expr {
+        Expr::JSXFragment(self.jsx_fragment(span, opening, children, closing).into())
     }
     #[inline]
     pub fn expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Expr {
@@ -2823,6 +2955,56 @@ impl Ast {
         Callee::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
     }
     #[inline]
+    pub fn callee_expr_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> Callee {
+        Callee::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn callee_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> Callee {
+        Callee::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        ))
+    }
+    #[inline]
+    pub fn callee_expr_jsx_empty_expr(&mut self, span: Span) -> Callee {
+        Callee::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into()))
+    }
+    #[inline]
+    pub fn callee_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> Callee {
+        Callee::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
+    pub fn callee_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> Callee {
+        Callee::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
     pub fn callee_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Callee {
         Callee::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
@@ -3147,6 +3329,56 @@ impl Ast {
         expr: Expr,
     ) -> BlockStmtOrExpr {
         BlockStmtOrExpr::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
+    }
+    #[inline]
+    pub fn block_stmt_or_expr_expr_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> BlockStmtOrExpr {
+        BlockStmtOrExpr::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn block_stmt_or_expr_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> BlockStmtOrExpr {
+        BlockStmtOrExpr::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        ))
+    }
+    #[inline]
+    pub fn block_stmt_or_expr_expr_jsx_empty_expr(&mut self, span: Span) -> BlockStmtOrExpr {
+        BlockStmtOrExpr::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into()))
+    }
+    #[inline]
+    pub fn block_stmt_or_expr_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> BlockStmtOrExpr {
+        BlockStmtOrExpr::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
+    pub fn block_stmt_or_expr_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> BlockStmtOrExpr {
+        BlockStmtOrExpr::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        ))
     }
     #[inline]
     pub fn block_stmt_or_expr_expr_private_name(
@@ -4166,6 +4398,51 @@ impl Ast {
         Pat::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
     }
     #[inline]
+    pub fn pat_expr_jsx_member_expr(&mut self, span: Span, obj: JSXObject, prop: IdentName) -> Pat {
+        Pat::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn pat_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> Pat {
+        Pat::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        ))
+    }
+    #[inline]
+    pub fn pat_expr_jsx_empty_expr(&mut self, span: Span) -> Pat {
+        Pat::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into()))
+    }
+    #[inline]
+    pub fn pat_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> Pat {
+        Pat::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
+    pub fn pat_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> Pat {
+        Pat::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
     pub fn pat_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> Pat {
         Pat::Expr(Expr::PrivateName(self.private_name(span, name).into()))
     }
@@ -4764,6 +5041,56 @@ impl Ast {
     #[inline]
     pub fn jsx_expr_expr_paren_expr(&mut self, span: Span, expr: Expr) -> JSXExpr {
         JSXExpr::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::JSXMember(
+            self.jsx_member_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::JSXNamespacedName(
+            self.jsx_namespaced_name(span, ns, name).into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_jsx_empty_expr(&mut self, span: Span) -> JSXExpr {
+        JSXExpr::Expr(Expr::JSXEmpty(self.jsx_empty_expr(span).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::JSXElement(
+            self.jsx_element(span, opening, children, closing).into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::JSXFragment(
+            self.jsx_fragment(span, opening, children, closing).into(),
+        ))
     }
     #[inline]
     pub fn jsx_expr_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> JSXExpr {

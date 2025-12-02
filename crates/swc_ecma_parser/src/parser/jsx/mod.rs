@@ -1,6 +1,6 @@
 use swc_atoms::Atom;
 use swc_common::{BytePos, Span};
-use swc_ecma_ast::*;
+use swc_experimental_ecma_ast::*;
 
 use super::{Parser, input::Tokens};
 use crate::{
