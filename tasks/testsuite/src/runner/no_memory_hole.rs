@@ -34,7 +34,7 @@ impl NoMemoryHoleRunner {
                 "mjs" => parser
                     .parse_module()
                     .map(|ret| ret.map_root(Program::Module)),
-                "ts" | "jsx" | "tsx" => {
+                "ts" | "tsx" => {
                     results.push(TestResult::Ignored {
                         path: case.path().to_owned(),
                     });
