@@ -9218,3 +9218,1123 @@ impl Regex {
         };
     }
 }
+impl JSXObject {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::JSXMemberExpr(it) => it.span(ast),
+            Self::Ident(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::JSXMemberExpr(it) => it.set_span(ast, span),
+            Self::Ident(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_jsx_member_expr(&self) -> bool {
+        matches!(self, Self::JSXMemberExpr(_))
+    }
+    #[inline]
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_))
+    }
+    #[inline]
+    pub fn as_jsx_member_expr(&self) -> Option<&JSXMemberExpr> {
+        match self {
+            Self::JSXMemberExpr(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_ident(&self) -> Option<&Ident> {
+        match self {
+            Self::Ident(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXMemberExpr {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn obj(&self, ast: &crate::Ast) -> JSXObject {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXObject::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn prop(&self, ast: &crate::Ast) -> IdentName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { IdentName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_obj(&self, ast: &mut crate::Ast, obj: JSXObject) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = obj.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_prop(&self, ast: &mut crate::Ast, prop: IdentName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = prop.node_id().into()
+        };
+    }
+}
+impl JSXNamespacedName {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn ns(&self, ast: &crate::Ast) -> IdentName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { IdentName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn name(&self, ast: &crate::Ast) -> IdentName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { IdentName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_ns(&self, ast: &mut crate::Ast, ns: IdentName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = ns.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_name(&self, ast: &mut crate::Ast, name: IdentName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = name.node_id().into()
+        };
+    }
+}
+impl JSXEmptyExpr {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+}
+impl JSXExprContainer {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn expr(&self, ast: &crate::Ast) -> JSXExpr {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXExpr::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_expr(&self, ast: &mut crate::Ast, expr: JSXExpr) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = expr.node_id().into()
+        };
+    }
+}
+impl JSXExpr {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::JSXEmptyExpr(it) => it.span(ast),
+            Self::Expr(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::JSXEmptyExpr(it) => it.set_span(ast, span),
+            Self::Expr(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_jsx_empty_expr(&self) -> bool {
+        matches!(self, Self::JSXEmptyExpr(_))
+    }
+    #[inline]
+    pub fn is_expr(&self) -> bool {
+        matches!(self, Self::Expr(_))
+    }
+    #[inline]
+    pub fn as_jsx_empty_expr(&self) -> Option<&JSXEmptyExpr> {
+        match self {
+            Self::JSXEmptyExpr(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_expr(&self) -> Option<&Expr> {
+        match self {
+            Self::Expr(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXSpreadChild {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn expr(&self, ast: &crate::Ast) -> Expr {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = expr.node_id().into()
+        };
+    }
+}
+impl JSXElementName {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::Ident(it) => it.span(ast),
+            Self::JSXMemberExpr(it) => it.span(ast),
+            Self::JSXNamespacedName(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::Ident(it) => it.set_span(ast, span),
+            Self::JSXMemberExpr(it) => it.set_span(ast, span),
+            Self::JSXNamespacedName(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_))
+    }
+    #[inline]
+    pub fn is_jsx_member_expr(&self) -> bool {
+        matches!(self, Self::JSXMemberExpr(_))
+    }
+    #[inline]
+    pub fn is_jsx_namespaced_name(&self) -> bool {
+        matches!(self, Self::JSXNamespacedName(_))
+    }
+    #[inline]
+    pub fn as_ident(&self) -> Option<&Ident> {
+        match self {
+            Self::Ident(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_member_expr(&self) -> Option<&JSXMemberExpr> {
+        match self {
+            Self::JSXMemberExpr(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_namespaced_name(&self) -> Option<&JSXNamespacedName> {
+        match self {
+            Self::JSXNamespacedName(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXOpeningElement {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn name(&self, ast: &crate::Ast) -> JSXElementName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXElementName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn attrs(&self, ast: &crate::Ast) -> TypedSubRange<JSXAttr> {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .sub_range
+        };
+        unsafe { ret.cast_to_typed() }
+    }
+    #[inline]
+    pub fn self_closing(&self, ast: &crate::Ast) -> bool {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .bool
+        };
+        ret.into()
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_name(&self, ast: &mut crate::Ast, name: JSXElementName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = name.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_attrs(&self, ast: &mut crate::Ast, attrs: TypedSubRange<JSXAttr>) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .sub_range = attrs.into()
+        };
+    }
+    #[inline]
+    pub fn set_self_closing(&self, ast: &mut crate::Ast, self_closing: bool) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .bool = self_closing.into()
+        };
+    }
+}
+impl JSXAttrOrSpread {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::JSXAttr(it) => it.span(ast),
+            Self::SpreadElement(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::JSXAttr(it) => it.set_span(ast, span),
+            Self::SpreadElement(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_jsx_attr(&self) -> bool {
+        matches!(self, Self::JSXAttr(_))
+    }
+    #[inline]
+    pub fn is_spread_element(&self) -> bool {
+        matches!(self, Self::SpreadElement(_))
+    }
+    #[inline]
+    pub fn as_jsx_attr(&self) -> Option<&JSXAttr> {
+        match self {
+            Self::JSXAttr(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_spread_element(&self) -> Option<&SpreadElement> {
+        match self {
+            Self::SpreadElement(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXClosingElement {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn name(&self, ast: &crate::Ast) -> JSXElementName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXElementName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_name(&self, ast: &mut crate::Ast, name: JSXElementName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = name.node_id().into()
+        };
+    }
+}
+impl JSXAttr {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn name(&self, ast: &crate::Ast) -> JSXAttrName {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXAttrName::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn value(&self, ast: &crate::Ast) -> Option<JSXAttrValue> {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .optional_node
+        };
+        ret.map(|id| unsafe { JSXAttrValue::from_node_id_unchecked(id, ast) })
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_name(&self, ast: &mut crate::Ast, name: JSXAttrName) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = name.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_value(&self, ast: &mut crate::Ast, value: Option<JSXAttrValue>) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .optional_node = value.optional_node_id().into()
+        };
+    }
+}
+impl JSXAttrName {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::Ident(it) => it.span(ast),
+            Self::JSXNamespacedName(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::Ident(it) => it.set_span(ast, span),
+            Self::JSXNamespacedName(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_))
+    }
+    #[inline]
+    pub fn is_jsx_namespaced_name(&self) -> bool {
+        matches!(self, Self::JSXNamespacedName(_))
+    }
+    #[inline]
+    pub fn as_ident(&self) -> Option<&Ident> {
+        match self {
+            Self::Ident(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_namespaced_name(&self) -> Option<&JSXNamespacedName> {
+        match self {
+            Self::JSXNamespacedName(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXAttrValue {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::Str(it) => it.span(ast),
+            Self::JSXExprContainer(it) => it.span(ast),
+            Self::JSXElement(it) => it.span(ast),
+            Self::JSXFragment(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::Str(it) => it.set_span(ast, span),
+            Self::JSXExprContainer(it) => it.set_span(ast, span),
+            Self::JSXElement(it) => it.set_span(ast, span),
+            Self::JSXFragment(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_str(&self) -> bool {
+        matches!(self, Self::Str(_))
+    }
+    #[inline]
+    pub fn is_jsx_expr_container(&self) -> bool {
+        matches!(self, Self::JSXExprContainer(_))
+    }
+    #[inline]
+    pub fn is_jsx_element(&self) -> bool {
+        matches!(self, Self::JSXElement(_))
+    }
+    #[inline]
+    pub fn is_jsx_fragment(&self) -> bool {
+        matches!(self, Self::JSXFragment(_))
+    }
+    #[inline]
+    pub fn as_str(&self) -> Option<&Str> {
+        match self {
+            Self::Str(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_expr_container(&self) -> Option<&JSXExprContainer> {
+        match self {
+            Self::JSXExprContainer(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_element(&self) -> Option<&JSXElement> {
+        match self {
+            Self::JSXElement(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_fragment(&self) -> Option<&JSXFragment> {
+        match self {
+            Self::JSXFragment(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXText {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn value(&self, ast: &crate::Ast) -> Utf8Ref {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .utf8
+        };
+        ret.into()
+    }
+    #[inline]
+    pub fn raw(&self, ast: &crate::Ast) -> Utf8Ref {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .utf8
+        };
+        ret.into()
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_value(&self, ast: &mut crate::Ast, value: Utf8Ref) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .utf8 = value.into()
+        };
+    }
+    #[inline]
+    pub fn set_raw(&self, ast: &mut crate::Ast, raw: Utf8Ref) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .utf8 = raw.into()
+        };
+    }
+}
+impl JSXElement {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn opening(&self, ast: &crate::Ast) -> JSXOpeningElement {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn children(&self, ast: &crate::Ast) -> TypedSubRange<JSXElementChild> {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .sub_range
+        };
+        unsafe { ret.cast_to_typed() }
+    }
+    #[inline]
+    pub fn closing(&self, ast: &crate::Ast) -> Option<JSXClosingElement> {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .optional_node
+        };
+        ret.map(|id| unsafe { JSXClosingElement::from_node_id_unchecked(id, ast) })
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_opening(&self, ast: &mut crate::Ast, opening: JSXOpeningElement) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = opening.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_children(&self, ast: &mut crate::Ast, children: TypedSubRange<JSXElementChild>) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .sub_range = children.into()
+        };
+    }
+    #[inline]
+    pub fn set_closing(&self, ast: &mut crate::Ast, closing: Option<JSXClosingElement>) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .optional_node = closing.optional_node_id().into()
+        };
+    }
+}
+impl JSXElementChild {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        match self {
+            Self::JSXText(it) => it.span(ast),
+            Self::JSXExprContainer(it) => it.span(ast),
+            Self::JSXSpreadChild(it) => it.span(ast),
+            Self::JSXElement(it) => it.span(ast),
+            Self::JSXFragment(it) => it.span(ast),
+        }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        match self {
+            Self::JSXText(it) => it.set_span(ast, span),
+            Self::JSXExprContainer(it) => it.set_span(ast, span),
+            Self::JSXSpreadChild(it) => it.set_span(ast, span),
+            Self::JSXElement(it) => it.set_span(ast, span),
+            Self::JSXFragment(it) => it.set_span(ast, span),
+        }
+    }
+    #[inline]
+    pub fn is_jsx_text(&self) -> bool {
+        matches!(self, Self::JSXText(_))
+    }
+    #[inline]
+    pub fn is_jsx_expr_container(&self) -> bool {
+        matches!(self, Self::JSXExprContainer(_))
+    }
+    #[inline]
+    pub fn is_jsx_spread_child(&self) -> bool {
+        matches!(self, Self::JSXSpreadChild(_))
+    }
+    #[inline]
+    pub fn is_jsx_element(&self) -> bool {
+        matches!(self, Self::JSXElement(_))
+    }
+    #[inline]
+    pub fn is_jsx_fragment(&self) -> bool {
+        matches!(self, Self::JSXFragment(_))
+    }
+    #[inline]
+    pub fn as_jsx_text(&self) -> Option<&JSXText> {
+        match self {
+            Self::JSXText(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_expr_container(&self) -> Option<&JSXExprContainer> {
+        match self {
+            Self::JSXExprContainer(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_spread_child(&self) -> Option<&JSXSpreadChild> {
+        match self {
+            Self::JSXSpreadChild(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_element(&self) -> Option<&JSXElement> {
+        match self {
+            Self::JSXElement(it) => Some(it),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn as_jsx_fragment(&self) -> Option<&JSXFragment> {
+        match self {
+            Self::JSXFragment(it) => Some(it),
+            _ => None,
+        }
+    }
+}
+impl JSXFragment {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn opening(&self, ast: &crate::Ast) -> JSXOpeningElement {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn children(&self, ast: &crate::Ast) -> TypedSubRange<JSXElementChild> {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .sub_range
+        };
+        unsafe { ret.cast_to_typed() }
+    }
+    #[inline]
+    pub fn closing(&self, ast: &crate::Ast) -> JSXClosingFragment {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked(offset.index())
+                .node
+        };
+        unsafe { JSXClosingFragment::from_node_id_unchecked(ret, ast) }
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+    #[inline]
+    pub fn set_opening(&self, ast: &mut crate::Ast, opening: JSXOpeningElement) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = opening.node_id().into()
+        };
+    }
+    #[inline]
+    pub fn set_children(&self, ast: &mut crate::Ast, children: TypedSubRange<JSXElementChild>) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .sub_range = children.into()
+        };
+    }
+    #[inline]
+    pub fn set_closing(&self, ast: &mut crate::Ast, closing: JSXClosingFragment) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
+        debug_assert!(offset < ast.extra_data.len());
+        unsafe {
+            ast.extra_data
+                .as_raw_slice_mut()
+                .get_unchecked_mut(offset.index())
+                .node = closing.node_id().into()
+        };
+    }
+}
+impl JSXOpeningFragment {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+}
+impl JSXClosingFragment {
+    #[inline]
+    pub fn span(&self, ast: &crate::Ast) -> crate::Span {
+        unsafe { ast.nodes.get_unchecked(self.0).span }
+    }
+    #[inline]
+    pub fn span_lo(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).lo
+    }
+    #[inline]
+    pub fn span_hi(&self, ast: &crate::Ast) -> crate::BytePos {
+        self.span(ast).hi
+    }
+    #[inline]
+    pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
+        unsafe {
+            ast.nodes.get_unchecked_mut(self.0).span = span;
+        }
+    }
+}

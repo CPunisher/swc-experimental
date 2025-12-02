@@ -4597,3 +4597,706 @@ impl FromNodeId for Regex {
         Self(node_id)
     }
 }
+impl GetNodeId for JSXObject {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::JSXMemberExpr(it) => it.node_id(),
+            Self::Ident(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXObject> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXObject {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::Ident => JSXObject::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) }),
+            NodeKind::JSXMemberExpr => {
+                JSXObject::JSXMemberExpr(unsafe { JSXMemberExpr::from_node_id_unchecked(id, ast) })
+            }
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXMemberExpr {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXMemberExpr> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXMemberExpr {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXMemberExpr);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXNamespacedName {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXNamespacedName> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXNamespacedName {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXNamespacedName);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXEmptyExpr {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXEmptyExpr> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXEmptyExpr {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXEmptyExpr);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXExprContainer {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXExprContainer> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXExprContainer {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXExprContainer);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXExpr {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::JSXEmptyExpr(it) => it.node_id(),
+            Self::Expr(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXExpr> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXExpr {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::ArrayLit => JSXExpr::Expr(Expr::Array(unsafe {
+                ArrayLit::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::ArrowExpr => JSXExpr::Expr(Expr::Arrow(unsafe {
+                ArrowExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::AssignExpr => JSXExpr::Expr(Expr::Assign(unsafe {
+                AssignExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::AwaitExpr => JSXExpr::Expr(Expr::Await(unsafe {
+                AwaitExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::BigInt => JSXExpr::Expr(Expr::Lit(Lit::BigInt(unsafe {
+                BigInt::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::BinExpr => JSXExpr::Expr(Expr::Bin(unsafe {
+                BinExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Bool => JSXExpr::Expr(Expr::Lit(Lit::Bool(unsafe {
+                Bool::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::CallExpr => JSXExpr::Expr(Expr::Call(unsafe {
+                CallExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::ClassExpr => JSXExpr::Expr(Expr::Class(unsafe {
+                ClassExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::CondExpr => JSXExpr::Expr(Expr::Cond(unsafe {
+                CondExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::FnExpr => {
+                JSXExpr::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            }
+            NodeKind::Ident => JSXExpr::Expr(Expr::Ident(unsafe {
+                Ident::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Invalid => JSXExpr::Expr(Expr::Invalid(unsafe {
+                Invalid::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::JSXEmptyExpr => {
+                JSXExpr::JSXEmptyExpr(unsafe { JSXEmptyExpr::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::MemberExpr => JSXExpr::Expr(Expr::Member(unsafe {
+                MemberExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::MetaPropExpr => JSXExpr::Expr(Expr::MetaProp(unsafe {
+                MetaPropExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::NewExpr => JSXExpr::Expr(Expr::New(unsafe {
+                NewExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Null => JSXExpr::Expr(Expr::Lit(Lit::Null(unsafe {
+                Null::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::Number => JSXExpr::Expr(Expr::Lit(Lit::Num(unsafe {
+                Number::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::ObjectLit => JSXExpr::Expr(Expr::Object(unsafe {
+                ObjectLit::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::OptChainExpr => JSXExpr::Expr(Expr::OptChain(unsafe {
+                OptChainExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::ParenExpr => JSXExpr::Expr(Expr::Paren(unsafe {
+                ParenExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::PrivateName => JSXExpr::Expr(Expr::PrivateName(unsafe {
+                PrivateName::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Regex => JSXExpr::Expr(Expr::Lit(Lit::Regex(unsafe {
+                Regex::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::SeqExpr => JSXExpr::Expr(Expr::Seq(unsafe {
+                SeqExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Str => JSXExpr::Expr(Expr::Lit(Lit::Str(unsafe {
+                Str::from_node_id_unchecked(id, ast)
+            }))),
+            NodeKind::SuperPropExpr => JSXExpr::Expr(Expr::SuperProp(unsafe {
+                SuperPropExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::TaggedTpl => JSXExpr::Expr(Expr::TaggedTpl(unsafe {
+                TaggedTpl::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::ThisExpr => JSXExpr::Expr(Expr::This(unsafe {
+                ThisExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::Tpl => {
+                JSXExpr::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }))
+            }
+            NodeKind::UnaryExpr => JSXExpr::Expr(Expr::Unary(unsafe {
+                UnaryExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::UpdateExpr => JSXExpr::Expr(Expr::Update(unsafe {
+                UpdateExpr::from_node_id_unchecked(id, ast)
+            })),
+            NodeKind::YieldExpr => JSXExpr::Expr(Expr::Yield(unsafe {
+                YieldExpr::from_node_id_unchecked(id, ast)
+            })),
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXSpreadChild {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXSpreadChild> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXSpreadChild {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXSpreadChild);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXElementName {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::Ident(it) => it.node_id(),
+            Self::JSXMemberExpr(it) => it.node_id(),
+            Self::JSXNamespacedName(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXElementName> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXElementName {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::Ident => {
+                JSXElementName::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXMemberExpr => JSXElementName::JSXMemberExpr(unsafe {
+                JSXMemberExpr::from_node_id_unchecked(id, ast)
+            }),
+            NodeKind::JSXNamespacedName => JSXElementName::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            }),
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXOpeningElement {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXOpeningElement> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXOpeningElement {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXOpeningElement);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXAttrOrSpread {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::JSXAttr(it) => it.node_id(),
+            Self::SpreadElement(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXAttrOrSpread> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXAttrOrSpread {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::JSXAttr => {
+                JSXAttrOrSpread::JSXAttr(unsafe { JSXAttr::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::SpreadElement => JSXAttrOrSpread::SpreadElement(unsafe {
+                SpreadElement::from_node_id_unchecked(id, ast)
+            }),
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXClosingElement {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXClosingElement> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXClosingElement {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXClosingElement);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXAttr {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXAttr> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXAttr {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXAttr);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXAttrName {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::Ident(it) => it.node_id(),
+            Self::JSXNamespacedName(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXAttrName> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXAttrName {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::Ident => {
+                JSXAttrName::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXNamespacedName => JSXAttrName::JSXNamespacedName(unsafe {
+                JSXNamespacedName::from_node_id_unchecked(id, ast)
+            }),
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXAttrValue {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::Str(it) => it.node_id(),
+            Self::JSXExprContainer(it) => it.node_id(),
+            Self::JSXElement(it) => it.node_id(),
+            Self::JSXFragment(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXAttrValue> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXAttrValue {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::JSXElement => {
+                JSXAttrValue::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXExprContainer => JSXAttrValue::JSXExprContainer(unsafe {
+                JSXExprContainer::from_node_id_unchecked(id, ast)
+            }),
+            NodeKind::JSXFragment => {
+                JSXAttrValue::JSXFragment(unsafe { JSXFragment::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::Str => JSXAttrValue::Str(unsafe { Str::from_node_id_unchecked(id, ast) }),
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXText {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXText> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXText {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXText);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXElement {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXElement> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXElement {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXElement);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXElementChild {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        match self {
+            Self::JSXText(it) => it.node_id(),
+            Self::JSXExprContainer(it) => it.node_id(),
+            Self::JSXSpreadChild(it) => it.node_id(),
+            Self::JSXElement(it) => it.node_id(),
+            Self::JSXFragment(it) => it.node_id(),
+        }
+    }
+}
+impl GetOptionalNodeId for Option<JSXElementChild> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXElementChild {
+    #[inline]
+    fn from_node_id(id: NodeId, ast: &Ast) -> Self {
+        match &ast.nodes[id].kind {
+            NodeKind::JSXElement => {
+                JSXElementChild::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
+            }
+            NodeKind::JSXExprContainer => JSXElementChild::JSXExprContainer(unsafe {
+                JSXExprContainer::from_node_id_unchecked(id, ast)
+            }),
+            NodeKind::JSXFragment => JSXElementChild::JSXFragment(unsafe {
+                JSXFragment::from_node_id_unchecked(id, ast)
+            }),
+            NodeKind::JSXSpreadChild => JSXElementChild::JSXSpreadChild(unsafe {
+                JSXSpreadChild::from_node_id_unchecked(id, ast)
+            }),
+            NodeKind::JSXText => {
+                JSXElementChild::JSXText(unsafe { JSXText::from_node_id_unchecked(id, ast) })
+            }
+            _ => unreachable!(),
+        }
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self {
+        Self::from_node_id(id, ast)
+    }
+}
+impl GetNodeId for JSXFragment {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXFragment> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXFragment {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXFragment);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXOpeningFragment {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXOpeningFragment> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXOpeningFragment {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXOpeningFragment);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}
+impl GetNodeId for JSXClosingFragment {
+    #[inline]
+    fn node_id(&self) -> NodeId {
+        self.0
+    }
+}
+impl GetOptionalNodeId for Option<JSXClosingFragment> {
+    #[inline]
+    fn optional_node_id(&self) -> OptionalNodeId {
+        match self {
+            Some(it) => it.node_id().into(),
+            None => OptionalNodeId::none(),
+        }
+    }
+}
+impl FromNodeId for JSXClosingFragment {
+    #[inline]
+    fn from_node_id(node_id: NodeId, ast: &Ast) -> Self {
+        assert!(ast.nodes[node_id].kind == NodeKind::JSXClosingFragment);
+        Self(node_id)
+    }
+    #[inline]
+    unsafe fn from_node_id_unchecked(node_id: NodeId, _ast: &Ast) -> Self {
+        Self(node_id)
+    }
+}

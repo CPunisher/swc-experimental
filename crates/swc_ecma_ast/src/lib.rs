@@ -226,9 +226,9 @@ pub enum NodeKind {
     PrivateName,
 
     // jsx.rs
-    JSXMember,
+    JSXMemberExpr,
     JSXNamespacedName,
-    JSXEmpty,
+    JSXEmptyExpr,
     JSXExprContainer,
     JSXSpreadChild,
     JSXElementName,

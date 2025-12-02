@@ -4470,4 +4470,604 @@ impl Ast {
             },
         }))
     }
+    #[inline]
+    pub fn jsx_object_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> JSXObject {
+        JSXObject::JSXMemberExpr(self.jsx_member_expr(span, obj, prop).into())
+    }
+    #[inline]
+    pub fn jsx_object_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> JSXObject {
+        JSXObject::Ident(self.ident(span, sym, optional).into())
+    }
+    #[inline]
+    pub fn jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> JSXMemberExpr {
+        let _f0 = self.add_extra(ExtraData {
+            node: obj.node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            node: prop.node_id(),
+        });
+        JSXMemberExpr(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXMemberExpr,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> JSXNamespacedName {
+        let _f0 = self.add_extra(ExtraData { node: ns.node_id() });
+        let _f1 = self.add_extra(ExtraData {
+            node: name.node_id(),
+        });
+        JSXNamespacedName(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXNamespacedName,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_empty_expr(&mut self, span: Span) -> JSXEmptyExpr {
+        JSXEmptyExpr(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXEmptyExpr,
+            data: NodeData { empty: () },
+        }))
+    }
+    #[inline]
+    pub fn jsx_expr_container(&mut self, span: Span, expr: JSXExpr) -> JSXExprContainer {
+        let _f0 = self.add_extra(ExtraData {
+            node: expr.node_id(),
+        });
+        JSXExprContainer(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXExprContainer,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_expr_jsx_empty_expr(&mut self, span: Span) -> JSXExpr {
+        JSXExpr::JSXEmptyExpr(self.jsx_empty_expr(span).into())
+    }
+    #[inline]
+    pub fn jsx_expr_expr_this_expr(&mut self, span: Span) -> JSXExpr {
+        JSXExpr::Expr(Expr::This(self.this_expr(span).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_array_lit(
+        &mut self,
+        span: Span,
+        elems: TypedSubRange<Option<ExprOrSpread>>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Array(self.array_lit(span, elems).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_object_lit(
+        &mut self,
+        span: Span,
+        props: TypedSubRange<PropOrSpread>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Object(self.object_lit(span, props).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_fn_expr(
+        &mut self,
+        span: Span,
+        ident: Option<Ident>,
+        function: Function,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Fn(self.fn_expr(span, ident, function).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_unary_expr(&mut self, span: Span, op: UnaryOp, arg: Expr) -> JSXExpr {
+        JSXExpr::Expr(Expr::Unary(self.unary_expr(span, op, arg).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_update_expr(
+        &mut self,
+        span: Span,
+        op: UpdateOp,
+        prefix: bool,
+        arg: Expr,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Update(self.update_expr(span, op, prefix, arg).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_bin_expr(
+        &mut self,
+        span: Span,
+        op: BinaryOp,
+        left: Expr,
+        right: Expr,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Bin(self.bin_expr(span, op, left, right).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_assign_expr(
+        &mut self,
+        span: Span,
+        op: AssignOp,
+        left: AssignTarget,
+        right: Expr,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Assign(self.assign_expr(span, op, left, right).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_member_expr(
+        &mut self,
+        span: Span,
+        obj: Expr,
+        prop: MemberProp,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Member(self.member_expr(span, obj, prop).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_super_prop_expr(
+        &mut self,
+        span: Span,
+        obj: Super,
+        prop: SuperProp,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::SuperProp(
+            self.super_prop_expr(span, obj, prop).into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_cond_expr(
+        &mut self,
+        span: Span,
+        test: Expr,
+        cons: Expr,
+        alt: Expr,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Cond(self.cond_expr(span, test, cons, alt).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_call_expr(
+        &mut self,
+        span: Span,
+        callee: Callee,
+        args: TypedSubRange<ExprOrSpread>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Call(self.call_expr(span, callee, args).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_new_expr(
+        &mut self,
+        span: Span,
+        callee: Expr,
+        args: TypedSubRange<ExprOrSpread>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::New(self.new_expr(span, callee, args).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_seq_expr(&mut self, span: Span, exprs: TypedSubRange<Expr>) -> JSXExpr {
+        JSXExpr::Expr(Expr::Seq(self.seq_expr(span, exprs).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> JSXExpr {
+        JSXExpr::Expr(Expr::Ident(self.ident(span, sym, optional).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_str(
+        &mut self,
+        span: Span,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::Str(self.str(span, value, raw).into())))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_bool(&mut self, span: Span, value: bool) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::Bool(self.bool(span, value).into())))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_null(&mut self, span: Span) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::Null(self.null(span).into())))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_number(
+        &mut self,
+        span: Span,
+        value: f64,
+        raw: OptionalUtf8Ref,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::Num(self.number(span, value, raw).into())))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_big_int(
+        &mut self,
+        span: Span,
+        value: BigIntId,
+        raw: OptionalUtf8Ref,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::BigInt(
+            self.big_int(span, value, raw).into(),
+        )))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_lit_regex(&mut self, span: Span, exp: Utf8Ref, flags: Utf8Ref) -> JSXExpr {
+        JSXExpr::Expr(Expr::Lit(Lit::Regex(self.regex(span, exp, flags).into())))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_tpl(
+        &mut self,
+        span: Span,
+        exprs: TypedSubRange<Expr>,
+        quasis: TypedSubRange<TplElement>,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Tpl(self.tpl(span, exprs, quasis).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_tagged_tpl(&mut self, span: Span, tag: Expr, tpl: Tpl) -> JSXExpr {
+        JSXExpr::Expr(Expr::TaggedTpl(self.tagged_tpl(span, tag, tpl).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_arrow_expr(
+        &mut self,
+        span: Span,
+        params: TypedSubRange<Pat>,
+        body: BlockStmtOrExpr,
+        is_async: bool,
+        is_generator: bool,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Arrow(
+            self.arrow_expr(span, params, body, is_async, is_generator)
+                .into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_class_expr(
+        &mut self,
+        span: Span,
+        ident: Option<Ident>,
+        class: Class,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Class(self.class_expr(span, ident, class).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_yield_expr(
+        &mut self,
+        span: Span,
+        arg: Option<Expr>,
+        delegate: bool,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::Yield(self.yield_expr(span, arg, delegate).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_meta_prop_expr(&mut self, span: Span, kind: MetaPropKind) -> JSXExpr {
+        JSXExpr::Expr(Expr::MetaProp(self.meta_prop_expr(span, kind).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_await_expr(&mut self, span: Span, arg: Expr) -> JSXExpr {
+        JSXExpr::Expr(Expr::Await(self.await_expr(span, arg).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_paren_expr(&mut self, span: Span, expr: Expr) -> JSXExpr {
+        JSXExpr::Expr(Expr::Paren(self.paren_expr(span, expr).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_private_name(&mut self, span: Span, name: Utf8Ref) -> JSXExpr {
+        JSXExpr::Expr(Expr::PrivateName(self.private_name(span, name).into()))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_opt_chain_expr(
+        &mut self,
+        span: Span,
+        optional: bool,
+        base: OptChainBase,
+    ) -> JSXExpr {
+        JSXExpr::Expr(Expr::OptChain(
+            self.opt_chain_expr(span, optional, base).into(),
+        ))
+    }
+    #[inline]
+    pub fn jsx_expr_expr_invalid(&mut self, span: Span) -> JSXExpr {
+        JSXExpr::Expr(Expr::Invalid(self.invalid(span).into()))
+    }
+    #[inline]
+    pub fn jsx_spread_child(&mut self, span: Span, expr: Expr) -> JSXSpreadChild {
+        let _f0 = self.add_extra(ExtraData {
+            node: expr.node_id(),
+        });
+        JSXSpreadChild(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXSpreadChild,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_element_name_ident(
+        &mut self,
+        span: Span,
+        sym: Utf8Ref,
+        optional: bool,
+    ) -> JSXElementName {
+        JSXElementName::Ident(self.ident(span, sym, optional).into())
+    }
+    #[inline]
+    pub fn jsx_element_name_jsx_member_expr(
+        &mut self,
+        span: Span,
+        obj: JSXObject,
+        prop: IdentName,
+    ) -> JSXElementName {
+        JSXElementName::JSXMemberExpr(self.jsx_member_expr(span, obj, prop).into())
+    }
+    #[inline]
+    pub fn jsx_element_name_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> JSXElementName {
+        JSXElementName::JSXNamespacedName(self.jsx_namespaced_name(span, ns, name).into())
+    }
+    #[inline]
+    pub fn jsx_opening_element(
+        &mut self,
+        span: Span,
+        name: JSXElementName,
+        attrs: TypedSubRange<JSXAttr>,
+        self_closing: bool,
+    ) -> JSXOpeningElement {
+        let _f0 = self.add_extra(ExtraData {
+            node: name.node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            sub_range: attrs.into(),
+        });
+        let _f2 = self.add_extra(ExtraData {
+            bool: self_closing.into(),
+        });
+        JSXOpeningElement(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXOpeningElement,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_attr_or_spread_jsx_attr(
+        &mut self,
+        span: Span,
+        name: JSXAttrName,
+        value: Option<JSXAttrValue>,
+    ) -> JSXAttrOrSpread {
+        JSXAttrOrSpread::JSXAttr(self.jsx_attr(span, name, value).into())
+    }
+    #[inline]
+    pub fn jsx_attr_or_spread_spread_element(
+        &mut self,
+        span: Span,
+        dot3_token: Span,
+        expr: Expr,
+    ) -> JSXAttrOrSpread {
+        JSXAttrOrSpread::SpreadElement(self.spread_element(span, dot3_token, expr).into())
+    }
+    #[inline]
+    pub fn jsx_closing_element(&mut self, span: Span, name: JSXElementName) -> JSXClosingElement {
+        let _f0 = self.add_extra(ExtraData {
+            node: name.node_id(),
+        });
+        JSXClosingElement(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXClosingElement,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_attr(
+        &mut self,
+        span: Span,
+        name: JSXAttrName,
+        value: Option<JSXAttrValue>,
+    ) -> JSXAttr {
+        let _f0 = self.add_extra(ExtraData {
+            node: name.node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            optional_node: value.optional_node_id(),
+        });
+        JSXAttr(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXAttr,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_attr_name_ident(&mut self, span: Span, sym: Utf8Ref, optional: bool) -> JSXAttrName {
+        JSXAttrName::Ident(self.ident(span, sym, optional).into())
+    }
+    #[inline]
+    pub fn jsx_attr_name_jsx_namespaced_name(
+        &mut self,
+        span: Span,
+        ns: IdentName,
+        name: IdentName,
+    ) -> JSXAttrName {
+        JSXAttrName::JSXNamespacedName(self.jsx_namespaced_name(span, ns, name).into())
+    }
+    #[inline]
+    pub fn jsx_attr_value_str(
+        &mut self,
+        span: Span,
+        value: Wtf8Ref,
+        raw: OptionalUtf8Ref,
+    ) -> JSXAttrValue {
+        JSXAttrValue::Str(self.str(span, value, raw).into())
+    }
+    #[inline]
+    pub fn jsx_attr_value_jsx_expr_container(&mut self, span: Span, expr: JSXExpr) -> JSXAttrValue {
+        JSXAttrValue::JSXExprContainer(self.jsx_expr_container(span, expr).into())
+    }
+    #[inline]
+    pub fn jsx_attr_value_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> JSXAttrValue {
+        JSXAttrValue::JSXElement(self.jsx_element(span, opening, children, closing).into())
+    }
+    #[inline]
+    pub fn jsx_attr_value_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> JSXAttrValue {
+        JSXAttrValue::JSXFragment(self.jsx_fragment(span, opening, children, closing).into())
+    }
+    #[inline]
+    pub fn jsx_text(&mut self, span: Span, value: Utf8Ref, raw: Utf8Ref) -> JSXText {
+        let _f0 = self.add_extra(ExtraData { utf8: value.into() });
+        let _f1 = self.add_extra(ExtraData { utf8: raw.into() });
+        JSXText(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXText,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> JSXElement {
+        let _f0 = self.add_extra(ExtraData {
+            node: opening.node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            sub_range: children.into(),
+        });
+        let _f2 = self.add_extra(ExtraData {
+            optional_node: closing.optional_node_id(),
+        });
+        JSXElement(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXElement,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_element_child_jsx_text(
+        &mut self,
+        span: Span,
+        value: Utf8Ref,
+        raw: Utf8Ref,
+    ) -> JSXElementChild {
+        JSXElementChild::JSXText(self.jsx_text(span, value, raw).into())
+    }
+    #[inline]
+    pub fn jsx_element_child_jsx_expr_container(
+        &mut self,
+        span: Span,
+        expr: JSXExpr,
+    ) -> JSXElementChild {
+        JSXElementChild::JSXExprContainer(self.jsx_expr_container(span, expr).into())
+    }
+    #[inline]
+    pub fn jsx_element_child_jsx_spread_child(
+        &mut self,
+        span: Span,
+        expr: Expr,
+    ) -> JSXElementChild {
+        JSXElementChild::JSXSpreadChild(self.jsx_spread_child(span, expr).into())
+    }
+    #[inline]
+    pub fn jsx_element_child_jsx_element(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: Option<JSXClosingElement>,
+    ) -> JSXElementChild {
+        JSXElementChild::JSXElement(self.jsx_element(span, opening, children, closing).into())
+    }
+    #[inline]
+    pub fn jsx_element_child_jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> JSXElementChild {
+        JSXElementChild::JSXFragment(self.jsx_fragment(span, opening, children, closing).into())
+    }
+    #[inline]
+    pub fn jsx_fragment(
+        &mut self,
+        span: Span,
+        opening: JSXOpeningElement,
+        children: TypedSubRange<JSXElementChild>,
+        closing: JSXClosingFragment,
+    ) -> JSXFragment {
+        let _f0 = self.add_extra(ExtraData {
+            node: opening.node_id(),
+        });
+        let _f1 = self.add_extra(ExtraData {
+            sub_range: children.into(),
+        });
+        let _f2 = self.add_extra(ExtraData {
+            node: closing.node_id(),
+        });
+        JSXFragment(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXFragment,
+            data: NodeData {
+                extra_data_start: _f0,
+            },
+        }))
+    }
+    #[inline]
+    pub fn jsx_opening_fragment(&mut self, span: Span) -> JSXOpeningFragment {
+        JSXOpeningFragment(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXOpeningFragment,
+            data: NodeData { empty: () },
+        }))
+    }
+    #[inline]
+    pub fn jsx_closing_fragment(&mut self, span: Span) -> JSXClosingFragment {
+        JSXClosingFragment(self.add_node(AstNode {
+            span,
+            kind: NodeKind::JSXClosingFragment,
+            data: NodeData { empty: () },
+        }))
+    }
 }

@@ -741,6 +741,112 @@ pub trait Visit {
         self.leave_node(node.node_id(), ast);
     }
     #[inline]
+    fn visit_jsx_object(&mut self, node: JSXObject, ast: &Ast) {
+        <JSXObject as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_member_expr(&mut self, node: JSXMemberExpr, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXMemberExpr as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_namespaced_name(&mut self, node: JSXNamespacedName, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXNamespacedName as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_empty_expr(&mut self, node: JSXEmptyExpr, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXEmptyExpr as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_expr_container(&mut self, node: JSXExprContainer, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXExprContainer as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_expr(&mut self, node: JSXExpr, ast: &Ast) {
+        <JSXExpr as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_spread_child(&mut self, node: JSXSpreadChild, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXSpreadChild as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_element_name(&mut self, node: JSXElementName, ast: &Ast) {
+        <JSXElementName as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_opening_element(&mut self, node: JSXOpeningElement, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXOpeningElement as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_attr_or_spread(&mut self, node: JSXAttrOrSpread, ast: &Ast) {
+        <JSXAttrOrSpread as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_closing_element(&mut self, node: JSXClosingElement, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXClosingElement as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_attr(&mut self, node: JSXAttr, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXAttr as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_attr_name(&mut self, node: JSXAttrName, ast: &Ast) {
+        <JSXAttrName as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_attr_value(&mut self, node: JSXAttrValue, ast: &Ast) {
+        <JSXAttrValue as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_text(&mut self, node: JSXText, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXText as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_element(&mut self, node: JSXElement, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXElement as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_element_child(&mut self, node: JSXElementChild, ast: &Ast) {
+        <JSXElementChild as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_fragment(&mut self, node: JSXFragment, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXFragment as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_opening_fragment(&mut self, node: JSXOpeningFragment, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXOpeningFragment as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_jsx_closing_fragment(&mut self, node: JSXClosingFragment, ast: &Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXClosingFragment as VisitWith<Self>>::visit_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
     fn visit_module_items(&mut self, node: TypedSubRange<ModuleItem>, ast: &Ast) {
         <TypedSubRange<ModuleItem> as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
@@ -865,6 +971,22 @@ pub trait Visit {
     #[inline]
     fn visit_object_pat_props(&mut self, node: TypedSubRange<ObjectPatProp>, ast: &Ast) {
         <TypedSubRange<ObjectPatProp> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_attrs(&mut self, node: TypedSubRange<JSXAttr>, ast: &Ast) {
+        <TypedSubRange<JSXAttr> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_opt_jsx_attr_value(&mut self, node: Option<JSXAttrValue>, ast: &Ast) {
+        <Option<JSXAttrValue> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_jsx_element_childs(&mut self, node: TypedSubRange<JSXElementChild>, ast: &Ast) {
+        <TypedSubRange<JSXElementChild> as VisitWith<Self>>::visit_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_opt_jsx_closing_element(&mut self, node: Option<JSXClosingElement>, ast: &Ast) {
+        <Option<JSXClosingElement> as VisitWith<Self>>::visit_children_with(node, self, ast)
     }
 }
 pub trait VisitWith<V: ?Sized + Visit> {
@@ -4182,6 +4304,417 @@ impl<V: ?Sized + Visit> VisitWith<V> for Regex {
         <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
     }
 }
+impl<V: ?Sized + Visit> VisitWith<V> for JSXObject {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_object(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::JSXMemberExpr(it) => {
+                <JSXMemberExpr as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::Ident(it) => <Ident as VisitWith<V>>::visit_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXMemberExpr {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_member_expr(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXObject as VisitWith<V>>::visit_with(
+            unsafe { JSXObject::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .node
+        };
+        <IdentName as VisitWith<V>>::visit_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXNamespacedName {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_namespaced_name(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <IdentName as VisitWith<V>>::visit_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .node
+        };
+        <IdentName as VisitWith<V>>::visit_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXEmptyExpr {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_empty_expr(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXExprContainer {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_expr_container(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXExpr as VisitWith<V>>::visit_with(
+            unsafe { JSXExpr::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXExpr {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_expr(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::JSXEmptyExpr(it) => <JSXEmptyExpr as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::Expr(it) => <Expr as VisitWith<V>>::visit_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXSpreadChild {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_spread_child(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <Expr as VisitWith<V>>::visit_with(
+            unsafe { Expr::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXElementName {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_element_name(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::Ident(it) => <Ident as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXMemberExpr(it) => {
+                <JSXMemberExpr as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXOpeningElement {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_opening_element(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXElementName as VisitWith<V>>::visit_with(
+            unsafe { JSXElementName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXAttr> as VisitWith<V>>::visit_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .bool
+        };
+        <bool as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXAttrOrSpread {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_attr_or_spread(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::JSXAttr(it) => <JSXAttr as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::SpreadElement(it) => {
+                <SpreadElement as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXClosingElement {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_closing_element(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXElementName as VisitWith<V>>::visit_with(
+            unsafe { JSXElementName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXAttr {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_attr(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXAttrName as VisitWith<V>>::visit_with(
+            unsafe { JSXAttrName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .optional_node
+        };
+        <Option<JSXAttrValue> as VisitWith<V>>::visit_with(
+            ret.map(|id| unsafe { JSXAttrValue::from_node_id_unchecked(id, ast) }),
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXAttrName {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_attr_name(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::Ident(it) => <Ident as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXAttrValue {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_attr_value(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::Str(it) => <Str as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXExprContainer(it) => {
+                <JSXExprContainer as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::JSXElement(it) => <JSXElement as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXFragment(it) => <JSXFragment as VisitWith<V>>::visit_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXText {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_text(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .utf8
+        };
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .utf8
+        };
+        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor, ast);
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXElement {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_element(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXOpeningElement as VisitWith<V>>::visit_with(
+            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .optional_node
+        };
+        <Option<JSXClosingElement> as VisitWith<V>>::visit_with(
+            ret.map(|id| unsafe { JSXClosingElement::from_node_id_unchecked(id, ast) }),
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXElementChild {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_element_child(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Self::JSXText(it) => <JSXText as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXExprContainer(it) => {
+                <JSXExprContainer as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::JSXSpreadChild(it) => {
+                <JSXSpreadChild as VisitWith<V>>::visit_with(it, visitor, ast)
+            }
+            Self::JSXElement(it) => <JSXElement as VisitWith<V>>::visit_with(it, visitor, ast),
+            Self::JSXFragment(it) => <JSXFragment as VisitWith<V>>::visit_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXFragment {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_fragment(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXOpeningElement as VisitWith<V>>::visit_with(
+            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .node
+        };
+        <JSXClosingFragment as VisitWith<V>>::visit_with(
+            unsafe { JSXClosingFragment::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXOpeningFragment {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_opening_fragment(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for JSXClosingFragment {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_closing_fragment(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
 impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ModuleItem> {
     fn visit_with(self, visitor: &mut V, ast: &Ast) {
         <V as Visit>::visit_module_items(visitor, self, ast)
@@ -4509,6 +5042,50 @@ impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ObjectPatProp> {
         for child in self.iter() {
             let child = ast.get_node_in_sub_range(child);
             child.visit_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<JSXAttr> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_attrs(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        for child in self.iter() {
+            let child = ast.get_node_in_sub_range(child);
+            child.visit_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for Option<JSXAttrValue> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_opt_jsx_attr_value(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Some(it) => it.visit_with(visitor, ast),
+            None => {}
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<JSXElementChild> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_jsx_element_childs(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        for child in self.iter() {
+            let child = ast.get_node_in_sub_range(child);
+            child.visit_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + Visit> VisitWith<V> for Option<JSXClosingElement> {
+    fn visit_with(self, visitor: &mut V, ast: &Ast) {
+        <V as Visit>::visit_opt_jsx_closing_element(visitor, self, ast)
+    }
+    fn visit_children_with(self, visitor: &mut V, ast: &Ast) {
+        match self {
+            Some(it) => it.visit_with(visitor, ast),
+            None => {}
         }
     }
 }
@@ -5256,6 +5833,112 @@ pub trait VisitMut {
         self.leave_node(node.node_id(), ast);
     }
     #[inline]
+    fn visit_mut_jsx_object(&mut self, node: JSXObject, ast: &mut Ast) {
+        <JSXObject as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_member_expr(&mut self, node: JSXMemberExpr, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXMemberExpr as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_namespaced_name(&mut self, node: JSXNamespacedName, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXNamespacedName as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_empty_expr(&mut self, node: JSXEmptyExpr, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXEmptyExpr as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_expr_container(&mut self, node: JSXExprContainer, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXExprContainer as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_expr(&mut self, node: JSXExpr, ast: &mut Ast) {
+        <JSXExpr as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_spread_child(&mut self, node: JSXSpreadChild, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXSpreadChild as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_element_name(&mut self, node: JSXElementName, ast: &mut Ast) {
+        <JSXElementName as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_opening_element(&mut self, node: JSXOpeningElement, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXOpeningElement as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_attr_or_spread(&mut self, node: JSXAttrOrSpread, ast: &mut Ast) {
+        <JSXAttrOrSpread as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_closing_element(&mut self, node: JSXClosingElement, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXClosingElement as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_attr(&mut self, node: JSXAttr, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXAttr as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_attr_name(&mut self, node: JSXAttrName, ast: &mut Ast) {
+        <JSXAttrName as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_attr_value(&mut self, node: JSXAttrValue, ast: &mut Ast) {
+        <JSXAttrValue as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_text(&mut self, node: JSXText, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXText as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_element(&mut self, node: JSXElement, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXElement as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_element_child(&mut self, node: JSXElementChild, ast: &mut Ast) {
+        <JSXElementChild as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_fragment(&mut self, node: JSXFragment, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXFragment as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_opening_fragment(&mut self, node: JSXOpeningFragment, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXOpeningFragment as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
+    fn visit_mut_jsx_closing_fragment(&mut self, node: JSXClosingFragment, ast: &mut Ast) {
+        self.enter_node(node.node_id(), ast);
+        <JSXClosingFragment as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast);
+        self.leave_node(node.node_id(), ast);
+    }
+    #[inline]
     fn visit_mut_module_items(&mut self, node: TypedSubRange<ModuleItem>, ast: &mut Ast) {
         <TypedSubRange<ModuleItem> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
@@ -5398,6 +6081,32 @@ pub trait VisitMut {
         <TypedSubRange<ObjectPatProp> as VisitMutWith<Self>>::visit_mut_children_with(
             node, self, ast,
         )
+    }
+    #[inline]
+    fn visit_mut_jsx_attrs(&mut self, node: TypedSubRange<JSXAttr>, ast: &mut Ast) {
+        <TypedSubRange<JSXAttr> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_opt_jsx_attr_value(&mut self, node: Option<JSXAttrValue>, ast: &mut Ast) {
+        <Option<JSXAttrValue> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
+    }
+    #[inline]
+    fn visit_mut_jsx_element_childs(
+        &mut self,
+        node: TypedSubRange<JSXElementChild>,
+        ast: &mut Ast,
+    ) {
+        <TypedSubRange<JSXElementChild> as VisitMutWith<Self>>::visit_mut_children_with(
+            node, self, ast,
+        )
+    }
+    #[inline]
+    fn visit_mut_opt_jsx_closing_element(
+        &mut self,
+        node: Option<JSXClosingElement>,
+        ast: &mut Ast,
+    ) {
+        <Option<JSXClosingElement> as VisitMutWith<Self>>::visit_mut_children_with(node, self, ast)
     }
 }
 pub trait VisitMutWith<V: ?Sized + VisitMut> {
@@ -8785,6 +9494,427 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
         <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
     }
 }
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXObject {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_object(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::JSXMemberExpr(it) => {
+                <JSXMemberExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::Ident(it) => <Ident as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXMemberExpr {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_member_expr(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXObject as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXObject::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .node
+        };
+        <IdentName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXNamespacedName {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_namespaced_name(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <IdentName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .node
+        };
+        <IdentName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { IdentName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXEmptyExpr {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_empty_expr(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXExprContainer {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_expr_container(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXExpr as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXExpr::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXExpr {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_expr(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::JSXEmptyExpr(it) => {
+                <JSXEmptyExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::Expr(it) => <Expr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXSpreadChild {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_spread_child(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <Expr as VisitMutWith<V>>::visit_mut_with(
+            unsafe { Expr::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElementName {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_element_name(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::Ident(it) => <Ident as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::JSXMemberExpr(it) => {
+                <JSXMemberExpr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXOpeningElement {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_opening_element(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXElementName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXElementName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXAttr> as VisitMutWith<V>>::visit_mut_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .bool
+        };
+        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttrOrSpread {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_attr_or_spread(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::JSXAttr(it) => <JSXAttr as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::SpreadElement(it) => {
+                <SpreadElement as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXClosingElement {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_closing_element(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXElementName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXElementName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttr {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_attr(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXAttrName as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXAttrName::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .optional_node
+        };
+        <Option<JSXAttrValue> as VisitMutWith<V>>::visit_mut_with(
+            ret.map(|id| unsafe { JSXAttrValue::from_node_id_unchecked(id, ast) }),
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttrName {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_attr_name(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::Ident(it) => <Ident as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::JSXNamespacedName(it) => {
+                <JSXNamespacedName as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttrValue {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_attr_value(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::Str(it) => <Str as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::JSXExprContainer(it) => {
+                <JSXExprContainer as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXElement(it) => {
+                <JSXElement as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXFragment(it) => {
+                <JSXFragment as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXText {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_text(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .utf8
+        };
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .utf8
+        };
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor, ast);
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElement {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_element(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXOpeningElement as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .optional_node
+        };
+        <Option<JSXClosingElement> as VisitMutWith<V>>::visit_mut_with(
+            ret.map(|id| unsafe { JSXClosingElement::from_node_id_unchecked(id, ast) }),
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElementChild {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_element_child(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Self::JSXText(it) => <JSXText as VisitMutWith<V>>::visit_mut_with(it, visitor, ast),
+            Self::JSXExprContainer(it) => {
+                <JSXExprContainer as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXSpreadChild(it) => {
+                <JSXSpreadChild as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXElement(it) => {
+                <JSXElement as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+            Self::JSXFragment(it) => {
+                <JSXFragment as VisitMutWith<V>>::visit_mut_with(it, visitor, ast)
+            }
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXFragment {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_fragment(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 0usize).index())
+                .node
+        };
+        <JSXOpeningElement as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 1usize).index())
+                .sub_range
+        };
+        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(
+            unsafe { ret.cast_to_typed() },
+            visitor,
+            ast,
+        );
+        let ret = unsafe {
+            ast.extra_data
+                .as_raw_slice()
+                .get_unchecked((offset + 2usize).index())
+                .node
+        };
+        <JSXClosingFragment as VisitMutWith<V>>::visit_mut_with(
+            unsafe { JSXClosingFragment::from_node_id_unchecked(ret, ast) },
+            visitor,
+            ast,
+        );
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXOpeningFragment {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_opening_fragment(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXClosingFragment {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_closing_fragment(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start };
+    }
+}
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ModuleItem> {
     fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
         <V as VisitMut>::visit_mut_module_items(visitor, self, ast)
@@ -9112,6 +10242,50 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ObjectPatProp> {
         for child in self.iter() {
             let child = ast.get_node_in_sub_range(child);
             child.visit_mut_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<JSXAttr> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_attrs(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        for child in self.iter() {
+            let child = ast.get_node_in_sub_range(child);
+            child.visit_mut_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for Option<JSXAttrValue> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_opt_jsx_attr_value(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Some(it) => it.visit_mut_with(visitor, ast),
+            None => {}
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<JSXElementChild> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_jsx_element_childs(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        for child in self.iter() {
+            let child = ast.get_node_in_sub_range(child);
+            child.visit_mut_with(visitor, ast);
+        }
+    }
+}
+impl<V: ?Sized + VisitMut> VisitMutWith<V> for Option<JSXClosingElement> {
+    fn visit_mut_with(self, visitor: &mut V, ast: &mut Ast) {
+        <V as VisitMut>::visit_mut_opt_jsx_closing_element(visitor, self, ast)
+    }
+    fn visit_mut_children_with(self, visitor: &mut V, ast: &mut Ast) {
+        match self {
+            Some(it) => it.visit_mut_with(visitor, ast),
+            None => {}
         }
     }
 }
