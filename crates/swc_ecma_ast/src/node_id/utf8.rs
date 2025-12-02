@@ -1,8 +1,11 @@
 use swc_common::Span;
 
+/// A reference to a utf8 string in the string allocator.
 #[derive(Debug, Clone, Copy)]
 pub struct Utf8Ref {
+    /// The start pos of the utf8 string in the string allocator.
     lo: u32,
+    /// The end pos of the utf8 string in the string allocator.
     hi: u32,
 }
 
@@ -28,6 +31,9 @@ impl Utf8Ref {
     }
 }
 
+/// An 8 bytes optimized version of `Option<Utf8Ref>` (12 bytes).
+///
+/// We regard it as `None` if `OptionalUtf8Ref::hi` is `u32::MAX`.
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct OptionalUtf8Ref {
     lo: u32,

@@ -23,6 +23,9 @@ oxc_index::define_index_type! {
     pub struct NodeId = u32;
 }
 
+/// An 4 bytes optimized version of `Option<NodeId>` (8 bytes)
+///
+/// We regard it as `None` if the inner is `u32::MAX`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OptionalNodeId(u32);
 

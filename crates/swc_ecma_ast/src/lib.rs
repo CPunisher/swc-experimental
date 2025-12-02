@@ -33,25 +33,52 @@ pub use node_id::{
 
 use crate::{ast_list::NodeList, string_allocator::StringAllocator};
 
+/// AST context that stores everything about the flattening AST.
 pub struct Ast {
+    /// Flattening AST nodes.
     nodes: NodeList,
+
+    /// Flattening AST fields.
     extra_data: IndexVec<ExtraDataId, ExtraData>,
+
+    /// Mapping from BigIntId to BigIntValue.
+    /// This is used to reduce the size of [BigIntValue] to store its Id in the AST.
     bigint: IndexVec<BigIntId, BigIntValue>,
+
+    /// The AST doesn't directly store strings (UTF-8 and WTF-8).
+    /// Instead, it stores the start and the end index of the string in the string allocator.
+    /// See: [StringAllocator]
     string_allocator: StringAllocator,
 }
 
+/// Untyped AST node
 pub struct AstNode {
     pub span: Span,
     pub kind: NodeKind,
     data: NodeData,
 }
 
+/// Node data is the start index of [Ast::extra_data], if the node is not freed, which indicates the first field of the AST node.
+/// Otherwise it's the next free node id, forming a free list of AST.
+///
+/// We use union here to eliminate the tag cost of enum.
+///
+/// # Safety:
+/// It is only access the by the property accesses of typed AST node, and the construction of typed AST is
+/// another safety guarantee.
 pub union NodeData {
     empty: (),
     extra_data_start: ExtraDataId,
     next_free: OptionalNodeId,
 }
 
+/// The extra data is used to represent the field of AST node.
+/// It's usally another Id to point to the data structures in [Ast],
+/// or it can be a primitive value, which is small enough to store in 8 bytes.
+///
+/// # Safety:
+/// It is only access the by the property accesses of typed AST node, and the construction of typed AST is
+/// another safety guarantee.
 pub union ExtraData {
     span: Span,
     node: NodeId,
@@ -70,6 +97,7 @@ pub union ExtraData {
     other: u64,
 }
 
+/// The NodeKind is one-to-one mapping to the typed AST node declared with struct keyword (not enum).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NodeKind {
     // module.rs
@@ -272,10 +300,13 @@ pub enum NodeKind {
     TsConstAssertion,
     TsInstantiation,
 
+    /// This is a special node kind to mark a node as freed.
     __FREED,
 }
 
 impl Ast {
+    /// Create a new AST with the given source length.
+    /// The source length is used to pre-allocate memory for the string allocator.
     pub fn new(source_len: usize) -> Self {
         Self {
             nodes: NodeList::default(),

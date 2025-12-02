@@ -2,15 +2,20 @@ use swc_atoms::wtf8::{Wtf8, Wtf8Buf};
 
 use crate::{OptionalUtf8Ref, OptionalWtf8Ref, Utf8Ref, Wtf8Ref};
 
+/// A string allocator that can be used to allocate strings for the AST.
+/// All the strings are stored in a single buffer to avoid memory fragmentation.
 pub struct StringAllocator {
     allocated_utf8: String,
     allocated_wtf8: Wtf8Buf,
 }
 
 impl StringAllocator {
+    /// Create a new string allocator with the given source length.
+    /// The source length is used to pre-allocate memory for the string allocator.
+    /// We assume that half length of the source code is the sum of utf8 identifier lengths.
     pub fn new(source_len: usize) -> Self {
         Self {
-            allocated_utf8: String::with_capacity(source_len),
+            allocated_utf8: String::with_capacity(source_len / 2),
             allocated_wtf8: Wtf8Buf::new(),
         }
     }

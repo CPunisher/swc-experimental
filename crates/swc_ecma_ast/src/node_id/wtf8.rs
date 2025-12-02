@@ -1,6 +1,9 @@
+/// A reference to a wtf8 string in the string allocator.
 #[derive(Debug, Clone, Copy)]
 pub struct Wtf8Ref {
+    /// The start pos of the wtf8 string in the string allocator.
     lo: u32,
+    /// The end pos of the wtf8 string in the string allocator.
     hi: u32,
 }
 
@@ -18,6 +21,9 @@ impl Wtf8Ref {
     }
 }
 
+/// An optimized version of `Option<Wtf8Ref>`
+///
+/// We regard it as `None` if `OptionalWtf8Ref::hi` is `u32::MAX`.
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct OptionalWtf8Ref {
     lo: u32,

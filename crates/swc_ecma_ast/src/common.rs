@@ -1,3 +1,5 @@
+/// Port from https://github.com/swc-project/swc/blob/main/crates/swc_ecma_ast/src/lib.rs
+
 #[derive(Debug, Default, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub enum EsVersion {
     Es3,
