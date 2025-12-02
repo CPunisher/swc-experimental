@@ -5,8 +5,13 @@ use swc_experimental_ecma_parser::{EsSyntax, Parser, StringSource, Syntax};
 use swc_experimental_ecma_visit::{Visit, VisitWith};
 
 fn main() {
-    let source = include_str!("../files/typescript.js");
-    let syntax = Syntax::Es(EsSyntax::default());
+    let source = include_str!(
+        "/Users/bytedance/Projects/rspack_experimental_swc/tasks/testsuite/fixtures/misc-parser/pass/basic-issue-10729-input.jsx"
+    );
+    let syntax = Syntax::Es(EsSyntax {
+        jsx: true,
+        ..Default::default()
+    });
     let input = StringSource::new(source);
 
     let parser = Parser::new(syntax, input, None);
@@ -19,7 +24,7 @@ fn main() {
 
     for (node_id, node) in ret.ast.nodes() {
         if !used.used.contains(&node_id) {
-            let source = &source[node.span.lo.0 as usize..node.span.hi.0 as usize];
+            let source = &source[node.span.lo.0 as usize - 1..node.span.hi.0 as usize - 1];
             println!("Unused node: {:?}, source: {}", node.kind, source);
         }
     }

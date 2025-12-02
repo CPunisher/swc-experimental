@@ -146,6 +146,7 @@ impl<I: Tokens> Parser<I> {
             let new_node = self
                 .ast
                 .jsx_element_name_jsx_member_expr(self.span(start), obj, prop);
+
             node = new_node;
         }
         Ok(node)
@@ -467,7 +468,7 @@ fn get_qualified_jsx_name(ast: &'_ Ast, name: JSXElementName) -> Cow<'_, str> {
     fn get_qualified_obj_name(ast: &'_ Ast, obj: JSXObject) -> Cow<'_, str> {
         match obj {
             JSXObject::Ident(i) => Cow::Borrowed(ast.get_utf8(i.sym(ast))),
-            JSXObject::JSXMemberExpr(ref member) => Cow::Owned(format!(
+            JSXObject::JSXMemberExpr(member) => Cow::Owned(format!(
                 "{}.{}",
                 get_qualified_obj_name(ast, member.obj(ast)),
                 ast.get_utf8(member.prop(ast).sym(ast))
