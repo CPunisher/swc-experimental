@@ -2260,19 +2260,16 @@ impl<I: Tokens> Parser<I> {
             for expr_or_spread in paren_items.iter() {
                 if let AssignTargetOrSpread::ExprOrSpread(e) = expr_or_spread {
                     if let Expr::Object(o) = e.expr(&self.ast) {
-                        let mut errors = Vec::new();
                         for prop in o.props(&self.ast).iter() {
                             let prop = self.ast.get_node_in_sub_range(prop);
                             if let PropOrSpread::Prop(prop) = prop {
                                 if prop.is_assign() {
-                                    errors
-                                        .push((prop.span(&self.ast), SyntaxError::AssignProperty));
+                                    self.emit_err(
+                                        prop.span(&self.ast),
+                                        SyntaxError::AssignProperty,
+                                    );
                                 }
                             }
-                        }
-
-                        for (span, error) in errors {
-                            self.emit_err(span, error);
                         }
                     }
                 }
