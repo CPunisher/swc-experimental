@@ -24,6 +24,14 @@ pub trait Case {
             .to_string()
     }
 
+    fn filename(&self) -> String {
+        self.path()
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned()
+    }
+
     fn relative_path(&self) -> &Path {
         self.path().strip_prefix(crate_root()).unwrap()
     }

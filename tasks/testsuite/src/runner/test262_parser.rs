@@ -15,12 +15,7 @@ impl Test262ParserRunner {
                 println!("[{}] {:?}", "Debug".green(), case.relative_path());
             }
 
-            let filename = case
-                .path()
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .into_owned();
+            let filename = case.filename();
             if (!case.should_fail() && IGNORED_PASS_TESTS.contains(&filename.as_str()))
                 || (case.should_fail() && IGNORED_ERROR_TESTS.contains(&filename.as_str()))
             {

@@ -520,6 +520,7 @@ fn transform_expr(ast: &Ast, expr: experimental::Expr) -> legacy::Expr {
         experimental::Expr::Invalid(i) => {
             legacy::Expr::Invalid(legacy::Invalid { span: i.span(ast) })
         }
+        _ => todo!(),
     }
 }
 

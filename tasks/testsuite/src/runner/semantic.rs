@@ -26,14 +26,14 @@ impl SemanticRunner {
             let lexer = Lexer::new(syntax, Default::default(), input, Some(&comments));
             let parser = Parser::new_from(lexer);
             let ret = match case.ext().as_str() {
-                "js" => parser.parse_program(),
+                "js" | "jsx" => parser.parse_program(),
                 "cjs" => parser
                     .parse_script()
                     .map(|ret| ret.map_root(Program::Script)),
                 "mjs" => parser
                     .parse_module()
                     .map(|ret| ret.map_root(Program::Module)),
-                "ts" | "jsx" | "tsx" => {
+                "ts" | "tsx" => {
                     results.push(TestResult::Ignored {
                         path: case.path().to_owned(),
                     });

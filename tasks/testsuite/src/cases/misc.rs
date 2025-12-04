@@ -7,8 +7,6 @@ use swc_experimental_ecma_parser::{EsSyntax, Syntax};
 
 use crate::{cases::Case, util::crate_root};
 
-const TEST_PATH: &str = "fixtures/parser-misc";
-
 pub struct MiscCase {
     path: PathBuf,
     code: String,
@@ -17,9 +15,14 @@ pub struct MiscCase {
 
 impl MiscCase {
     pub fn read() -> Vec<Self> {
-        let test_path = crate_root().join(TEST_PATH);
-        let pass_cases = read_dir(test_path.join("pass")).unwrap();
-        let fail_cases = read_dir(test_path.join("fail")).unwrap();
+        let mut pass_cases = Vec::new();
+        let mut fail_cases = Vec::new();
+
+        for test_path in &["fixtures/misc-parser", "fixtures/misc-swc"] {
+            let test_path = crate_root().join(test_path);
+            pass_cases.extend(read_dir(test_path.join("pass")).unwrap());
+            fail_cases.extend(read_dir(test_path.join("fail")).unwrap());
+        }
 
         let mut cases = Vec::new();
         for pass_case in pass_cases {

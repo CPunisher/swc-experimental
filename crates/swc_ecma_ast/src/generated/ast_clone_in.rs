@@ -439,6 +439,11 @@ impl CloneIn for Expr {
             Self::MetaProp(it) => Self::MetaProp(it.clone_in(ast)),
             Self::Await(it) => Self::Await(it.clone_in(ast)),
             Self::Paren(it) => Self::Paren(it.clone_in(ast)),
+            Self::JSXMember(it) => Self::JSXMember(it.clone_in(ast)),
+            Self::JSXNamespacedName(it) => Self::JSXNamespacedName(it.clone_in(ast)),
+            Self::JSXEmpty(it) => Self::JSXEmpty(it.clone_in(ast)),
+            Self::JSXElement(it) => Self::JSXElement(it.clone_in(ast)),
+            Self::JSXFragment(it) => Self::JSXFragment(it.clone_in(ast)),
             Self::PrivateName(it) => Self::PrivateName(it.clone_in(ast)),
             Self::OptChain(it) => Self::OptChain(it.clone_in(ast)),
             Self::Invalid(it) => Self::Invalid(it.clone_in(ast)),
@@ -1087,6 +1092,173 @@ impl CloneIn for BigInt {
 }
 impl CloneIn for Regex {
     type Cloned = Regex;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXObject {
+    type Cloned = JSXObject;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::JSXMemberExpr(it) => Self::JSXMemberExpr(it.clone_in(ast)),
+            Self::Ident(it) => Self::Ident(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXMemberExpr {
+    type Cloned = JSXMemberExpr;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXNamespacedName {
+    type Cloned = JSXNamespacedName;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXEmptyExpr {
+    type Cloned = JSXEmptyExpr;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXExprContainer {
+    type Cloned = JSXExprContainer;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXExpr {
+    type Cloned = JSXExpr;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::JSXEmptyExpr(it) => Self::JSXEmptyExpr(it.clone_in(ast)),
+            Self::Expr(it) => Self::Expr(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXSpreadChild {
+    type Cloned = JSXSpreadChild;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXElementName {
+    type Cloned = JSXElementName;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::Ident(it) => Self::Ident(it.clone_in(ast)),
+            Self::JSXMemberExpr(it) => Self::JSXMemberExpr(it.clone_in(ast)),
+            Self::JSXNamespacedName(it) => Self::JSXNamespacedName(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXOpeningElement {
+    type Cloned = JSXOpeningElement;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXAttrOrSpread {
+    type Cloned = JSXAttrOrSpread;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::JSXAttr(it) => Self::JSXAttr(it.clone_in(ast)),
+            Self::SpreadElement(it) => Self::SpreadElement(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXClosingElement {
+    type Cloned = JSXClosingElement;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXAttr {
+    type Cloned = JSXAttr;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXAttrName {
+    type Cloned = JSXAttrName;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::Ident(it) => Self::Ident(it.clone_in(ast)),
+            Self::JSXNamespacedName(it) => Self::JSXNamespacedName(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXAttrValue {
+    type Cloned = JSXAttrValue;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::Str(it) => Self::Str(it.clone_in(ast)),
+            Self::JSXExprContainer(it) => Self::JSXExprContainer(it.clone_in(ast)),
+            Self::JSXElement(it) => Self::JSXElement(it.clone_in(ast)),
+            Self::JSXFragment(it) => Self::JSXFragment(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXText {
+    type Cloned = JSXText;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXElement {
+    type Cloned = JSXElement;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXElementChild {
+    type Cloned = JSXElementChild;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        match self {
+            Self::JSXText(it) => Self::JSXText(it.clone_in(ast)),
+            Self::JSXExprContainer(it) => Self::JSXExprContainer(it.clone_in(ast)),
+            Self::JSXSpreadChild(it) => Self::JSXSpreadChild(it.clone_in(ast)),
+            Self::JSXElement(it) => Self::JSXElement(it.clone_in(ast)),
+            Self::JSXFragment(it) => Self::JSXFragment(it.clone_in(ast)),
+        }
+    }
+}
+impl CloneIn for JSXFragment {
+    type Cloned = JSXFragment;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXOpeningFragment {
+    type Cloned = JSXOpeningFragment;
+    #[inline]
+    fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
+        todo!()
+    }
+}
+impl CloneIn for JSXClosingFragment {
+    type Cloned = JSXClosingFragment;
     #[inline]
     fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
         todo!()

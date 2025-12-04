@@ -15,20 +15,27 @@ impl MiscParserRunner {
                 println!("[{}] {:?}", "Debug".green(), case.relative_path());
             }
 
+            if case.should_fail() && IGNORED_FAIL_TESTS.contains(&case.filename().as_str()) {
+                results.push(TestResult::Ignored {
+                    path: case.relative_path().to_path_buf(),
+                });
+                continue;
+            }
+
             let syntax = case.syntax();
             let input = StringSource::new(case.code());
             let comments = SingleThreadedComments::default();
             let lexer = Lexer::new(syntax, Default::default(), input, Some(&comments));
             let parser = Parser::new_from(lexer);
             let ret = match case.ext().as_str() {
-                "js" => parser.parse_program(),
+                "js" | "jsx" => parser.parse_program(),
                 "cjs" => parser
                     .parse_script()
                     .map(|ret| ret.map_root(Program::Script)),
                 "mjs" => parser
                     .parse_module()
                     .map(|ret| ret.map_root(Program::Module)),
-                "ts" | "jsx" | "tsx" => {
+                "ts" | "tsx" => {
                     results.push(TestResult::Ignored {
                         path: case.path().to_owned(),
                     });
@@ -61,3 +68,9 @@ impl MiscParserRunner {
         results
     }
 }
+
+const IGNORED_FAIL_TESTS: &[&str] = &[
+    // SWC passes these cases, which seems like bugs.
+    "errors-issue-387-4-input.jsx",
+    "errors-html-comment-input.jsx",
+];

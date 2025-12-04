@@ -217,13 +217,13 @@ impl<I: Tokens> Parser<I> {
                 peek.is_word() || peek == Token::Gt || peek.should_rescan_into_gt_in_jsx()
             })
         {
-            // fn into_expr(e: Either<JSXFragment, JSXElement>) -> Expr {
-            //     match e {
-            //         Either::Left(l) => l.into(),
-            //         Either::Right(r) => r.into(),
-            //     }
-            // }
-            // return self.parse_jsx_element(true).map(into_expr);
+            fn into_expr(e: Either<JSXFragment, JSXElement>) -> Expr {
+                match e {
+                    Either::Left(l) => Expr::JSXFragment(l),
+                    Either::Right(r) => Expr::JSXElement(r),
+                }
+            }
+            return self.parse_jsx_element(true).map(into_expr);
         } else if matches!(cur, Token::PlusPlus | Token::MinusMinus) {
             // Parse update expression
             let op = if cur == Token::PlusPlus {
@@ -2260,19 +2260,16 @@ impl<I: Tokens> Parser<I> {
             for expr_or_spread in paren_items.iter() {
                 if let AssignTargetOrSpread::ExprOrSpread(e) = expr_or_spread {
                     if let Expr::Object(o) = e.expr(&self.ast) {
-                        let mut errors = Vec::new();
                         for prop in o.props(&self.ast).iter() {
                             let prop = self.ast.get_node_in_sub_range(prop);
                             if let PropOrSpread::Prop(prop) = prop {
                                 if prop.is_assign() {
-                                    errors
-                                        .push((prop.span(&self.ast), SyntaxError::AssignProperty));
+                                    self.emit_err(
+                                        prop.span(&self.ast),
+                                        SyntaxError::AssignProperty,
+                                    );
                                 }
                             }
-                        }
-
-                        for (span, error) in errors {
-                            self.emit_err(span, error);
                         }
                     }
                 }
@@ -2314,7 +2311,9 @@ impl<I: Tokens> Parser<I> {
 
         // ParenthesizedExpression cannot contain spread.
         if expr_or_spreads.len() == 1 {
-            let expr_or_spread = self.ast.get_node_in_sub_range(expr_or_spreads.iter().next().unwrap());
+            let expr_or_spread = self
+                .ast
+                .get_node_in_sub_range(expr_or_spreads.iter().next().unwrap());
             let expr = match expr_or_spread.spread(&self.ast) {
                 Some(_) => {
                     syntax_error!(
@@ -2349,8 +2348,14 @@ impl<I: Tokens> Parser<I> {
             debug_assert!(exprs.len() >= 2);
 
             // span of sequence expression should not include '(', ')'
-            let span_lo = self.ast.get_node_in_sub_range(exprs.first().unwrap()).span_lo(&self.ast);
-            let span_hi = self.ast.get_node_in_sub_range(exprs.last().unwrap()).span_hi(&self.ast);
+            let span_lo = self
+                .ast
+                .get_node_in_sub_range(exprs.first().unwrap())
+                .span_lo(&self.ast);
+            let span_hi = self
+                .ast
+                .get_node_in_sub_range(exprs.last().unwrap())
+                .span_hi(&self.ast);
             let seq_expr = self
                 .ast
                 .expr_seq_expr(Span::new_with_checked(span_lo, span_hi), exprs);
