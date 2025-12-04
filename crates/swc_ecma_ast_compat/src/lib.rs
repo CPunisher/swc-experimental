@@ -1221,9 +1221,7 @@ fn transform_utf8_ref(ast: &Ast, utf8_ref: Utf8Ref) -> Atom {
 }
 
 fn transform_opt_utf8_ref(ast: &Ast, utf8_ref: OptionalUtf8Ref) -> Option<Atom> {
-    utf8_ref
-        .to_option()
-        .map(|utf8_ref| transform_utf8_ref(ast, utf8_ref))
+    utf8_ref.map(|utf8_ref| transform_utf8_ref(ast, utf8_ref))
 }
 
 fn transform_wtf8_ref(ast: &Ast, wtf8_ref: Wtf8Ref) -> Wtf8Atom {

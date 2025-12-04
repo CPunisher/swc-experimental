@@ -1,3 +1,4 @@
+use string_interner::{StringInterner, backend::StringBackend};
 use swc_atoms::wtf8::{Wtf8, Wtf8Buf};
 
 use crate::{OptionalUtf8Ref, OptionalWtf8Ref, Utf8Ref, Wtf8Ref};
@@ -5,7 +6,7 @@ use crate::{OptionalUtf8Ref, OptionalWtf8Ref, Utf8Ref, Wtf8Ref};
 /// A string allocator that can be used to allocate strings for the AST.
 /// All the strings are stored in a single buffer to avoid memory fragmentation.
 pub struct StringAllocator {
-    allocated_utf8: String,
+    allocated_utf8: StringInterner<StringBackend>,
     allocated_wtf8: Wtf8Buf,
 }
 
@@ -15,24 +16,22 @@ impl StringAllocator {
     /// We assume that half length of the source code is the sum of utf8 identifier lengths.
     pub fn new(source_len: usize) -> Self {
         Self {
-            allocated_utf8: String::with_capacity(source_len / 2),
+            allocated_utf8: StringInterner::with_capacity(source_len / 2),
             allocated_wtf8: Wtf8Buf::new(),
         }
     }
 
     #[inline]
     pub fn add_utf8(&mut self, s: &str) -> Utf8Ref {
-        let lo = self.allocated_utf8.len() as u32;
-        self.allocated_utf8.push_str(s);
-        let hi = self.allocated_utf8.len() as u32;
-        Utf8Ref::new_ref(lo, hi)
+        let symbol = self.allocated_utf8.get_or_intern(s);
+        Utf8Ref::new(symbol)
     }
 
     #[inline]
     pub fn add_optional_utf8(&mut self, s: Option<&str>) -> OptionalUtf8Ref {
         match s {
-            Some(s) => self.add_utf8(s).into(),
-            None => OptionalUtf8Ref::new_none(),
+            Some(s) => Some(self.add_utf8(s)),
+            None => None,
         }
     }
 
@@ -54,12 +53,12 @@ impl StringAllocator {
 
     #[inline]
     pub fn get_utf8(&self, id: Utf8Ref) -> &str {
-        &self.allocated_utf8[id.lo() as usize..id.hi() as usize]
+        self.allocated_utf8.resolve(id.0).unwrap()
     }
 
     #[inline]
     pub fn get_optional_utf8(&self, id: OptionalUtf8Ref) -> Option<&str> {
-        let id = id.to_option()?;
+        let id = id?;
         Some(self.get_utf8(id))
     }
 

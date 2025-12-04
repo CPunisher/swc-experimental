@@ -2,8 +2,8 @@ use swc_common::Span;
 
 use crate::{
     AssignOp, Ast, BigIntId, BinaryOp, FromNodeId, GetNodeId, ImportPhase, MetaPropKind,
-    MethodKind, OptionalNodeId, OptionalUtf8Ref, OptionalWtf8Ref, TypedSubRange, UnaryOp, UpdateOp,
-    Utf8Ref, VarDeclKind, Wtf8Ref,
+    MethodKind, OptionalNodeId, OptionalWtf8Ref, TypedSubRange, UnaryOp, UpdateOp, Utf8Ref,
+    VarDeclKind, Wtf8Ref,
 };
 
 pub trait CloneIn: Sized {
@@ -38,7 +38,7 @@ impl_clone_in_trivial!(MethodKind);
 impl_clone_in_trivial!(BigIntId);
 impl_clone_in_trivial!(Utf8Ref);
 impl_clone_in_trivial!(Wtf8Ref);
-impl_clone_in_trivial!(OptionalUtf8Ref);
+// impl_clone_in_trivial!(OptionalUtf8Ref);
 impl_clone_in_trivial!(OptionalWtf8Ref);
 
 impl<C, T: CloneIn<Cloned = C>> CloneIn for Vec<T> {

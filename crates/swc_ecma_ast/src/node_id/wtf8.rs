@@ -8,7 +8,7 @@ pub struct Wtf8Ref {
 }
 
 impl Wtf8Ref {
-    pub const fn new_ref(lo: u32, hi: u32) -> Self {
+    pub(crate) const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
     }
 
@@ -30,7 +30,7 @@ pub struct OptionalWtf8Ref {
     hi: u32,
 }
 impl OptionalWtf8Ref {
-    pub const fn new_ref(lo: u32, hi: u32) -> Self {
+    pub(crate) const fn new_ref(lo: u32, hi: u32) -> Self {
         Self { lo, hi }
     }
 
