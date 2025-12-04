@@ -11,19 +11,26 @@ This project is an experimental version of [SWC](https://github.com/swc-project/
 
 See [codspeed](https://codspeed.io/CPunisher/swc-experimental/benchmarks) for comparison.
 
+Local benchmark results with M3Pro:
+
+- Parser: **1.35x-1.60x** faster.
+- Pre-order visit: **0.45-0.70x** slower.
+- Post-order visit: Compared to legacy pre-order visitor, **7-40x** faster.
+
 ## Roadmap
 
 There's a long way to go, but luckly it could be progressive.
 
 - [x] Flattening AST design
-- [x] Port parser tests.
-- [ ] Port SWC parser. Currently support parsing JavaScript, but not TypeScript and JSX.
+- [x] Port SWC js parser.
+- [x] Port SWC jsx parser.
+- [ ] Port SWC TypeScript parser.
 - [ ] Port SWC minifier.
 - [ ] Port SWC transformation.
 
 ## Design & Architecture
 
-See our [docs](/docs/)
+See our [docs](/docs/)(WIP)
 
 ## Credits
 
