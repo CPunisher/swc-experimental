@@ -30,7 +30,7 @@ There's a long way to go, but luckly it could be progressive.
 
 ## Design & Architecture
 
-See our [docs](/docs/)(WIP)
+See our [docs](/docs/)
 
 ## Credits
 
