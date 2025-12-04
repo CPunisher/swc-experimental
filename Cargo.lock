@@ -1273,7 +1273,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ast_macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1282,7 +1282,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_ast"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "num-bigint",
  "oxc_index",
@@ -1294,7 +1294,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_ast_compat"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "swc_atoms",
  "swc_ecma_ast",
@@ -1303,7 +1303,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_parser"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitflags",
  "either",
@@ -1321,7 +1321,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_semantic"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitflags",
  "oxc_index",
@@ -1333,7 +1333,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_visit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "swc_common",
  "swc_experimental_ecma_ast",
