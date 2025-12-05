@@ -32,7 +32,7 @@ fn bench_new(b: &mut Bencher, src: &'static str) {
         );
         let parser = Parser::new_from(lexer);
         let ret = parser.parse_module().unwrap();
-        swc_experimental_ecma_ast_compat::transform_module(&ret.ast, ret.root);
+        swc_experimental_ecma_ast_compat::compat_module(&ret.ast, ret.root);
     });
 }
 
