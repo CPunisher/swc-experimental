@@ -20,6 +20,7 @@ impl MiscCase {
 
         for test_path in &["fixtures/misc-parser", "fixtures/misc-swc"] {
             let test_path = crate_root().join(test_path);
+            dbg!(&test_path);
             pass_cases.extend(read_dir(test_path.join("pass")).unwrap());
             fail_cases.extend(read_dir(test_path.join("fail")).unwrap());
         }
