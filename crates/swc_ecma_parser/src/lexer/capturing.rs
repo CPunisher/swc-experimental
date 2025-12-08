@@ -1,11 +1,11 @@
 use std::mem;
 
 use crate::{
+    Context,
     error::Error,
     input::Tokens,
-    lexer::{token::TokenAndSpan, TokenFlags},
+    lexer::{TokenFlags, token::TokenAndSpan},
     syntax::SyntaxFlags,
-    Context,
 };
 
 #[derive(Debug)]
@@ -164,7 +164,10 @@ impl<I: Tokens> Tokens for Capturing<I> {
         self.inner.scan_jsx_open_el_terminal_token()
     }
 
-    fn rescan_jsx_open_el_terminal_token(&mut self, reset: swc_core::common::BytePos) -> TokenAndSpan {
+    fn rescan_jsx_open_el_terminal_token(
+        &mut self,
+        reset: swc_core::common::BytePos,
+    ) -> TokenAndSpan {
         let ts = self.inner.rescan_jsx_open_el_terminal_token(reset);
         self.capture(ts);
         ts

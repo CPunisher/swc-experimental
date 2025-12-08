@@ -1,6 +1,6 @@
 #![allow(unused)]
-use crate::{ast::*, node_id::*};
 use crate::{Ast, CloneIn, NodeKind};
+use crate::{ast::*, node_id::*};
 impl CloneIn for Program {
     type Cloned = Program;
     #[inline]

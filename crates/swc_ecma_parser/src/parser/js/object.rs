@@ -328,10 +328,9 @@ impl<I: Tokens> Parser<I> {
                                 |p| {
                                     let params = p.parse_formal_params()?;
 
-                                    if params
-                                        .iter()
-                                        .any(|param| is_not_this(&p.ast, p.ast.get_node_in_sub_range(param)))
-                                    {
+                                    if params.iter().any(|param| {
+                                        is_not_this(&p.ast, p.ast.get_node_in_sub_range(param))
+                                    }) {
                                         p.emit_err(key_span, SyntaxError::GetterParam);
                                     }
 
@@ -365,7 +364,9 @@ impl<I: Tokens> Parser<I> {
 
                                     if params
                                         .iter()
-                                        .filter(|param| is_not_this(&p.ast, p.ast.get_node_in_sub_range(*param)))
+                                        .filter(|param| {
+                                            is_not_this(&p.ast, p.ast.get_node_in_sub_range(*param))
+                                        })
                                         .count()
                                         != 1
                                     {
@@ -398,7 +399,11 @@ impl<I: Tokens> Parser<I> {
                                 let mut this = None;
                                 let mut params = function.params(&p.ast);
                                 if params.len() >= 2 {
-                                    this = Some(p.ast.get_node_in_sub_range(params.remove_first()).pat(&p.ast));
+                                    this = Some(
+                                        p.ast
+                                            .get_node_in_sub_range(params.remove_first())
+                                            .pat(&p.ast),
+                                    );
                                 }
 
                                 if params.len() != 1 {

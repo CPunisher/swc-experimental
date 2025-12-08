@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{ast::*, node_id::*, Ast};
+use crate::{Ast, ast::*, node_id::*};
 use swc_core::common::Span;
 pub trait Visit {
     #[inline]

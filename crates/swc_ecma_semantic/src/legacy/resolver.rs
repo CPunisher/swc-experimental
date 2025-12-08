@@ -139,7 +139,7 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
         block_scopes: FxHashMap::default(),
         scopes,
 
-        top_level_scope_id: top_level_scope_id,
+        top_level_scope_id,
         current: top_level_scope_id,
 
         ident_type: IdentType::Ref,

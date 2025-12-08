@@ -64,11 +64,7 @@ pub fn ast_builder(schema: &Schema) -> RawOutput {
             #![allow(unused)]
             use swc_core::common::Span;
 
-            use crate::{
-                Ast, AstNode, ExtraData, NodeData, NodeKind,
-                node_id::*,
-                ast::*,
-            };
+            use crate::{Ast, AstNode, ExtraData, NodeData, NodeKind, ast::*, node_id::*};
 
             impl Ast {
                 #build_functions

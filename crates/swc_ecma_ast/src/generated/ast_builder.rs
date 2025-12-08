@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{ast::*, node_id::*, Ast, AstNode, ExtraData, NodeData, NodeKind};
+use crate::{Ast, AstNode, ExtraData, NodeData, NodeKind, ast::*, node_id::*};
 use swc_core::common::Span;
 impl Ast {
     #[inline]

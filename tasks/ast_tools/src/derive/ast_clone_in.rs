@@ -22,12 +22,11 @@ pub fn ast_clone_in(schema: &Schema) -> RawOutput {
     }
 
     let output = quote! {
-            #![allow(unused)]
+        #![allow(unused)]
+        use crate::{Ast, CloneIn, NodeKind};
+        use crate::{ast::*, node_id::*};
 
-            use crate::{Ast, NodeKind, CloneIn};
-            use crate::{node_id::*, ast::*};
-
-            #impls
+        #impls
     };
 
     RustOutput {

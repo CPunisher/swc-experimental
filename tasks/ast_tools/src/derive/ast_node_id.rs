@@ -22,9 +22,8 @@ pub fn ast_node_id(schema: &Schema) -> RawOutput {
 
     let output = quote! {
             #![allow(unused)]
-
             use crate::{Ast, NodeKind};
-            use crate::{node_id::*, ast::*};
+            use crate::{ast::*, node_id::*};
 
             #impls
     };
