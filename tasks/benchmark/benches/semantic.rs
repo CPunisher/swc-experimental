@@ -11,7 +11,7 @@ fn bench_semantic(c: &mut Criterion) {
     let bench_cases = &[("typescript", include_str!("../files/typescript.js"))];
     let mut group = c.benchmark_group("semantic");
     for (name, source) in bench_cases {
-        group.bench_function(&format!("{name}/semantic/legacy"), |b| {
+        group.bench_function(format!("{name}/semantic/legacy"), |b| {
             let input = StringSource::new(&source);
             let lexer = Lexer::new(
                 swc_experimental_ecma_parser::Syntax::Es(Default::default()),

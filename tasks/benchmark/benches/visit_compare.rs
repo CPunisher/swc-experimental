@@ -111,12 +111,10 @@ fn bench_files(c: &mut Criterion) {
     ];
 
     for (name, source) in bench_cases {
-        c.bench_function(&format!("{name}/visit/legacy"), |b| {
-            bench_legacy(b, &source)
-        });
+        c.bench_function(&format!("{name}/visit/legacy"), |b| bench_legacy(b, source));
         c.bench_function(&format!("{name}/visit/new"), |b| bench_new(b, &source));
         c.bench_function(&format!("{name}/visit/postorder"), |b| {
-            bench_post_order(b, &source)
+            bench_post_order(b, source)
         });
     }
 }

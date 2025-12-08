@@ -17,11 +17,11 @@ fn bench_semantic_old(c: &mut Criterion) {
     for (name, source) in bench_cases {
         let globals = Globals::default();
         GLOBALS.set(&globals, || {
-            group.bench_function(&format!("{name}/semantic/legacy"), |b| {
+            group.bench_function(format!("{name}/semantic/legacy"), |b| {
                 b.iter_batched(
                     || {
                         let input =
-                            SourceFileInput::new(&source, BytePos(0), BytePos(source.len() as u32));
+                            SourceFileInput::new(source, BytePos(0), BytePos(source.len() as u32));
                         let lexer = Lexer::new(
                             swc_core::ecma::parser::Syntax::Es(Default::default()),
                             Default::default(),
@@ -29,8 +29,7 @@ fn bench_semantic_old(c: &mut Criterion) {
                             None,
                         );
                         let mut parser = Parser::new_from(lexer);
-                        let ret = parser.parse_module().unwrap();
-                        ret
+                        parser.parse_module().unwrap()
                     },
                     |mut ret| {
                         let mut resolver = swc_core::ecma::transforms::base::resolver(
@@ -54,7 +53,7 @@ fn bench_semantic_new(c: &mut Criterion) {
     let bench_cases = &[("typescript", include_str!("../files/typescript.js"))];
     let mut group = c.benchmark_group("semantic");
     for (name, source) in bench_cases {
-        group.bench_function(&format!("{name}/semantic/new"), |b| {
+        group.bench_function(format!("{name}/semantic/new"), |b| {
             let input = StringSource::new(&source);
             let lexer = Lexer::new(
                 swc_experimental_ecma_parser::Syntax::Es(Default::default()),

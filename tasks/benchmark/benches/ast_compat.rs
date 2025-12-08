@@ -55,9 +55,9 @@ fn bench_files(c: &mut Criterion) {
 
     for (name, source) in bench_cases {
         c.bench_function(&format!("{name}/ast_compat/legacy"), |b| {
-            bench_legacy(b, &source)
+            bench_legacy(b, source)
         });
-        c.bench_function(&format!("{name}/ast_compat/new"), |b| bench_new(b, &source));
+        c.bench_function(&format!("{name}/ast_compat/new"), |b| bench_new(b, source));
     }
 }
 
