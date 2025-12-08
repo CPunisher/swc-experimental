@@ -21,9 +21,9 @@ fn main() {
     ret.root.visit_with(&mut used, &ret.ast);
 
     for (node_id, node) in ret.ast.nodes() {
-        let source = &source[node.span.lo.0 as usize - 1..node.span.hi.0 as usize - 1];
+        let source = &source[node.span().lo.0 as usize - 1..node.span().hi.0 as usize - 1];
         if !used.used.contains(&node_id) {
-            println!("Unused node: {:?}, source: {}", node.kind, source);
+            println!("Unused node: {:?}, source: {}", node.kind(), source);
         }
     }
 

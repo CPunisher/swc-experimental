@@ -84,7 +84,7 @@ fn bench_post_order(b: &mut Bencher, src: &'static str) {
     b.iter(|| {
         let mut counter: usize = 0;
         for (_, node) in ret.ast.nodes() {
-            if node.kind == NodeKind::Ident {
+            if node.kind() == NodeKind::Ident {
                 counter += 1;
             }
         }

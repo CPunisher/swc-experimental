@@ -53,9 +53,26 @@ pub struct Ast {
 
 /// Untyped AST node
 pub struct AstNode {
-    pub span: Span,
-    pub kind: NodeKind,
+    span: Span,
+    kind: NodeKind,
     data: NodeData,
+}
+
+impl AstNode {
+    #[inline]
+    pub fn span(&self) -> Span {
+        self.span
+    }
+
+    #[inline]
+    pub fn set_span(&mut self, span: Span) {
+        self.span = span;
+    }
+
+    #[inline]
+    pub fn kind(&self) -> NodeKind {
+        self.kind
+    }
 }
 
 /// Node data is the start index of [Ast::extra_data], if the node is not freed, which indicates the first field of the AST node.

@@ -75,7 +75,7 @@ fn test_post_order(src: &str) -> usize {
 
     let mut counter = 0;
     for (_, node) in ret.ast.nodes() {
-        if node.kind == NodeKind::Ident {
+        if node.kind() == NodeKind::Ident {
             counter += 1;
         }
     }
