@@ -14,47 +14,28 @@ jobs:
     env:
       RUST_LOG: "0"
     steps:
-      - uses: actions/checkout@v4
-
-      # We explicitly do this to cache properly.
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          components: rustfmt
-
+      - uses: actions/checkout@v6
+      - uses: moonrepo/setup-rust@v1
       - run: cargo fmt --all -- --check
 
   cargo-clippy:
     name: Cargo clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          components: clippy
-
+      - uses: actions/checkout@v6
+      - uses: moonrepo/setup-rust@v1
       - run: cargo clippy --all --all-targets -- -D warnings
 
   cargo-shear:
     name: Cargo shear
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-
+      - uses: actions/checkout@v6
+      - uses: moonrepo/setup-rust@v1
       - name: Install cargo-shear
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-shear
-
       - name: cargo-shear
         run: cargo shear --fix
 
@@ -69,15 +50,8 @@ jobs:
           - macos-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-
+      - uses: actions/checkout@v6
+      - uses: moonrepo/setup-rust@v1
       - name: Run cargo check for all targets
         run: cargo check --all --all-targets
 
@@ -92,14 +66,7 @@ jobs:
           - macos-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-
+      - uses: actions/checkout@v6
+      - uses: moonrepo/setup-rust@v1
       - name: Run testsuite
         run: cargo run -p testsuite
