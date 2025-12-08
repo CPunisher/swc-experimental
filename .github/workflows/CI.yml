@@ -70,5 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: moonrepo/setup-rust@v1
+      - name: Clone test fixtures
+        run: git clone https://github.com/tc39/test262-parser-tests.git tasks/testsuite/fixtures/test262-parser-tests
       - name: Run testsuite
         run: cargo run -p testsuite
