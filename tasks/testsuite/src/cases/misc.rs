@@ -1,5 +1,4 @@
 use std::{
-    env,
     fs::read_dir,
     path::{Path, PathBuf},
 };
@@ -19,6 +18,7 @@ impl MiscCase {
         let mut pass_cases = Vec::new();
         let mut fail_cases = Vec::new();
 
+        #[allow(clippy::single_element_loop)]
         for test_path in &[fixtures().join("misc-parser")] {
             let test_path = test_path.join(test_path);
             pass_cases.extend(read_dir(test_path.join("pass")).unwrap());
