@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use swc_experimental_ecma_parser::Syntax;
 
@@ -35,4 +35,8 @@ pub trait Case {
     fn relative_path(&self) -> &Path {
         self.path().strip_prefix(crate_root()).unwrap()
     }
+}
+
+pub fn fixtures() -> PathBuf {
+    crate_root().join("fixtures")
 }

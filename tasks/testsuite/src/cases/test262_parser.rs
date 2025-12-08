@@ -3,9 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{cases::Case, util::crate_root};
-
-const TEST_PATH: &str = "fixtures/test262-parser-tests";
+use crate::cases::{Case, fixtures};
 
 pub struct Test262ParserCase {
     path: PathBuf,
@@ -15,7 +13,7 @@ pub struct Test262ParserCase {
 
 impl Test262ParserCase {
     pub fn read() -> Vec<Self> {
-        let test_path = crate_root().join(TEST_PATH);
+        let test_path = fixtures().join("test262-parser-tests");
         let pass_cases = read_dir(test_path.join("pass")).unwrap();
         let pass_explicit_cases = read_dir(test_path.join("pass-explicit")).unwrap();
         let fail_cases = read_dir(test_path.join("fail")).unwrap();
