@@ -23,8 +23,8 @@ jobs:
           components: rustfmt
 
       - run: cargo fmt --all -- --check
-  
-    cargo-clippy:
+
+  cargo-clippy:
     name: Cargo clippy
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +57,7 @@ jobs:
 
       - name: cargo-shear
         run: cargo shear --fix
-    
+
   cargo-check:
     name: Check
     runs-on: ${{ matrix.os }}
