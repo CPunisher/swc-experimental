@@ -12,4 +12,3 @@ swc_core  = { workspace = true }
 swc_experimental_ecma_ast      = { workspace = true }
 swc_experimental_ecma_parser   = { workspace = true }
 swc_experimental_ecma_semantic = { workspace = true }
-swc_experimental_ecma_visit    = { workspace = true }
