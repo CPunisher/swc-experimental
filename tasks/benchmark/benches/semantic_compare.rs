@@ -54,7 +54,7 @@ fn bench_semantic_new(c: &mut Criterion) {
     let mut group = c.benchmark_group("semantic");
     for (name, source) in bench_cases {
         group.bench_function(format!("{name}/semantic/new"), |b| {
-            let input = StringSource::new(&source);
+            let input = StringSource::new(source);
             let lexer = Lexer::new(
                 swc_experimental_ecma_parser::Syntax::Es(Default::default()),
                 Default::default(),
