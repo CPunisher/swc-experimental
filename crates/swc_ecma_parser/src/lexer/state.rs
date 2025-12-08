@@ -399,11 +399,11 @@ impl Lexer<'_> {
             return self.read_regexp(next_regexp);
         }
 
-        if self.state.is_first {
-            if let Some(shebang) = self.read_shebang()? {
-                self.state.set_token_value(TokenValue::Word(shebang));
-                return Ok(Token::Shebang);
-            }
+        if self.state.is_first
+            && let Some(shebang) = self.read_shebang()?
+        {
+            self.state.set_token_value(TokenValue::Word(shebang));
+            return Ok(Token::Shebang);
         }
 
         self.state.had_line_break = self.state.is_first;

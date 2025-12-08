@@ -32,7 +32,7 @@ impl AstType {
             AstType::Enum(ast) => &ast.name,
             AstType::Vec(ast) => &ast.name,
             AstType::Option(ast) => &ast.name,
-            AstType::Primitive(ast) => &ast.name,
+            AstType::Primitive(ast) => ast.name,
         }
     }
 

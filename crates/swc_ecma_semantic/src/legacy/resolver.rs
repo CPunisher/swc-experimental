@@ -127,7 +127,7 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
     let mut scopes = IndexVec::default();
     let top_level_scope_id = scopes.push(top_level_scope);
 
-    let node_cap = ast.nodes_capacity() as usize;
+    let node_cap = ast.nodes_capacity();
     let mut parent_ids = IndexVec::with_capacity(node_cap);
     parent_ids.resize(node_cap, NodeId::from_raw(0));
 
@@ -1160,11 +1160,6 @@ impl<'ast> Visit for Resolver<'ast> {
         self.ident_type = old;
     }
 
-    /// Ignore.
-    ///
-    /// See https://github.com/swc-project/swc/issues/2854
-    // fn visit_jsx_attr_name(&mut self, _: &mut JSXAttrName, ast: &Ast) {}
-
     fn visit_key_value_pat_prop(&mut self, n: KeyValuePatProp, ast: &Ast) {
         self.enter_node(n.node_id(), ast);
 
@@ -1777,8 +1772,8 @@ impl<'resolver, 'ast> Hoister<'resolver, 'ast> {
         let sym = ast.get_utf8(id.sym(ast));
         if self.in_catch_body {
             // If we have a binding, it's different variable.
-            if self.resolver.mark_for_ref_inner(&sym, true).is_some()
-                && self.catch_param_decls.contains(&sym)
+            if self.resolver.mark_for_ref_inner(sym, true).is_some()
+                && self.catch_param_decls.contains(sym)
             {
                 return;
             }
@@ -1786,7 +1781,7 @@ impl<'resolver, 'ast> Hoister<'resolver, 'ast> {
             self.excluded_from_catch.insert(sym);
         } else {
             // Behavior is different
-            if self.catch_param_decls.contains(&sym) && !self.excluded_from_catch.contains(&sym) {
+            if self.catch_param_decls.contains(sym) && !self.excluded_from_catch.contains(&sym) {
                 return;
             }
         }

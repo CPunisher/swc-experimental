@@ -105,6 +105,7 @@ impl From<UnicodeEscape> for CodePoint {
 }
 
 pub type LexResult<T> = Result<T, crate::error::Error>;
+type NumberEither = Either<(f64, MaybeSubUtf8), (Box<BigIntValue>, MaybeSubUtf8)>;
 
 fn remove_underscore(s: &str, has_underscore: bool) -> Cow<'_, str> {
     if has_underscore {
@@ -970,7 +971,7 @@ impl<'a> Lexer<'a> {
     /// Reads an integer, octal integer, or floating-point number
     fn read_number<const START_WITH_DOT: bool, const START_WITH_ZERO: bool>(
         &mut self,
-    ) -> LexResult<Either<(f64, MaybeSubUtf8), (Box<BigIntValue>, MaybeSubUtf8)>> {
+    ) -> LexResult<NumberEither> {
         debug_assert!(!(START_WITH_DOT && START_WITH_ZERO));
         debug_assert!(self.peek().is_some());
 
@@ -1135,9 +1136,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Returns `Left(value)` or `Right(BigInt)`
-    fn read_radix_number<const RADIX: u8>(
-        &mut self,
-    ) -> LexResult<Either<(f64, MaybeSubUtf8), (Box<BigIntValue>, MaybeSubUtf8)>> {
+    fn read_radix_number<const RADIX: u8>(&mut self) -> LexResult<NumberEither> {
         debug_assert!(
             RADIX == 2 || RADIX == 8 || RADIX == 16,
             "radix should be one of 2, 8, 16, but got {RADIX}"
@@ -1749,33 +1748,33 @@ impl<'a> Lexer<'a> {
         let slice_start = self.cur_pos();
 
         // Fast path: try to scan ASCII identifier using byte_search
-        if let Some(c) = self.input().peek_ascii() {
-            if is_valid_ascii_start(c) {
-                // Advance past first byte
-                self.bump(1);
+        if let Some(c) = self.input().peek_ascii()
+            && is_valid_ascii_start(c)
+        {
+            // Advance past first byte
+            self.bump(1);
 
-                // Use byte_search to quickly scan to end of ASCII identifier
-                let next_byte = byte_search! {
-                    lexer: self,
-                    table: NOT_ASCII_ID_CONTINUE_TABLE,
-                    handle_eof: {
-                        // Reached EOF, entire remainder is identifier
-                        return Ok((MaybeSubUtf8::new_from_source(slice_start, self.cur_pos()), false));
-                    },
-                };
+            // Use byte_search to quickly scan to end of ASCII identifier
+            let next_byte = byte_search! {
+                lexer: self,
+                table: NOT_ASCII_ID_CONTINUE_TABLE,
+                handle_eof: {
+                    // Reached EOF, entire remainder is identifier
+                    return Ok((MaybeSubUtf8::new_from_source(slice_start, self.cur_pos()), false));
+                },
+            };
 
-                // Check if we hit end of identifier or need to fall back to slow path
-                if !next_byte.is_ascii() {
-                    // Hit Unicode character, fall back to slow path from current position
-                    return self.read_word_as_str_with_slow_path(slice_start);
-                } else if next_byte == b'\\' {
-                    // Hit escape sequence, fall back to slow path from current position
-                    return self.read_word_as_str_with_slow_path(slice_start);
-                } else {
-                    // Hit end of identifier (non-continue ASCII char)
-                    let s = MaybeSubUtf8::new_from_source(slice_start, self.cur_pos());
-                    return Ok((s, false));
-                }
+            // Check if we hit end of identifier or need to fall back to slow path
+            if !next_byte.is_ascii() {
+                // Hit Unicode character, fall back to slow path from current position
+                return self.read_word_as_str_with_slow_path(slice_start);
+            } else if next_byte == b'\\' {
+                // Hit escape sequence, fall back to slow path from current position
+                return self.read_word_as_str_with_slow_path(slice_start);
+            } else {
+                // Hit end of identifier (non-continue ASCII char)
+                let s = MaybeSubUtf8::new_from_source(slice_start, self.cur_pos());
+                return Ok((s, false));
             }
         }
 
@@ -2111,7 +2110,7 @@ impl<'a> Lexer<'a> {
     fn read_str_lit(&mut self) -> LexResult<Token> {
         debug_assert!(self.peek() == Some(b'\'') || self.peek() == Some(b'"'));
         let start = self.cur_pos();
-        let quote = self.peek().unwrap() as u8;
+        let quote = self.peek().unwrap();
 
         self.bump(1); // '"' or '\''
 

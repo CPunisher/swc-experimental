@@ -1,4 +1,4 @@
-#![allow(unused)]
+#![allow(unused, clippy::useless_conversion)]
 use crate::{ast::*, node_id::*};
 impl Program {
     #[inline]

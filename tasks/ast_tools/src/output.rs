@@ -19,10 +19,10 @@ pub struct RawOutput {
 
 impl RawOutput {
     pub fn write_to_file(&self) -> io::Result<()> {
-        if let Ok(existing_data) = fs::read(&self.path) {
-            if existing_data == self.content {
-                return Ok(());
-            }
+        if let Ok(existing_data) = fs::read(&self.path)
+            && existing_data == self.content
+        {
+            return Ok(());
         }
 
         let path = Path::new(&self.path);

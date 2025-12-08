@@ -147,25 +147,26 @@ impl<I: Tokens> Parser<I> {
     // fn parse_super_class(&mut self) -> PResult<(Expr, Option<Box<TsTypeParamInstantiation>>)> {
     fn parse_super_class(&mut self) -> PResult<Expr> {
         let super_class = self.parse_lhs_expr()?;
-        match super_class {
-            // Expr::TsInstantiation(TsInstantiation {
-            //     expr, type_args, ..
-            // }) => Ok((expr, Some(type_args))),
-            _ => {
-                // We still need to parse TS type arguments,
-                // because in some cases "super class" returned by `parse_lhs_expr`
-                // may not include `TsExprWithTypeArgs`
-                // but it's a super class with type params, for example, in JSX.
-                // if self.syntax().typescript() && self.input().is(Token::Lt) {
-                //     let ret = self.parse_ts_type_args()?;
-                //     self.assert_and_bump(Token::Gt);
-                //     Ok((super_class, Some(ret)))
-                // } else {
-                //     Ok((super_class, None))
-                // }
-                Ok(super_class)
-            }
-        }
+        Ok(super_class)
+        // match super_class {
+        //     Expr::TsInstantiation(TsInstantiation {
+        //         expr, type_args, ..
+        //     }) => Ok((expr, Some(type_args))),
+        //     _ => {
+        //         We still need to parse TS type arguments,
+        //         because in some cases "super class" returned by `parse_lhs_expr`
+        //         may not include `TsExprWithTypeArgs`
+        //         but it's a super class with type params, for example, in JSX.
+        //         if self.syntax().typescript() && self.input().is(Token::Lt) {
+        //             let ret = self.parse_ts_type_args()?;
+        //             self.assert_and_bump(Token::Gt);
+        //             Ok((super_class, Some(ret)))
+        //         } else {
+        //             Ok((super_class, None))
+        //         }
+        //         Ok(super_class)
+        //     }
+        // }
     }
 
     fn is_class_method(&mut self) -> bool {
@@ -547,10 +548,10 @@ impl<I: Tokens> Parser<I> {
             |p, is_simple_parameter_list| {
                 if p.input().is(Token::LBrace) {
                     p.parse_block(false).map(|block_stmt| {
-                        if !is_simple_parameter_list {
-                            if let Some(span) = has_use_strict(&p.ast, block_stmt) {
-                                p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
-                            }
+                        if !is_simple_parameter_list
+                            && let Some(span) = has_use_strict(&p.ast, block_stmt)
+                        {
+                            p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                         }
                         BlockStmtOrExpr::BlockStmt(block_stmt)
                     })
@@ -639,10 +640,10 @@ impl<I: Tokens> Parser<I> {
                     return Ok(None);
                 }
                 p.allow_in_expr(|p| p.parse_block(true)).map(|block_stmt| {
-                    if !is_simple_parameter_list {
-                        if let Some(span) = has_use_strict(&p.ast, block_stmt) {
-                            p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
-                        }
+                    if !is_simple_parameter_list
+                        && let Some(span) = has_use_strict(&p.ast, block_stmt)
+                    {
+                        p.emit_err(span, SyntaxError::IllegalLanguageModeDirective);
                     }
                     Some(block_stmt)
                 })
@@ -910,10 +911,11 @@ impl<I: Tokens> Parser<I> {
         }
 
         trace_cur!(self, parse_class_member_with_is_static__normal_class_member);
-        let key = if readonly.is_some() && matches!(self.input().cur(), Token::Bang | Token::Colon)
+        let key = if let Some(readonly) = readonly
+            && matches!(self.input().cur(), Token::Bang | Token::Colon)
         {
             let sym = self.ast.add_utf8("readonly");
-            self.ast.key_prop_name_ident_name(readonly.unwrap(), sym)
+            self.ast.key_prop_name_ident_name(readonly, sym)
         } else {
             self.parse_class_prop_name()?
         };
@@ -1012,10 +1014,10 @@ impl<I: Tokens> Parser<I> {
                     self.emit_err(static_token, SyntaxError::TS1089(atom!("static")))
                 }
 
-                if let Some(span) = modifier_span {
-                    if is_abstract {
-                        self.emit_err(span, SyntaxError::TS1242);
-                    }
+                if let Some(span) = modifier_span
+                    && is_abstract
+                {
+                    self.emit_err(span, SyntaxError::TS1242);
                 }
 
                 let key = match key {
@@ -1186,12 +1188,11 @@ impl<I: Tokens> Parser<I> {
                             p.emit_err(key_span, SyntaxError::SetterParam);
                         }
 
-                        if !params.is_empty() {
-                            if let Pat::Rest(rest) =
+                        if !params.is_empty()
+                            && let Pat::Rest(rest) =
                                 p.ast.get_node_in_sub_range(params.get(0)).pat(&p.ast)
-                            {
-                                p.emit_err(rest.span(&p.ast), SyntaxError::RestPatInSetter);
-                            }
+                        {
+                            p.emit_err(rest.span(&p.ast), SyntaxError::RestPatInSetter);
                         }
 
                         Ok(params)
@@ -1432,16 +1433,16 @@ impl<I: Tokens> Parser<I> {
             let elem =
                 self.do_inside_of_context(Context::AllowDirectSuper, Self::parse_class_member)?;
 
-            if !self.ctx().contains(Context::InDeclare) {
-                if let ClassMember::Constructor(constructor) = elem {
-                    if constructor.body(&self.ast).is_some() && has_constructor_with_body {
-                        self.emit_err(
-                            constructor.span(&self.ast),
-                            SyntaxError::DuplicateConstructor,
-                        );
-                    }
-                    has_constructor_with_body = true;
+            if !self.ctx().contains(Context::InDeclare)
+                && let ClassMember::Constructor(constructor) = elem
+            {
+                if constructor.body(&self.ast).is_some() && has_constructor_with_body {
+                    self.emit_err(
+                        constructor.span(&self.ast),
+                        SyntaxError::DuplicateConstructor,
+                    );
                 }
+                has_constructor_with_body = true;
             }
             elems.push(self, elem);
         }
@@ -1501,10 +1502,10 @@ impl<I: Tokens> Parser<I> {
             expect!(p, Token::Class);
 
             let ident = p.parse_maybe_opt_binding_ident(is_ident_required, true)?;
-            if p.input().syntax().typescript() {
-                if let Some(span) = ident.invalid_class_name(&p.ast) {
-                    p.emit_err(span, SyntaxError::TS2414);
-                }
+            if p.input().syntax().typescript()
+                && let Some(span) = ident.invalid_class_name(&p.ast)
+            {
+                p.emit_err(span, SyntaxError::TS2414);
             }
 
             // let type_params = if p.input().syntax().typescript() {

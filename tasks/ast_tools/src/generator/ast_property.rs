@@ -22,7 +22,7 @@ pub fn ast_property(schema: &Schema) -> RawOutput {
     }
 
     let output = quote! {
-            #![allow(unused)]
+            #![allow(unused, clippy::useless_conversion)]
             use crate::{node_id::*, ast::*};
 
             #impls

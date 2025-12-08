@@ -22,7 +22,7 @@ pub fn ast_clone_in(schema: &Schema) -> RawOutput {
     }
 
     let output = quote! {
-        #![allow(unused)]
+        #![allow(unused, clippy::manual_map)]
         use crate::{Ast, CloneIn, NodeKind};
         use crate::{ast::*, node_id::*};
 

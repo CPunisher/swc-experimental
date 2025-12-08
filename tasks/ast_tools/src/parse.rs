@@ -42,7 +42,8 @@ pub fn parse_files(file_paths: &[&str]) -> Schema {
     let mut type_names = IndexSet::new();
     let mut prototypes = Vec::new();
     for source in file_paths {
-        let content = fs::read_to_string(source).expect(&format!("Cannot not find {}", source));
+        let content =
+            fs::read_to_string(source).unwrap_or_else(|_| panic!("Cannot not find {source}"));
         let file = syn::parse_file(&content).unwrap();
         for item in file.items {
             match item {

@@ -314,9 +314,9 @@ pub struct OptCall {
 pub struct Invalid {}
 
 impl Expr {
-    pub fn is_ident_ref_to<S: ?Sized>(&self, ast: &Ast, ident: &S) -> bool
+    pub fn is_ident_ref_to<S>(&self, ast: &Ast, ident: &S) -> bool
     where
-        S: AsRef<str>,
+        S: ?Sized + AsRef<str>,
     {
         match self {
             Expr::Ident(i) => ast.get_utf8(i.sym(ast)) == ident.as_ref(),

@@ -16,6 +16,9 @@ impl<T: GetNodeId> GetOptionalNodeId for T {
 
 pub trait FromNodeId {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self;
+
+    /// # Safety
+    /// 1. The caller should ensure that `node.kind` is corresponding to `Self`
     unsafe fn from_node_id_unchecked(id: NodeId, ast: &Ast) -> Self;
 }
 

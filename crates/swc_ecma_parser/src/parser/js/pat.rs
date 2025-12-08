@@ -856,10 +856,10 @@ impl<I: Tokens> Parser<I> {
                 ret
             }
             AssignTargetOrSpread::Pat(pat) => {
-                if let Some(trailing_comma) = trailing_comma {
-                    if let Pat::Rest(..) = pat {
-                        self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
-                    }
+                if let Some(trailing_comma) = trailing_comma
+                    && let Pat::Rest(..) = pat
+                {
+                    self.emit_err(trailing_comma, SyntaxError::CommaAfterRestElement);
                 }
                 pat
             }

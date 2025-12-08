@@ -25,7 +25,7 @@ impl SubRange {
     pub(crate) unsafe fn cast_to_typed<T>(self) -> TypedSubRange<T> {
         TypedSubRange {
             inner: self,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -48,7 +48,7 @@ impl<T> TypedSubRange<T> {
     pub fn empty() -> Self {
         Self {
             inner: EMPTY_SUB_RANGE,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -56,14 +56,18 @@ impl<T> TypedSubRange<T> {
         self.end.index() - self.start.index()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Similar to `Vec::remove(0)`
     pub fn remove_first(&mut self) -> NodeExtraDataId<T> {
-        assert!(self.len() >= 1);
+        assert!(!self.is_empty());
         let start = self.start;
-        self.inner.start = self.inner.start + 1;
+        self.inner.start += 1;
         NodeExtraDataId {
             inner: start,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -72,7 +76,7 @@ impl<T> TypedSubRange<T> {
         let id = self.start + index;
         NodeExtraDataId {
             inner: id,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -83,7 +87,7 @@ impl<T> TypedSubRange<T> {
 
         Some(NodeExtraDataId {
             inner: self.start,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 
@@ -94,15 +98,15 @@ impl<T> TypedSubRange<T> {
 
         Some(NodeExtraDataId {
             inner: self.end - 1,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 
-    pub fn iter<'a>(&self) -> TypedSubRangeIterator<T> {
+    pub fn iter(&self) -> TypedSubRangeIterator<T> {
         TypedSubRangeIterator {
             cur: self.start,
             end: self.end,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -124,7 +128,7 @@ impl<T> TypedSubRange<T> {
                 start: at,
                 end: original_end,
             },
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -164,7 +168,7 @@ impl<T: FromNodeId> Iterator for TypedSubRangeIterator<T> {
 
         Some(NodeExtraDataId {
             inner: next,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 }
@@ -183,7 +187,7 @@ impl<T: FromNodeId> DoubleEndedIterator for TypedSubRangeIterator<T> {
 
         Some(NodeExtraDataId {
             inner: next,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 }
@@ -204,7 +208,7 @@ impl<T: FromNodeId> Iterator for TypedSubRangeIterator<Option<T>> {
 
         Some(NodeExtraDataId {
             inner: next,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 }
@@ -223,7 +227,7 @@ impl<T: FromNodeId> DoubleEndedIterator for TypedSubRangeIterator<Option<T>> {
 
         Some(NodeExtraDataId {
             inner: next,
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         })
     }
 }

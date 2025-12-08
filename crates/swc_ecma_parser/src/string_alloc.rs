@@ -132,8 +132,7 @@ impl StringAllocator {
 
     #[inline]
     pub fn get_wtf8(&self, maybe: MaybeSubWtf8) -> &Wtf8 {
-        &self
-            .allocated_wtf8
+        self.allocated_wtf8
             .slice(maybe.end as usize, maybe.start as usize)
     }
 }

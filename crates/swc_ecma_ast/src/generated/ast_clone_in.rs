@@ -1,4 +1,4 @@
-#![allow(unused)]
+#![allow(unused, clippy::manual_map)]
 use crate::{Ast, CloneIn, NodeKind};
 use crate::{ast::*, node_id::*};
 impl CloneIn for Program {

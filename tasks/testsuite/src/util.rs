@@ -1,6 +1,5 @@
 use std::{
     env,
-    ffi::OsString,
     fs::read_dir,
     io::{self, ErrorKind},
     path::PathBuf,
@@ -12,12 +11,12 @@ pub fn crate_root() -> PathBuf {
 
 pub fn workspace_root() -> io::Result<PathBuf> {
     let path = env::current_dir()?;
-    let mut path_ancestors = path.as_path().ancestors();
+    let path_ancestors = path.as_path().ancestors();
 
-    while let Some(p) = path_ancestors.next() {
+    for p in path_ancestors {
         let has_cargo = read_dir(p)?
             .into_iter()
-            .any(|p| p.unwrap().file_name() == OsString::from("Cargo.lock"));
+            .any(|p| p.unwrap().file_name() == "Cargo.lock");
         if has_cargo {
             return Ok(PathBuf::from(p));
         }

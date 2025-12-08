@@ -373,15 +373,11 @@ impl<I: Tokens> Parser<I> {
                                         p.emit_err(key_span, SyntaxError::SetterParam);
                                     }
 
-                                    if !params.is_empty() {
-                                        if let Pat::Rest(rest) =
+                                    if !params.is_empty()
+                                        && let Pat::Rest(rest) =
                                             p.ast.get_node_in_sub_range(params.get(0)).pat(&p.ast)
-                                        {
-                                            p.emit_err(
-                                                rest.span(&p.ast),
-                                                SyntaxError::RestPatInSetter,
-                                            );
-                                        }
+                                    {
+                                        p.emit_err(rest.span(&p.ast), SyntaxError::RestPatInSetter);
                                     }
 
                                     if p.input().syntax().typescript()
@@ -457,16 +453,14 @@ impl<I: Tokens> Parser<I> {
                     unreachable!()
                 })
             })
-        } else {
-            if self.input().syntax().typescript() {
-                unexpected!(
-                    self,
-                    "... , *,  (, [, :, , ?, =, an identifier, public, protected, private, \
+        } else if self.input().syntax().typescript() {
+            unexpected!(
+                self,
+                "... , *,  (, [, :, , ?, =, an identifier, public, protected, private, \
                          readonly, <."
-                )
-            } else {
-                unexpected!(self, "... , *,  (, [, :, , ?, = or an identifier")
-            }
+            )
+        } else {
+            unexpected!(self, "... , *,  (, [, :, , ?, = or an identifier")
         }
     }
 

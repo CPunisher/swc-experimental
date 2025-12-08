@@ -199,11 +199,10 @@ impl<I: Tokens> Parser<I> {
             } else {
                 syntax_error!(self, span, SyntaxError::ExpectedIdent)
             }
-        } else if t == Token::This && self.input().syntax().typescript() {
-            word = MaybeSubUtf8::new_from_span(span)
-        } else if t == Token::Let {
-            word = MaybeSubUtf8::new_from_span(span)
-        } else if t.is_known_ident() {
+        } else if (t == Token::This && self.input().syntax().typescript())
+            || t == Token::Let
+            || t.is_known_ident()
+        {
             word = MaybeSubUtf8::new_from_span(span)
         } else if t == Token::Ident {
             let word = self.input_mut().expect_word_token_and_bump();

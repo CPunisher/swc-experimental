@@ -25,7 +25,7 @@ impl Test262ParserRunner {
                 continue;
             }
 
-            let input = StringSource::new(&case.code());
+            let input = StringSource::new(case.code());
             let comments = SingleThreadedComments::default();
             let lexer = Lexer::new(case.syntax(), Default::default(), input, Some(&comments));
             let parser = Parser::new_from(lexer);

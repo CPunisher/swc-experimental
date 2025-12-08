@@ -57,10 +57,7 @@ impl<C, T: CloneIn<Cloned = C>> CloneIn for Option<T> {
     type Cloned = Option<C>;
 
     fn clone_in(&self, ast: &mut Ast) -> Self::Cloned {
-        match self {
-            Some(it) => Some(it.clone_in(ast)),
-            None => None,
-        }
+        self.as_ref().map(|it| it.clone_in(ast))
     }
 }
 

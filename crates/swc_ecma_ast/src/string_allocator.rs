@@ -65,8 +65,7 @@ impl StringAllocator {
 
     #[inline]
     pub fn get_wtf8(&self, id: Wtf8Ref) -> &Wtf8 {
-        &self
-            .allocated_wtf8
+        self.allocated_wtf8
             .slice(id.lo() as usize, id.hi() as usize)
     }
 

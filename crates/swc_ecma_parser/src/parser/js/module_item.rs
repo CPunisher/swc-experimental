@@ -190,7 +190,7 @@ impl<I: Tokens> Parser<I> {
                     if possibly_orig_name_str == "as" {
                         // `import { type as } from 'mod'`
                         if !self.input().cur().is_word() {
-                            if self.ctx().is_reserved_word(&possibly_orig_name_str) {
+                            if self.ctx().is_reserved_word(possibly_orig_name_str) {
                                 syntax_error!(
                                     self,
                                     possibly_orig_name.span(&self.ast),
@@ -273,7 +273,7 @@ impl<I: Tokens> Parser<I> {
                 // 'IdentifierName' as 'ImportedBinding'
                 if self
                     .ctx()
-                    .is_reserved_word(&self.ast.get_utf8(orig_name.sym(&self.ast)))
+                    .is_reserved_word(self.ast.get_utf8(orig_name.sym(&self.ast)))
                 {
                     syntax_error!(
                         self,

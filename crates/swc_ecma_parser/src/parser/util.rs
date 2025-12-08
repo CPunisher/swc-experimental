@@ -167,7 +167,7 @@ impl<N: GetNodeId> ScratchIndex<N> {
     pub(crate) fn new(start: usize) -> Self {
         Self {
             start,
-            _p: PhantomData::default(),
+            _p: PhantomData,
         }
     }
 

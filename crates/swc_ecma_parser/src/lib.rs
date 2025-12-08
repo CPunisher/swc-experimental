@@ -177,7 +177,7 @@ impl<T> ParseRet<T> {
     }
 }
 
-pub fn with_file_parser<'a, T>(
+pub fn with_file_parser<T>(
     src: &str,
     syntax: Syntax,
     target: EsVersion,
@@ -186,8 +186,7 @@ pub fn with_file_parser<'a, T>(
 ) -> T {
     let lexer = self::Lexer::new(syntax, target, StringSource::new(src), comments);
     let p = Parser::new_from(lexer);
-    let ret = op(p);
-    ret
+    op(p)
 }
 
 macro_rules! expose {

@@ -964,15 +964,10 @@ impl<I: Tokens> Parser<I> {
             let span = self.span(start);
             if is_break {
                 if label.is_some()
-                    && !self
-                        .state()
-                        .labels
-                        .iter()
-                        .find(|l| {
-                            self.ast.get_utf8(**l)
-                                == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
-                        })
-                        .is_some()
+                    && !self.state().labels.iter().any(|l| {
+                        self.ast.get_utf8(*l)
+                            == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                    })
                 {
                     self.emit_err(span, SyntaxError::TS1116);
                 } else if !self.ctx().contains(Context::IsBreakAllowed) {
@@ -981,15 +976,10 @@ impl<I: Tokens> Parser<I> {
             } else if !self.ctx().contains(Context::IsContinueAllowed) {
                 self.emit_err(span, SyntaxError::TS1115);
             } else if label.is_some()
-                && !self
-                    .state()
-                    .labels
-                    .iter()
-                    .find(|l| {
-                        self.ast.get_utf8(**l)
-                            == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
-                    })
-                    .is_some()
+                && !self.state().labels.iter().any(|l| {
+                    self.ast.get_utf8(*l)
+                        == self.ast.get_utf8(label.as_ref().unwrap().sym(&self.ast))
+                })
             {
                 self.emit_err(span, SyntaxError::TS1107);
             }

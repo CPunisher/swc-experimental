@@ -312,7 +312,7 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
     }
 
     let output = quote! {
-            #![allow(unused)]
+            #![allow(unused, clippy::useless_conversion, clippy::single_match)]
             use crate::{Ast, ast::*, node_id::*};
             use swc_core::common::Span;
 

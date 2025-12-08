@@ -274,10 +274,10 @@ impl<I: Tokens> Parser<I> {
                 }
             };
 
-            if op == UnaryOp::Delete {
-                if let Expr::Ident(ref i) = arg {
-                    self.emit_strict_mode_err(i.span(&self.ast), SyntaxError::TS1102)
-                }
+            if op == UnaryOp::Delete
+                && let Expr::Ident(ref i) = arg
+            {
+                self.emit_strict_mode_err(i.span(&self.ast), SyntaxError::TS1102)
             }
 
             return Ok(self.ast.expr_unary_expr(
@@ -351,7 +351,7 @@ impl<I: Tokens> Parser<I> {
             }
             // Literals
             Token::Null | Token::True | Token::False | Token::Num | Token::BigInt | Token::Str => {
-                return self.parse_lit().map(|lit| Expr::Lit(lit));
+                return self.parse_lit().map(Expr::Lit);
             }
             // Regexp
             Token::Slash | Token::DivEq => {
@@ -422,21 +422,21 @@ impl<I: Tokens> Parser<I> {
         //     None
         // };
 
-        if let Expr::New(new) = callee {
-            if new.args(&self.ast).is_empty() {
-                // If this is parsed using 'NewExpression' rule, just return it.
-                // Because it's not left-recursive.
-                // if type_args.is_some() {
-                //     // This fails with `expected (`
-                //     expect!(self, Token::LParen);
-                // }
-                debug_assert!(
-                    self.input().cur() != Token::LParen,
-                    "parse_new_expr() should eat paren if it exists"
-                );
-                // return Ok(NewExpr { type_args, ..ne }.into());
-                return Ok(Expr::New(new));
-            }
+        if let Expr::New(new) = callee
+            && new.args(&self.ast).is_empty()
+        {
+            // If this is parsed using 'NewExpression' rule, just return it.
+            // Because it's not left-recursive.
+            // if type_args.is_some() {
+            //     // This fails with `expected (`
+            //     expect!(self, Token::LParen);
+            // }
+            debug_assert!(
+                self.input().cur() != Token::LParen,
+                "parse_new_expr() should eat paren if it exists"
+            );
+            // return Ok(NewExpr { type_args, ..ne }.into());
+            return Ok(Expr::New(new));
         }
         // 'CallExpr' rule contains 'MemberExpr (...)',
         // and 'MemberExpr' rule contains 'new MemberExpr (...)'
@@ -1490,14 +1490,14 @@ impl<I: Tokens> Parser<I> {
                         )
                     }
                     Expr::Member(member) => {
-                        if let Expr::OptChain(opt) = member.obj(&self.ast) {
-                            if opt.optional(&self.ast) {
-                                syntax_error!(
-                                    self,
-                                    opt.span(&self.ast),
-                                    SyntaxError::OptChainCannotFollowConstructorCall
-                                )
-                            }
+                        if let Expr::OptChain(opt) = member.obj(&self.ast)
+                            && opt.optional(&self.ast)
+                        {
+                            syntax_error!(
+                                self,
+                                opt.span(&self.ast),
+                                SyntaxError::OptChainCannotFollowConstructorCall
+                            )
                         }
                     }
                     _ => {}
@@ -1627,23 +1627,18 @@ impl<I: Tokens> Parser<I> {
         loop {
             let (next_left, next_prec) = self.parse_bin_op_recursively_inner(left, min_prec)?;
 
-            match next_left {
-                Expr::Bin(bin) => {
-                    if matches!(
-                        bin.op(&self.ast),
-                        BinaryOp::LogicalAnd | BinaryOp::LogicalOr
-                    ) {
-                        if let Expr::Bin(bin) = bin.left(&self.ast) {
-                            if matches!(bin.op(&self.ast), BinaryOp::NullishCoalescing) {
-                                self.emit_err(
-                                    bin.span(&self.ast),
-                                    SyntaxError::NullishCoalescingWithLogicalOp,
-                                );
-                            }
-                        }
-                    }
-                }
-                _ => {}
+            if let Expr::Bin(bin) = next_left
+                && let Expr::Bin(bin) = bin.left(&self.ast)
+                && matches!(
+                    bin.op(&self.ast),
+                    BinaryOp::LogicalAnd | BinaryOp::LogicalOr
+                )
+                && matches!(bin.op(&self.ast), BinaryOp::NullishCoalescing)
+            {
+                self.emit_err(
+                    bin.span(&self.ast),
+                    SyntaxError::NullishCoalescingWithLogicalOp,
+                );
             }
 
             min_prec = match next_prec {
@@ -1750,7 +1745,7 @@ impl<I: Tokens> Parser<I> {
                 SyntaxError::UnaryInExp {
                     // FIXME: Use display
                     // left: format!("{left:?}"),
-                    left: format!("left"),
+                    left: "left".to_string(),
                     left_span: left.span(&self.ast),
                 }
             )
@@ -2237,20 +2232,17 @@ impl<I: Tokens> Parser<I> {
                 async_span.is_some(),
                 false,
             );
-            if arrow_expr.body(&self.ast).is_block_stmt() {
-                if self.input().cur().is_bin_op() {
-                    // ) is required
+            if arrow_expr.body(&self.ast).is_block_stmt() && self.input().cur().is_bin_op() {
+                // ) is required
+                self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
+                let errorred_expr = self.parse_bin_op_recursively(Expr::Arrow(arrow_expr), 0)?;
+
+                if !self.is_general_semi() {
+                    // ; is required
                     self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
-                    let errorred_expr =
-                        self.parse_bin_op_recursively(Expr::Arrow(arrow_expr), 0)?;
-
-                    if !self.is_general_semi() {
-                        // ; is required
-                        self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
-                    }
-
-                    return Ok(errorred_expr);
                 }
+
+                return Ok(errorred_expr);
             }
             return Ok(Expr::Arrow(arrow_expr));
         } else {
@@ -2258,18 +2250,15 @@ impl<I: Tokens> Parser<I> {
             // AssignProp in lhs to check against assignment in object literals
             // like (a, {b = 1});
             for expr_or_spread in paren_items.iter() {
-                if let AssignTargetOrSpread::ExprOrSpread(e) = expr_or_spread {
-                    if let Expr::Object(o) = e.expr(&self.ast) {
-                        for prop in o.props(&self.ast).iter() {
-                            let prop = self.ast.get_node_in_sub_range(prop);
-                            if let PropOrSpread::Prop(prop) = prop {
-                                if prop.is_assign() {
-                                    self.emit_err(
-                                        prop.span(&self.ast),
-                                        SyntaxError::AssignProperty,
-                                    );
-                                }
-                            }
+                if let AssignTargetOrSpread::ExprOrSpread(e) = expr_or_spread
+                    && let Expr::Object(o) = e.expr(&self.ast)
+                {
+                    for prop in o.props(&self.ast).iter() {
+                        let prop = self.ast.get_node_in_sub_range(prop);
+                        if let PropOrSpread::Prop(prop) = prop
+                            && prop.is_assign()
+                        {
+                            self.emit_err(prop.span(&self.ast), SyntaxError::AssignProperty);
                         }
                     }
                 }
