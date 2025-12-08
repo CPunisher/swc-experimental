@@ -235,7 +235,7 @@ impl Parser {
             type_id,
             name,
             fields,
-            attrs,
+            _attrs: attrs,
         })
     }
 
@@ -258,7 +258,7 @@ impl Parser {
             type_id,
             name,
             variants,
-            attrs,
+            _attrs: attrs,
         })
     }
 
