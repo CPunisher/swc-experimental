@@ -1,4 +1,5 @@
 use std::{
+    env,
     fs::read_dir,
     path::{Path, PathBuf},
 };
@@ -20,7 +21,7 @@ impl MiscCase {
 
         for test_path in &[fixtures().join("misc-parser"), fixtures().join("misc-swc")] {
             let test_path = test_path.join(test_path);
-            dbg!(&test_path);
+            dbg!(&test_path, env::current_dir().unwrap());
             pass_cases.extend(read_dir(test_path.join("pass")).unwrap());
             fail_cases.extend(read_dir(test_path.join("fail")).unwrap());
         }
