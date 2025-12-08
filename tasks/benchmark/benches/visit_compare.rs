@@ -84,9 +84,8 @@ fn bench_post_order(b: &mut Bencher, src: &'static str) {
     b.iter(|| {
         let mut counter: usize = 0;
         for (_, node) in ret.ast.nodes() {
-            match node.kind {
-                NodeKind::Ident => counter += 1,
-                _ => {}
+            if node.kind == NodeKind::Ident {
+                counter += 1;
             }
         }
         std::hint::black_box(counter);
@@ -112,7 +111,7 @@ fn bench_files(c: &mut Criterion) {
 
     for (name, source) in bench_cases {
         c.bench_function(&format!("{name}/visit/legacy"), |b| bench_legacy(b, source));
-        c.bench_function(&format!("{name}/visit/new"), |b| bench_new(b, &source));
+        c.bench_function(&format!("{name}/visit/new"), |b| bench_new(b, source));
         c.bench_function(&format!("{name}/visit/postorder"), |b| {
             bench_post_order(b, source)
         });
