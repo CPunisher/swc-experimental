@@ -73,7 +73,7 @@ fn generate_node_id_for_enum(ast: &AstEnum, schema: &Schema) -> TokenStream {
     for (_, element) in flat_enum_type(ast, schema) {
         let kind = element.kind;
         let body = element.path.iter().rev().fold(
-            quote!(unsafe { #kind::from_node_id_unchecked(id, ast) }),
+            quote!({ #kind::from_node_id(id, ast) }),
             |acc, construcotr| quote!(#construcotr(#acc)),
         );
         from_node_id_arms.extend(quote! {

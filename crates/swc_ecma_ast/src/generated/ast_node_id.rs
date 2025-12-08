@@ -12,8 +12,8 @@ impl NodeIdTrait for Program {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Module => Program::Module(unsafe { Module::from_node_id_unchecked(id, ast) }),
-            NodeKind::Script => Program::Script(unsafe { Script::from_node_id_unchecked(id, ast) }),
+            NodeKind::Module => Program::Module({ Module::from_node_id(id, ast) }),
+            NodeKind::Script => Program::Script({ Script::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -63,94 +63,80 @@ impl NodeIdTrait for ModuleItem {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::BlockStmt => ModuleItem::Stmt(Stmt::Block(unsafe {
-                BlockStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BreakStmt => ModuleItem::Stmt(Stmt::Break(unsafe {
-                BreakStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Class(unsafe {
-                ClassDecl::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ContinueStmt => ModuleItem::Stmt(Stmt::Continue(unsafe {
-                ContinueStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::DebuggerStmt => ModuleItem::Stmt(Stmt::Debugger(unsafe {
-                DebuggerStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::DoWhileStmt => ModuleItem::Stmt(Stmt::DoWhile(unsafe {
-                DoWhileStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::EmptyStmt => ModuleItem::Stmt(Stmt::Empty(unsafe {
-                EmptyStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ExportAll => ModuleItem::ModuleDecl(ModuleDecl::ExportAll(unsafe {
-                ExportAll::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ExportDecl => ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(unsafe {
-                ExportDecl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ExportDefaultDecl => {
-                ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(unsafe {
-                    ExportDefaultDecl::from_node_id_unchecked(id, ast)
-                }))
+            NodeKind::BlockStmt => {
+                ModuleItem::Stmt(Stmt::Block({ BlockStmt::from_node_id(id, ast) }))
             }
-            NodeKind::ExportDefaultExpr => {
-                ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(unsafe {
-                    ExportDefaultExpr::from_node_id_unchecked(id, ast)
-                }))
+            NodeKind::BreakStmt => {
+                ModuleItem::Stmt(Stmt::Break({ BreakStmt::from_node_id(id, ast) }))
             }
-            NodeKind::ExprStmt => ModuleItem::Stmt(Stmt::Expr(unsafe {
-                ExprStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Fn(unsafe {
-                FnDecl::from_node_id_unchecked(id, ast)
+            NodeKind::ClassDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Class({
+                ClassDecl::from_node_id(id, ast)
             }))),
-            NodeKind::ForInStmt => ModuleItem::Stmt(Stmt::ForIn(unsafe {
-                ForInStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ForOfStmt => ModuleItem::Stmt(Stmt::ForOf(unsafe {
-                ForOfStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ForStmt => ModuleItem::Stmt(Stmt::For(unsafe {
-                ForStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::IfStmt => {
-                ModuleItem::Stmt(Stmt::If(unsafe { IfStmt::from_node_id_unchecked(id, ast) }))
+            NodeKind::ContinueStmt => {
+                ModuleItem::Stmt(Stmt::Continue({ ContinueStmt::from_node_id(id, ast) }))
             }
-            NodeKind::ImportDecl => ModuleItem::ModuleDecl(ModuleDecl::Import(unsafe {
-                ImportDecl::from_node_id_unchecked(id, ast)
+            NodeKind::DebuggerStmt => {
+                ModuleItem::Stmt(Stmt::Debugger({ DebuggerStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::DoWhileStmt => {
+                ModuleItem::Stmt(Stmt::DoWhile({ DoWhileStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::EmptyStmt => {
+                ModuleItem::Stmt(Stmt::Empty({ EmptyStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::ExportAll => {
+                ModuleItem::ModuleDecl(ModuleDecl::ExportAll({ ExportAll::from_node_id(id, ast) }))
+            }
+            NodeKind::ExportDecl => ModuleItem::ModuleDecl(ModuleDecl::ExportDecl({
+                ExportDecl::from_node_id(id, ast)
             })),
-            NodeKind::LabeledStmt => ModuleItem::Stmt(Stmt::Labeled(unsafe {
-                LabeledStmt::from_node_id_unchecked(id, ast)
+            NodeKind::ExportDefaultDecl => ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl({
+                ExportDefaultDecl::from_node_id(id, ast)
             })),
-            NodeKind::NamedExport => ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(unsafe {
-                NamedExport::from_node_id_unchecked(id, ast)
+            NodeKind::ExportDefaultExpr => ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr({
+                ExportDefaultExpr::from_node_id(id, ast)
             })),
-            NodeKind::ReturnStmt => ModuleItem::Stmt(Stmt::Return(unsafe {
-                ReturnStmt::from_node_id_unchecked(id, ast)
+            NodeKind::ExprStmt => ModuleItem::Stmt(Stmt::Expr({ ExprStmt::from_node_id(id, ast) })),
+            NodeKind::FnDecl => {
+                ModuleItem::Stmt(Stmt::Decl(Decl::Fn({ FnDecl::from_node_id(id, ast) })))
+            }
+            NodeKind::ForInStmt => {
+                ModuleItem::Stmt(Stmt::ForIn({ ForInStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::ForOfStmt => {
+                ModuleItem::Stmt(Stmt::ForOf({ ForOfStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::ForStmt => ModuleItem::Stmt(Stmt::For({ ForStmt::from_node_id(id, ast) })),
+            NodeKind::IfStmt => ModuleItem::Stmt(Stmt::If({ IfStmt::from_node_id(id, ast) })),
+            NodeKind::ImportDecl => {
+                ModuleItem::ModuleDecl(ModuleDecl::Import({ ImportDecl::from_node_id(id, ast) }))
+            }
+            NodeKind::LabeledStmt => {
+                ModuleItem::Stmt(Stmt::Labeled({ LabeledStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::NamedExport => ModuleItem::ModuleDecl(ModuleDecl::ExportNamed({
+                NamedExport::from_node_id(id, ast)
             })),
-            NodeKind::SwitchStmt => ModuleItem::Stmt(Stmt::Switch(unsafe {
-                SwitchStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThrowStmt => ModuleItem::Stmt(Stmt::Throw(unsafe {
-                ThrowStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TryStmt => ModuleItem::Stmt(Stmt::Try(unsafe {
-                TryStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::UsingDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Using(unsafe {
-                UsingDecl::from_node_id_unchecked(id, ast)
+            NodeKind::ReturnStmt => {
+                ModuleItem::Stmt(Stmt::Return({ ReturnStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::SwitchStmt => {
+                ModuleItem::Stmt(Stmt::Switch({ SwitchStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::ThrowStmt => {
+                ModuleItem::Stmt(Stmt::Throw({ ThrowStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::TryStmt => ModuleItem::Stmt(Stmt::Try({ TryStmt::from_node_id(id, ast) })),
+            NodeKind::UsingDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Using({
+                UsingDecl::from_node_id(id, ast)
             }))),
-            NodeKind::VarDecl => ModuleItem::Stmt(Stmt::Decl(Decl::Var(unsafe {
-                VarDecl::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::WhileStmt => ModuleItem::Stmt(Stmt::While(unsafe {
-                WhileStmt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::WithStmt => ModuleItem::Stmt(Stmt::With(unsafe {
-                WithStmt::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::VarDecl => {
+                ModuleItem::Stmt(Stmt::Decl(Decl::Var({ VarDecl::from_node_id(id, ast) })))
+            }
+            NodeKind::WhileStmt => {
+                ModuleItem::Stmt(Stmt::While({ WhileStmt::from_node_id(id, ast) }))
+            }
+            NodeKind::WithStmt => ModuleItem::Stmt(Stmt::With({ WithStmt::from_node_id(id, ast) })),
             _ => unreachable!(),
         }
     }
@@ -174,23 +160,17 @@ impl NodeIdTrait for ModuleDecl {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ExportAll => {
-                ModuleDecl::ExportAll(unsafe { ExportAll::from_node_id_unchecked(id, ast) })
+            NodeKind::ExportAll => ModuleDecl::ExportAll({ ExportAll::from_node_id(id, ast) }),
+            NodeKind::ExportDecl => ModuleDecl::ExportDecl({ ExportDecl::from_node_id(id, ast) }),
+            NodeKind::ExportDefaultDecl => {
+                ModuleDecl::ExportDefaultDecl({ ExportDefaultDecl::from_node_id(id, ast) })
             }
-            NodeKind::ExportDecl => {
-                ModuleDecl::ExportDecl(unsafe { ExportDecl::from_node_id_unchecked(id, ast) })
+            NodeKind::ExportDefaultExpr => {
+                ModuleDecl::ExportDefaultExpr({ ExportDefaultExpr::from_node_id(id, ast) })
             }
-            NodeKind::ExportDefaultDecl => ModuleDecl::ExportDefaultDecl(unsafe {
-                ExportDefaultDecl::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ExportDefaultExpr => ModuleDecl::ExportDefaultExpr(unsafe {
-                ExportDefaultExpr::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ImportDecl => {
-                ModuleDecl::Import(unsafe { ImportDecl::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::ImportDecl => ModuleDecl::Import({ ImportDecl::from_node_id(id, ast) }),
             NodeKind::NamedExport => {
-                ModuleDecl::ExportNamed(unsafe { NamedExport::from_node_id_unchecked(id, ast) })
+                ModuleDecl::ExportNamed({ NamedExport::from_node_id(id, ast) })
             }
             _ => unreachable!(),
         }
@@ -227,15 +207,15 @@ impl NodeIdTrait for ImportSpecifier {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ImportDefaultSpecifier => ImportSpecifier::Default(unsafe {
-                ImportDefaultSpecifier::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ImportNamedSpecifier => ImportSpecifier::Named(unsafe {
-                ImportNamedSpecifier::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ImportStarAsSpecifier => ImportSpecifier::Namespace(unsafe {
-                ImportStarAsSpecifier::from_node_id_unchecked(id, ast)
-            }),
+            NodeKind::ImportDefaultSpecifier => {
+                ImportSpecifier::Default({ ImportDefaultSpecifier::from_node_id(id, ast) })
+            }
+            NodeKind::ImportNamedSpecifier => {
+                ImportSpecifier::Named({ ImportNamedSpecifier::from_node_id(id, ast) })
+            }
+            NodeKind::ImportStarAsSpecifier => {
+                ImportSpecifier::Namespace({ ImportStarAsSpecifier::from_node_id(id, ast) })
+            }
             _ => unreachable!(),
         }
     }
@@ -331,15 +311,15 @@ impl NodeIdTrait for ExportSpecifier {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ExportDefaultSpecifier => ExportSpecifier::Default(unsafe {
-                ExportDefaultSpecifier::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ExportNamedSpecifier => ExportSpecifier::Named(unsafe {
-                ExportNamedSpecifier::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ExportNamespaceSpecifier => ExportSpecifier::Namespace(unsafe {
-                ExportNamespaceSpecifier::from_node_id_unchecked(id, ast)
-            }),
+            NodeKind::ExportDefaultSpecifier => {
+                ExportSpecifier::Default({ ExportDefaultSpecifier::from_node_id(id, ast) })
+            }
+            NodeKind::ExportNamedSpecifier => {
+                ExportSpecifier::Named({ ExportNamedSpecifier::from_node_id(id, ast) })
+            }
+            NodeKind::ExportNamespaceSpecifier => {
+                ExportSpecifier::Namespace({ ExportNamespaceSpecifier::from_node_id(id, ast) })
+            }
             _ => unreachable!(),
         }
     }
@@ -374,10 +354,8 @@ impl NodeIdTrait for ModuleExportName {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Ident => {
-                ModuleExportName::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::Str => ModuleExportName::Str(unsafe { Str::from_node_id_unchecked(id, ast) }),
+            NodeKind::Ident => ModuleExportName::Ident({ Ident::from_node_id(id, ast) }),
+            NodeKind::Str => ModuleExportName::Str({ Str::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -442,10 +420,8 @@ impl NodeIdTrait for DefaultDecl {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ClassExpr => {
-                DefaultDecl::Class(unsafe { ClassExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::FnExpr => DefaultDecl::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }),
+            NodeKind::ClassExpr => DefaultDecl::Class({ ClassExpr::from_node_id(id, ast) }),
+            NodeKind::FnExpr => DefaultDecl::Fn({ FnExpr::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -527,62 +503,28 @@ impl NodeIdTrait for Stmt {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::BlockStmt => {
-                Stmt::Block(unsafe { BlockStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::BreakStmt => {
-                Stmt::Break(unsafe { BreakStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ClassDecl => Stmt::Decl(Decl::Class(unsafe {
-                ClassDecl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ContinueStmt => {
-                Stmt::Continue(unsafe { ContinueStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::DebuggerStmt => {
-                Stmt::Debugger(unsafe { DebuggerStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::DoWhileStmt => {
-                Stmt::DoWhile(unsafe { DoWhileStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::EmptyStmt => {
-                Stmt::Empty(unsafe { EmptyStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ExprStmt => Stmt::Expr(unsafe { ExprStmt::from_node_id_unchecked(id, ast) }),
-            NodeKind::FnDecl => {
-                Stmt::Decl(Decl::Fn(unsafe { FnDecl::from_node_id_unchecked(id, ast) }))
-            }
-            NodeKind::ForInStmt => {
-                Stmt::ForIn(unsafe { ForInStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ForOfStmt => {
-                Stmt::ForOf(unsafe { ForOfStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ForStmt => Stmt::For(unsafe { ForStmt::from_node_id_unchecked(id, ast) }),
-            NodeKind::IfStmt => Stmt::If(unsafe { IfStmt::from_node_id_unchecked(id, ast) }),
-            NodeKind::LabeledStmt => {
-                Stmt::Labeled(unsafe { LabeledStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ReturnStmt => {
-                Stmt::Return(unsafe { ReturnStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::SwitchStmt => {
-                Stmt::Switch(unsafe { SwitchStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ThrowStmt => {
-                Stmt::Throw(unsafe { ThrowStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::TryStmt => Stmt::Try(unsafe { TryStmt::from_node_id_unchecked(id, ast) }),
-            NodeKind::UsingDecl => Stmt::Decl(Decl::Using(unsafe {
-                UsingDecl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::VarDecl => Stmt::Decl(Decl::Var(unsafe {
-                VarDecl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::WhileStmt => {
-                Stmt::While(unsafe { WhileStmt::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::WithStmt => Stmt::With(unsafe { WithStmt::from_node_id_unchecked(id, ast) }),
+            NodeKind::BlockStmt => Stmt::Block({ BlockStmt::from_node_id(id, ast) }),
+            NodeKind::BreakStmt => Stmt::Break({ BreakStmt::from_node_id(id, ast) }),
+            NodeKind::ClassDecl => Stmt::Decl(Decl::Class({ ClassDecl::from_node_id(id, ast) })),
+            NodeKind::ContinueStmt => Stmt::Continue({ ContinueStmt::from_node_id(id, ast) }),
+            NodeKind::DebuggerStmt => Stmt::Debugger({ DebuggerStmt::from_node_id(id, ast) }),
+            NodeKind::DoWhileStmt => Stmt::DoWhile({ DoWhileStmt::from_node_id(id, ast) }),
+            NodeKind::EmptyStmt => Stmt::Empty({ EmptyStmt::from_node_id(id, ast) }),
+            NodeKind::ExprStmt => Stmt::Expr({ ExprStmt::from_node_id(id, ast) }),
+            NodeKind::FnDecl => Stmt::Decl(Decl::Fn({ FnDecl::from_node_id(id, ast) })),
+            NodeKind::ForInStmt => Stmt::ForIn({ ForInStmt::from_node_id(id, ast) }),
+            NodeKind::ForOfStmt => Stmt::ForOf({ ForOfStmt::from_node_id(id, ast) }),
+            NodeKind::ForStmt => Stmt::For({ ForStmt::from_node_id(id, ast) }),
+            NodeKind::IfStmt => Stmt::If({ IfStmt::from_node_id(id, ast) }),
+            NodeKind::LabeledStmt => Stmt::Labeled({ LabeledStmt::from_node_id(id, ast) }),
+            NodeKind::ReturnStmt => Stmt::Return({ ReturnStmt::from_node_id(id, ast) }),
+            NodeKind::SwitchStmt => Stmt::Switch({ SwitchStmt::from_node_id(id, ast) }),
+            NodeKind::ThrowStmt => Stmt::Throw({ ThrowStmt::from_node_id(id, ast) }),
+            NodeKind::TryStmt => Stmt::Try({ TryStmt::from_node_id(id, ast) }),
+            NodeKind::UsingDecl => Stmt::Decl(Decl::Using({ UsingDecl::from_node_id(id, ast) })),
+            NodeKind::VarDecl => Stmt::Decl(Decl::Var({ VarDecl::from_node_id(id, ast) })),
+            NodeKind::WhileStmt => Stmt::While({ WhileStmt::from_node_id(id, ast) }),
+            NodeKind::WithStmt => Stmt::With({ WithStmt::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -888,140 +830,122 @@ impl NodeIdTrait for ForHead {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => ForHead::Pat(Pat::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ArrayPat => ForHead::Pat(Pat::Array(unsafe {
-                ArrayPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrowExpr => ForHead::Pat(Pat::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::AssignExpr => ForHead::Pat(Pat::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::AssignPat => ForHead::Pat(Pat::Assign(unsafe {
-                AssignPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AwaitExpr => ForHead::Pat(Pat::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BigInt => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::BinExpr => ForHead::Pat(Pat::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BindingIdent => ForHead::Pat(Pat::Ident(unsafe {
-                BindingIdent::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Bool => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::CallExpr => ForHead::Pat(Pat::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ClassExpr => ForHead::Pat(Pat::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CondExpr => ForHead::Pat(Pat::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::FnExpr => ForHead::Pat(Pat::Expr(Expr::Fn(unsafe {
-                FnExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Ident => ForHead::Pat(Pat::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Invalid => ForHead::Pat(Pat::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXElement => ForHead::Pat(Pat::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::JSXEmptyExpr => ForHead::Pat(Pat::Expr(Expr::JSXEmpty(unsafe {
-                JSXEmptyExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::JSXFragment => ForHead::Pat(Pat::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::JSXMemberExpr => ForHead::Pat(Pat::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::JSXNamespacedName => {
-                ForHead::Pat(Pat::Expr(Expr::JSXNamespacedName(unsafe {
-                    JSXNamespacedName::from_node_id_unchecked(id, ast)
-                })))
+            NodeKind::ArrayLit => {
+                ForHead::Pat(Pat::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) })))
             }
-            NodeKind::MemberExpr => ForHead::Pat(Pat::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::MetaPropExpr => ForHead::Pat(Pat::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::NewExpr => ForHead::Pat(Pat::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Null => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::Number => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::ObjectLit => ForHead::Pat(Pat::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectPat => ForHead::Pat(Pat::Object(unsafe {
-                ObjectPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => ForHead::Pat(Pat::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ParenExpr => ForHead::Pat(Pat::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::PrivateName => ForHead::Pat(Pat::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Regex => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::RestPat => ForHead::Pat(Pat::Rest(unsafe {
-                RestPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::SeqExpr => ForHead::Pat(Pat::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Str => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            })))),
-            NodeKind::SuperPropExpr => ForHead::Pat(Pat::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::TaggedTpl => ForHead::Pat(Pat::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ThisExpr => ForHead::Pat(Pat::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Tpl => ForHead::Pat(Pat::Expr(Expr::Tpl(unsafe {
-                Tpl::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::UnaryExpr => ForHead::Pat(Pat::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::UpdateExpr => ForHead::Pat(Pat::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::UsingDecl => {
-                ForHead::UsingDecl(unsafe { UsingDecl::from_node_id_unchecked(id, ast) })
+            NodeKind::ArrayPat => ForHead::Pat(Pat::Array({ ArrayPat::from_node_id(id, ast) })),
+            NodeKind::ArrowExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) })))
             }
-            NodeKind::VarDecl => {
-                ForHead::VarDecl(unsafe { VarDecl::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::YieldExpr => ForHead::Pat(Pat::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
+            NodeKind::AssignExpr => ForHead::Pat(Pat::Expr(Expr::Assign({
+                AssignExpr::from_node_id(id, ast)
             }))),
+            NodeKind::AssignPat => ForHead::Pat(Pat::Assign({ AssignPat::from_node_id(id, ast) })),
+            NodeKind::AwaitExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::BigInt => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::BigInt({
+                BigInt::from_node_id(id, ast)
+            })))),
+            NodeKind::BinExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::BindingIdent => {
+                ForHead::Pat(Pat::Ident({ BindingIdent::from_node_id(id, ast) }))
+            }
+            NodeKind::Bool => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Bool({
+                Bool::from_node_id(id, ast)
+            })))),
+            NodeKind::CallExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::ClassExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::CondExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::FnExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::Ident => {
+                ForHead::Pat(Pat::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })))
+            }
+            NodeKind::Invalid => ForHead::Pat(Pat::Invalid({ Invalid::from_node_id(id, ast) })),
+            NodeKind::JSXElement => ForHead::Pat(Pat::Expr(Expr::JSXElement({
+                JSXElement::from_node_id(id, ast)
+            }))),
+            NodeKind::JSXEmptyExpr => ForHead::Pat(Pat::Expr(Expr::JSXEmpty({
+                JSXEmptyExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::JSXFragment => ForHead::Pat(Pat::Expr(Expr::JSXFragment({
+                JSXFragment::from_node_id(id, ast)
+            }))),
+            NodeKind::JSXMemberExpr => ForHead::Pat(Pat::Expr(Expr::JSXMember({
+                JSXMemberExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::JSXNamespacedName => ForHead::Pat(Pat::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
+            }))),
+            NodeKind::MemberExpr => ForHead::Pat(Pat::Expr(Expr::Member({
+                MemberExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::MetaPropExpr => ForHead::Pat(Pat::Expr(Expr::MetaProp({
+                MetaPropExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::NewExpr => {
+                ForHead::Pat(Pat::Expr(Expr::New({ NewExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::Null => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Null({
+                Null::from_node_id(id, ast)
+            })))),
+            NodeKind::Number => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Num({
+                Number::from_node_id(id, ast)
+            })))),
+            NodeKind::ObjectLit => ForHead::Pat(Pat::Expr(Expr::Object({
+                ObjectLit::from_node_id(id, ast)
+            }))),
+            NodeKind::ObjectPat => ForHead::Pat(Pat::Object({ ObjectPat::from_node_id(id, ast) })),
+            NodeKind::OptChainExpr => ForHead::Pat(Pat::Expr(Expr::OptChain({
+                OptChainExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::ParenExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::PrivateName => ForHead::Pat(Pat::Expr(Expr::PrivateName({
+                PrivateName::from_node_id(id, ast)
+            }))),
+            NodeKind::Regex => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Regex({
+                Regex::from_node_id(id, ast)
+            })))),
+            NodeKind::RestPat => ForHead::Pat(Pat::Rest({ RestPat::from_node_id(id, ast) })),
+            NodeKind::SeqExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::Str => ForHead::Pat(Pat::Expr(Expr::Lit(Lit::Str({
+                Str::from_node_id(id, ast)
+            })))),
+            NodeKind::SuperPropExpr => ForHead::Pat(Pat::Expr(Expr::SuperProp({
+                SuperPropExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::TaggedTpl => ForHead::Pat(Pat::Expr(Expr::TaggedTpl({
+                TaggedTpl::from_node_id(id, ast)
+            }))),
+            NodeKind::ThisExpr => {
+                ForHead::Pat(Pat::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::Tpl => ForHead::Pat(Pat::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) }))),
+            NodeKind::UnaryExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) })))
+            }
+            NodeKind::UpdateExpr => ForHead::Pat(Pat::Expr(Expr::Update({
+                UpdateExpr::from_node_id(id, ast)
+            }))),
+            NodeKind::UsingDecl => ForHead::UsingDecl({ UsingDecl::from_node_id(id, ast) }),
+            NodeKind::VarDecl => ForHead::VarDecl({ VarDecl::from_node_id(id, ast) }),
+            NodeKind::YieldExpr => {
+                ForHead::Pat(Pat::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) })))
+            }
             _ => unreachable!(),
         }
     }
@@ -1041,120 +965,106 @@ impl NodeIdTrait for VarDeclOrExpr {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => VarDeclOrExpr::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrowExpr => VarDeclOrExpr::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignExpr => VarDeclOrExpr::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AwaitExpr => VarDeclOrExpr::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BigInt => VarDeclOrExpr::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BinExpr => VarDeclOrExpr::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Bool => VarDeclOrExpr::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CallExpr => VarDeclOrExpr::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassExpr => VarDeclOrExpr::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::CondExpr => VarDeclOrExpr::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnExpr => {
-                VarDeclOrExpr::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            NodeKind::ArrayLit => {
+                VarDeclOrExpr::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) }))
             }
-            NodeKind::Ident => VarDeclOrExpr::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Invalid => VarDeclOrExpr::Expr(Expr::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXElement => VarDeclOrExpr::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXEmptyExpr => VarDeclOrExpr::Expr(Expr::JSXEmpty(unsafe {
-                JSXEmptyExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXFragment => VarDeclOrExpr::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXMemberExpr => VarDeclOrExpr::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXNamespacedName => VarDeclOrExpr::Expr(Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => VarDeclOrExpr::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MetaPropExpr => VarDeclOrExpr::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::NewExpr => VarDeclOrExpr::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Null => VarDeclOrExpr::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Number => VarDeclOrExpr::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectLit => VarDeclOrExpr::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => VarDeclOrExpr::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ParenExpr => VarDeclOrExpr::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => VarDeclOrExpr::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Regex => VarDeclOrExpr::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SeqExpr => VarDeclOrExpr::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Str => VarDeclOrExpr::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SuperPropExpr => VarDeclOrExpr::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TaggedTpl => VarDeclOrExpr::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThisExpr => VarDeclOrExpr::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Tpl => {
-                VarDeclOrExpr::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }))
+            NodeKind::ArrowExpr => {
+                VarDeclOrExpr::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) }))
             }
-            NodeKind::UnaryExpr => VarDeclOrExpr::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::UpdateExpr => VarDeclOrExpr::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::VarDecl => {
-                VarDeclOrExpr::VarDecl(unsafe { VarDecl::from_node_id_unchecked(id, ast) })
+            NodeKind::AssignExpr => {
+                VarDeclOrExpr::Expr(Expr::Assign({ AssignExpr::from_node_id(id, ast) }))
             }
-            NodeKind::YieldExpr => VarDeclOrExpr::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
+            NodeKind::AwaitExpr => {
+                VarDeclOrExpr::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::BigInt => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })))
+            }
+            NodeKind::BinExpr => VarDeclOrExpr::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) })),
+            NodeKind::Bool => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) })))
+            }
+            NodeKind::CallExpr => {
+                VarDeclOrExpr::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ClassExpr => {
+                VarDeclOrExpr::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::CondExpr => {
+                VarDeclOrExpr::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::FnExpr => VarDeclOrExpr::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })),
+            NodeKind::Ident => VarDeclOrExpr::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })),
+            NodeKind::Invalid => {
+                VarDeclOrExpr::Expr(Expr::Invalid({ Invalid::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXElement => {
+                VarDeclOrExpr::Expr(Expr::JSXElement({ JSXElement::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXEmptyExpr => {
+                VarDeclOrExpr::Expr(Expr::JSXEmpty({ JSXEmptyExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXFragment => {
+                VarDeclOrExpr::Expr(Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXMemberExpr => {
+                VarDeclOrExpr::Expr(Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXNamespacedName => VarDeclOrExpr::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
             })),
+            NodeKind::MemberExpr => {
+                VarDeclOrExpr::Expr(Expr::Member({ MemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::MetaPropExpr => {
+                VarDeclOrExpr::Expr(Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::NewExpr => VarDeclOrExpr::Expr(Expr::New({ NewExpr::from_node_id(id, ast) })),
+            NodeKind::Null => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) })))
+            }
+            NodeKind::Number => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) })))
+            }
+            NodeKind::ObjectLit => {
+                VarDeclOrExpr::Expr(Expr::Object({ ObjectLit::from_node_id(id, ast) }))
+            }
+            NodeKind::OptChainExpr => {
+                VarDeclOrExpr::Expr(Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ParenExpr => {
+                VarDeclOrExpr::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::PrivateName => {
+                VarDeclOrExpr::Expr(Expr::PrivateName({ PrivateName::from_node_id(id, ast) }))
+            }
+            NodeKind::Regex => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) })))
+            }
+            NodeKind::SeqExpr => VarDeclOrExpr::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) })),
+            NodeKind::Str => {
+                VarDeclOrExpr::Expr(Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) })))
+            }
+            NodeKind::SuperPropExpr => {
+                VarDeclOrExpr::Expr(Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::TaggedTpl => {
+                VarDeclOrExpr::Expr(Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) }))
+            }
+            NodeKind::ThisExpr => {
+                VarDeclOrExpr::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::Tpl => VarDeclOrExpr::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) })),
+            NodeKind::UnaryExpr => {
+                VarDeclOrExpr::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::UpdateExpr => {
+                VarDeclOrExpr::Expr(Expr::Update({ UpdateExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::VarDecl => VarDeclOrExpr::VarDecl({ VarDecl::from_node_id(id, ast) }),
+            NodeKind::YieldExpr => {
+                VarDeclOrExpr::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) }))
+            }
             _ => unreachable!(),
         }
     }
@@ -1176,14 +1086,10 @@ impl NodeIdTrait for Decl {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ClassDecl => {
-                Decl::Class(unsafe { ClassDecl::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::FnDecl => Decl::Fn(unsafe { FnDecl::from_node_id_unchecked(id, ast) }),
-            NodeKind::UsingDecl => {
-                Decl::Using(unsafe { UsingDecl::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::VarDecl => Decl::Var(unsafe { VarDecl::from_node_id_unchecked(id, ast) }),
+            NodeKind::ClassDecl => Decl::Class({ ClassDecl::from_node_id(id, ast) }),
+            NodeKind::FnDecl => Decl::Fn({ FnDecl::from_node_id(id, ast) }),
+            NodeKind::UsingDecl => Decl::Using({ UsingDecl::from_node_id(id, ast) }),
+            NodeKind::VarDecl => Decl::Var({ VarDecl::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -1308,93 +1214,45 @@ impl NodeIdTrait for Expr {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => Expr::Array(unsafe { ArrayLit::from_node_id_unchecked(id, ast) }),
-            NodeKind::ArrowExpr => {
-                Expr::Arrow(unsafe { ArrowExpr::from_node_id_unchecked(id, ast) })
+            NodeKind::ArrayLit => Expr::Array({ ArrayLit::from_node_id(id, ast) }),
+            NodeKind::ArrowExpr => Expr::Arrow({ ArrowExpr::from_node_id(id, ast) }),
+            NodeKind::AssignExpr => Expr::Assign({ AssignExpr::from_node_id(id, ast) }),
+            NodeKind::AwaitExpr => Expr::Await({ AwaitExpr::from_node_id(id, ast) }),
+            NodeKind::BigInt => Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })),
+            NodeKind::BinExpr => Expr::Bin({ BinExpr::from_node_id(id, ast) }),
+            NodeKind::Bool => Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) })),
+            NodeKind::CallExpr => Expr::Call({ CallExpr::from_node_id(id, ast) }),
+            NodeKind::ClassExpr => Expr::Class({ ClassExpr::from_node_id(id, ast) }),
+            NodeKind::CondExpr => Expr::Cond({ CondExpr::from_node_id(id, ast) }),
+            NodeKind::FnExpr => Expr::Fn({ FnExpr::from_node_id(id, ast) }),
+            NodeKind::Ident => Expr::Ident({ Ident::from_node_id(id, ast) }),
+            NodeKind::Invalid => Expr::Invalid({ Invalid::from_node_id(id, ast) }),
+            NodeKind::JSXElement => Expr::JSXElement({ JSXElement::from_node_id(id, ast) }),
+            NodeKind::JSXEmptyExpr => Expr::JSXEmpty({ JSXEmptyExpr::from_node_id(id, ast) }),
+            NodeKind::JSXFragment => Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }),
+            NodeKind::JSXMemberExpr => Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }),
+            NodeKind::JSXNamespacedName => {
+                Expr::JSXNamespacedName({ JSXNamespacedName::from_node_id(id, ast) })
             }
-            NodeKind::AssignExpr => {
-                Expr::Assign(unsafe { AssignExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::AwaitExpr => {
-                Expr::Await(unsafe { AwaitExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::BigInt => Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BinExpr => Expr::Bin(unsafe { BinExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::Bool => {
-                Expr::Lit(Lit::Bool(unsafe { Bool::from_node_id_unchecked(id, ast) }))
-            }
-            NodeKind::CallExpr => Expr::Call(unsafe { CallExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::ClassExpr => {
-                Expr::Class(unsafe { ClassExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::CondExpr => Expr::Cond(unsafe { CondExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::FnExpr => Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::Ident => Expr::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) }),
-            NodeKind::Invalid => Expr::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) }),
-            NodeKind::JSXElement => {
-                Expr::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::JSXEmptyExpr => {
-                Expr::JSXEmpty(unsafe { JSXEmptyExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::JSXFragment => {
-                Expr::JSXFragment(unsafe { JSXFragment::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::JSXMemberExpr => {
-                Expr::JSXMember(unsafe { JSXMemberExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::JSXNamespacedName => Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::MemberExpr => {
-                Expr::Member(unsafe { MemberExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::MetaPropExpr => {
-                Expr::MetaProp(unsafe { MetaPropExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::NewExpr => Expr::New(unsafe { NewExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::Null => {
-                Expr::Lit(Lit::Null(unsafe { Null::from_node_id_unchecked(id, ast) }))
-            }
-            NodeKind::Number => {
-                Expr::Lit(Lit::Num(unsafe { Number::from_node_id_unchecked(id, ast) }))
-            }
-            NodeKind::ObjectLit => {
-                Expr::Object(unsafe { ObjectLit::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::OptChainExpr => {
-                Expr::OptChain(unsafe { OptChainExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ParenExpr => {
-                Expr::Paren(unsafe { ParenExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::PrivateName => {
-                Expr::PrivateName(unsafe { PrivateName::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::Regex => Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::SeqExpr => Expr::Seq(unsafe { SeqExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::Str => Expr::Lit(Lit::Str(unsafe { Str::from_node_id_unchecked(id, ast) })),
-            NodeKind::SuperPropExpr => {
-                Expr::SuperProp(unsafe { SuperPropExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::TaggedTpl => {
-                Expr::TaggedTpl(unsafe { TaggedTpl::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ThisExpr => Expr::This(unsafe { ThisExpr::from_node_id_unchecked(id, ast) }),
-            NodeKind::Tpl => Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }),
-            NodeKind::UnaryExpr => {
-                Expr::Unary(unsafe { UnaryExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::UpdateExpr => {
-                Expr::Update(unsafe { UpdateExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::YieldExpr => {
-                Expr::Yield(unsafe { YieldExpr::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::MemberExpr => Expr::Member({ MemberExpr::from_node_id(id, ast) }),
+            NodeKind::MetaPropExpr => Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }),
+            NodeKind::NewExpr => Expr::New({ NewExpr::from_node_id(id, ast) }),
+            NodeKind::Null => Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) })),
+            NodeKind::Number => Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) })),
+            NodeKind::ObjectLit => Expr::Object({ ObjectLit::from_node_id(id, ast) }),
+            NodeKind::OptChainExpr => Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }),
+            NodeKind::ParenExpr => Expr::Paren({ ParenExpr::from_node_id(id, ast) }),
+            NodeKind::PrivateName => Expr::PrivateName({ PrivateName::from_node_id(id, ast) }),
+            NodeKind::Regex => Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) })),
+            NodeKind::SeqExpr => Expr::Seq({ SeqExpr::from_node_id(id, ast) }),
+            NodeKind::Str => Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) })),
+            NodeKind::SuperPropExpr => Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }),
+            NodeKind::TaggedTpl => Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) }),
+            NodeKind::ThisExpr => Expr::This({ ThisExpr::from_node_id(id, ast) }),
+            NodeKind::Tpl => Expr::Tpl({ Tpl::from_node_id(id, ast) }),
+            NodeKind::UnaryExpr => Expr::Unary({ UnaryExpr::from_node_id(id, ast) }),
+            NodeKind::UpdateExpr => Expr::Update({ UpdateExpr::from_node_id(id, ast) }),
+            NodeKind::YieldExpr => Expr::Yield({ YieldExpr::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -1459,27 +1317,27 @@ impl NodeIdTrait for PropOrSpread {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::AssignProp => PropOrSpread::Prop(Prop::Assign(unsafe {
-                AssignProp::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::GetterProp => PropOrSpread::Prop(Prop::Getter(unsafe {
-                GetterProp::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Ident => PropOrSpread::Prop(Prop::Shorthand(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::KeyValueProp => PropOrSpread::Prop(Prop::KeyValue(unsafe {
-                KeyValueProp::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MethodProp => PropOrSpread::Prop(Prop::Method(unsafe {
-                MethodProp::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::SetterProp => PropOrSpread::Prop(Prop::Setter(unsafe {
-                SetterProp::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::SpreadElement => PropOrSpread::SpreadElement(unsafe {
-                SpreadElement::from_node_id_unchecked(id, ast)
-            }),
+            NodeKind::AssignProp => {
+                PropOrSpread::Prop(Prop::Assign({ AssignProp::from_node_id(id, ast) }))
+            }
+            NodeKind::GetterProp => {
+                PropOrSpread::Prop(Prop::Getter({ GetterProp::from_node_id(id, ast) }))
+            }
+            NodeKind::Ident => {
+                PropOrSpread::Prop(Prop::Shorthand({ Ident::from_node_id(id, ast) }))
+            }
+            NodeKind::KeyValueProp => {
+                PropOrSpread::Prop(Prop::KeyValue({ KeyValueProp::from_node_id(id, ast) }))
+            }
+            NodeKind::MethodProp => {
+                PropOrSpread::Prop(Prop::Method({ MethodProp::from_node_id(id, ast) }))
+            }
+            NodeKind::SetterProp => {
+                PropOrSpread::Prop(Prop::Setter({ SetterProp::from_node_id(id, ast) }))
+            }
+            NodeKind::SpreadElement => {
+                PropOrSpread::SpreadElement({ SpreadElement::from_node_id(id, ast) })
+            }
             _ => unreachable!(),
         }
     }
@@ -1621,13 +1479,11 @@ impl NodeIdTrait for MemberProp {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::ComputedPropName => {
-                MemberProp::Computed(unsafe { ComputedPropName::from_node_id_unchecked(id, ast) })
+                MemberProp::Computed({ ComputedPropName::from_node_id(id, ast) })
             }
-            NodeKind::IdentName => {
-                MemberProp::Ident(unsafe { IdentName::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::IdentName => MemberProp::Ident({ IdentName::from_node_id(id, ast) }),
             NodeKind::PrivateName => {
-                MemberProp::PrivateName(unsafe { PrivateName::from_node_id_unchecked(id, ast) })
+                MemberProp::PrivateName({ PrivateName::from_node_id(id, ast) })
             }
             _ => unreachable!(),
         }
@@ -1664,11 +1520,9 @@ impl NodeIdTrait for SuperProp {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::ComputedPropName => {
-                SuperProp::Computed(unsafe { ComputedPropName::from_node_id_unchecked(id, ast) })
+                SuperProp::Computed({ ComputedPropName::from_node_id(id, ast) })
             }
-            NodeKind::IdentName => {
-                SuperProp::Ident(unsafe { IdentName::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::IdentName => SuperProp::Ident({ IdentName::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -1869,119 +1723,77 @@ impl NodeIdTrait for Callee {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => Callee::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrowExpr => Callee::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignExpr => Callee::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AwaitExpr => Callee::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BigInt => Callee::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BinExpr => Callee::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Bool => Callee::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CallExpr => Callee::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassExpr => Callee::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::CondExpr => Callee::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnExpr => {
-                Callee::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            NodeKind::ArrayLit => Callee::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) })),
+            NodeKind::ArrowExpr => Callee::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) })),
+            NodeKind::AssignExpr => {
+                Callee::Expr(Expr::Assign({ AssignExpr::from_node_id(id, ast) }))
             }
-            NodeKind::Ident => Callee::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Import => Callee::Import(unsafe { Import::from_node_id_unchecked(id, ast) }),
-            NodeKind::Invalid => Callee::Expr(Expr::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXElement => Callee::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXEmptyExpr => Callee::Expr(Expr::JSXEmpty(unsafe {
-                JSXEmptyExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXFragment => Callee::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXMemberExpr => Callee::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXNamespacedName => Callee::Expr(Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => Callee::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MetaPropExpr => Callee::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::NewExpr => Callee::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Null => Callee::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Number => Callee::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectLit => Callee::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => Callee::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ParenExpr => Callee::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => Callee::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Regex => Callee::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SeqExpr => Callee::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Str => Callee::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Super => Callee::Super(unsafe { Super::from_node_id_unchecked(id, ast) }),
-            NodeKind::SuperPropExpr => Callee::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TaggedTpl => Callee::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThisExpr => Callee::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Tpl => {
-                Callee::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }))
+            NodeKind::AwaitExpr => Callee::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) })),
+            NodeKind::BigInt => {
+                Callee::Expr(Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })))
             }
-            NodeKind::UnaryExpr => Callee::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
+            NodeKind::BinExpr => Callee::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) })),
+            NodeKind::Bool => Callee::Expr(Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) }))),
+            NodeKind::CallExpr => Callee::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) })),
+            NodeKind::ClassExpr => Callee::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) })),
+            NodeKind::CondExpr => Callee::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) })),
+            NodeKind::FnExpr => Callee::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })),
+            NodeKind::Ident => Callee::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })),
+            NodeKind::Import => Callee::Import({ Import::from_node_id(id, ast) }),
+            NodeKind::Invalid => Callee::Expr(Expr::Invalid({ Invalid::from_node_id(id, ast) })),
+            NodeKind::JSXElement => {
+                Callee::Expr(Expr::JSXElement({ JSXElement::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXEmptyExpr => {
+                Callee::Expr(Expr::JSXEmpty({ JSXEmptyExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXFragment => {
+                Callee::Expr(Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXMemberExpr => {
+                Callee::Expr(Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXNamespacedName => Callee::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
             })),
-            NodeKind::UpdateExpr => Callee::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::YieldExpr => Callee::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::MemberExpr => {
+                Callee::Expr(Expr::Member({ MemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::MetaPropExpr => {
+                Callee::Expr(Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::NewExpr => Callee::Expr(Expr::New({ NewExpr::from_node_id(id, ast) })),
+            NodeKind::Null => Callee::Expr(Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) }))),
+            NodeKind::Number => {
+                Callee::Expr(Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) })))
+            }
+            NodeKind::ObjectLit => Callee::Expr(Expr::Object({ ObjectLit::from_node_id(id, ast) })),
+            NodeKind::OptChainExpr => {
+                Callee::Expr(Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ParenExpr => Callee::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) })),
+            NodeKind::PrivateName => {
+                Callee::Expr(Expr::PrivateName({ PrivateName::from_node_id(id, ast) }))
+            }
+            NodeKind::Regex => {
+                Callee::Expr(Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) })))
+            }
+            NodeKind::SeqExpr => Callee::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) })),
+            NodeKind::Str => Callee::Expr(Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) }))),
+            NodeKind::Super => Callee::Super({ Super::from_node_id(id, ast) }),
+            NodeKind::SuperPropExpr => {
+                Callee::Expr(Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::TaggedTpl => {
+                Callee::Expr(Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) }))
+            }
+            NodeKind::ThisExpr => Callee::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) })),
+            NodeKind::Tpl => Callee::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) })),
+            NodeKind::UnaryExpr => Callee::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) })),
+            NodeKind::UpdateExpr => {
+                Callee::Expr(Expr::Update({ UpdateExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::YieldExpr => Callee::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) })),
             _ => unreachable!(),
         }
     }
@@ -2061,120 +1873,112 @@ impl NodeIdTrait for BlockStmtOrExpr {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => BlockStmtOrExpr::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrowExpr => BlockStmtOrExpr::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignExpr => BlockStmtOrExpr::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AwaitExpr => BlockStmtOrExpr::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BigInt => BlockStmtOrExpr::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BinExpr => BlockStmtOrExpr::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BlockStmt => {
-                BlockStmtOrExpr::BlockStmt(unsafe { BlockStmt::from_node_id_unchecked(id, ast) })
+            NodeKind::ArrayLit => {
+                BlockStmtOrExpr::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) }))
             }
-            NodeKind::Bool => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CallExpr => BlockStmtOrExpr::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassExpr => BlockStmtOrExpr::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::CondExpr => BlockStmtOrExpr::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnExpr => {
-                BlockStmtOrExpr::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            NodeKind::ArrowExpr => {
+                BlockStmtOrExpr::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) }))
             }
-            NodeKind::Ident => BlockStmtOrExpr::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Invalid => BlockStmtOrExpr::Expr(Expr::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXElement => BlockStmtOrExpr::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXEmptyExpr => BlockStmtOrExpr::Expr(Expr::JSXEmpty(unsafe {
-                JSXEmptyExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXFragment => BlockStmtOrExpr::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXMemberExpr => BlockStmtOrExpr::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXNamespacedName => BlockStmtOrExpr::Expr(Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => BlockStmtOrExpr::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MetaPropExpr => BlockStmtOrExpr::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::NewExpr => BlockStmtOrExpr::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Null => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Number => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectLit => BlockStmtOrExpr::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => BlockStmtOrExpr::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ParenExpr => BlockStmtOrExpr::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => BlockStmtOrExpr::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Regex => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SeqExpr => BlockStmtOrExpr::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Str => BlockStmtOrExpr::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SuperPropExpr => BlockStmtOrExpr::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TaggedTpl => BlockStmtOrExpr::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThisExpr => BlockStmtOrExpr::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Tpl => {
-                BlockStmtOrExpr::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }))
+            NodeKind::AssignExpr => {
+                BlockStmtOrExpr::Expr(Expr::Assign({ AssignExpr::from_node_id(id, ast) }))
             }
-            NodeKind::UnaryExpr => BlockStmtOrExpr::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
+            NodeKind::AwaitExpr => {
+                BlockStmtOrExpr::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::BigInt => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })))
+            }
+            NodeKind::BinExpr => {
+                BlockStmtOrExpr::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::BlockStmt => BlockStmtOrExpr::BlockStmt({ BlockStmt::from_node_id(id, ast) }),
+            NodeKind::Bool => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) })))
+            }
+            NodeKind::CallExpr => {
+                BlockStmtOrExpr::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ClassExpr => {
+                BlockStmtOrExpr::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::CondExpr => {
+                BlockStmtOrExpr::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::FnExpr => BlockStmtOrExpr::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })),
+            NodeKind::Ident => BlockStmtOrExpr::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })),
+            NodeKind::Invalid => {
+                BlockStmtOrExpr::Expr(Expr::Invalid({ Invalid::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXElement => {
+                BlockStmtOrExpr::Expr(Expr::JSXElement({ JSXElement::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXEmptyExpr => {
+                BlockStmtOrExpr::Expr(Expr::JSXEmpty({ JSXEmptyExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXFragment => {
+                BlockStmtOrExpr::Expr(Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXMemberExpr => {
+                BlockStmtOrExpr::Expr(Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXNamespacedName => BlockStmtOrExpr::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
             })),
-            NodeKind::UpdateExpr => BlockStmtOrExpr::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::YieldExpr => BlockStmtOrExpr::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::MemberExpr => {
+                BlockStmtOrExpr::Expr(Expr::Member({ MemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::MetaPropExpr => {
+                BlockStmtOrExpr::Expr(Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::NewExpr => {
+                BlockStmtOrExpr::Expr(Expr::New({ NewExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::Null => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) })))
+            }
+            NodeKind::Number => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) })))
+            }
+            NodeKind::ObjectLit => {
+                BlockStmtOrExpr::Expr(Expr::Object({ ObjectLit::from_node_id(id, ast) }))
+            }
+            NodeKind::OptChainExpr => {
+                BlockStmtOrExpr::Expr(Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ParenExpr => {
+                BlockStmtOrExpr::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::PrivateName => {
+                BlockStmtOrExpr::Expr(Expr::PrivateName({ PrivateName::from_node_id(id, ast) }))
+            }
+            NodeKind::Regex => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) })))
+            }
+            NodeKind::SeqExpr => {
+                BlockStmtOrExpr::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::Str => {
+                BlockStmtOrExpr::Expr(Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) })))
+            }
+            NodeKind::SuperPropExpr => {
+                BlockStmtOrExpr::Expr(Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::TaggedTpl => {
+                BlockStmtOrExpr::Expr(Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) }))
+            }
+            NodeKind::ThisExpr => {
+                BlockStmtOrExpr::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::Tpl => BlockStmtOrExpr::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) })),
+            NodeKind::UnaryExpr => {
+                BlockStmtOrExpr::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::UpdateExpr => {
+                BlockStmtOrExpr::Expr(Expr::Update({ UpdateExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::YieldExpr => {
+                BlockStmtOrExpr::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) }))
+            }
             _ => unreachable!(),
         }
     }
@@ -2194,32 +1998,30 @@ impl NodeIdTrait for AssignTarget {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayPat => AssignTarget::Pat(AssignTargetPat::Array(unsafe {
-                ArrayPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BindingIdent => AssignTarget::Simple(SimpleAssignTarget::Ident(unsafe {
-                BindingIdent::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Invalid => AssignTarget::Simple(SimpleAssignTarget::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => AssignTarget::Simple(SimpleAssignTarget::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ObjectPat => AssignTarget::Pat(AssignTargetPat::Object(unsafe {
-                ObjectPat::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => AssignTarget::Simple(SimpleAssignTarget::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ParenExpr => AssignTarget::Simple(SimpleAssignTarget::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::SuperPropExpr => {
-                AssignTarget::Simple(SimpleAssignTarget::SuperProp(unsafe {
-                    SuperPropExpr::from_node_id_unchecked(id, ast)
-                }))
+            NodeKind::ArrayPat => {
+                AssignTarget::Pat(AssignTargetPat::Array({ ArrayPat::from_node_id(id, ast) }))
             }
+            NodeKind::BindingIdent => AssignTarget::Simple(SimpleAssignTarget::Ident({
+                BindingIdent::from_node_id(id, ast)
+            })),
+            NodeKind::Invalid => AssignTarget::Simple(SimpleAssignTarget::Invalid({
+                Invalid::from_node_id(id, ast)
+            })),
+            NodeKind::MemberExpr => AssignTarget::Simple(SimpleAssignTarget::Member({
+                MemberExpr::from_node_id(id, ast)
+            })),
+            NodeKind::ObjectPat => AssignTarget::Pat(AssignTargetPat::Object({
+                ObjectPat::from_node_id(id, ast)
+            })),
+            NodeKind::OptChainExpr => AssignTarget::Simple(SimpleAssignTarget::OptChain({
+                OptChainExpr::from_node_id(id, ast)
+            })),
+            NodeKind::ParenExpr => AssignTarget::Simple(SimpleAssignTarget::Paren({
+                ParenExpr::from_node_id(id, ast)
+            })),
+            NodeKind::SuperPropExpr => AssignTarget::Simple(SimpleAssignTarget::SuperProp({
+                SuperPropExpr::from_node_id(id, ast)
+            })),
             _ => unreachable!(),
         }
     }
@@ -2240,15 +2042,9 @@ impl NodeIdTrait for AssignTargetPat {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayPat => {
-                AssignTargetPat::Array(unsafe { ArrayPat::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::Invalid => {
-                AssignTargetPat::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ObjectPat => {
-                AssignTargetPat::Object(unsafe { ObjectPat::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::ArrayPat => AssignTargetPat::Array({ ArrayPat::from_node_id(id, ast) }),
+            NodeKind::Invalid => AssignTargetPat::Invalid({ Invalid::from_node_id(id, ast) }),
+            NodeKind::ObjectPat => AssignTargetPat::Object({ ObjectPat::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -2273,23 +2069,19 @@ impl NodeIdTrait for SimpleAssignTarget {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::BindingIdent => {
-                SimpleAssignTarget::Ident(unsafe { BindingIdent::from_node_id_unchecked(id, ast) })
+                SimpleAssignTarget::Ident({ BindingIdent::from_node_id(id, ast) })
             }
-            NodeKind::Invalid => {
-                SimpleAssignTarget::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::Invalid => SimpleAssignTarget::Invalid({ Invalid::from_node_id(id, ast) }),
             NodeKind::MemberExpr => {
-                SimpleAssignTarget::Member(unsafe { MemberExpr::from_node_id_unchecked(id, ast) })
+                SimpleAssignTarget::Member({ MemberExpr::from_node_id(id, ast) })
             }
-            NodeKind::OptChainExpr => SimpleAssignTarget::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::ParenExpr => {
-                SimpleAssignTarget::Paren(unsafe { ParenExpr::from_node_id_unchecked(id, ast) })
+            NodeKind::OptChainExpr => {
+                SimpleAssignTarget::OptChain({ OptChainExpr::from_node_id(id, ast) })
             }
-            NodeKind::SuperPropExpr => SimpleAssignTarget::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            }),
+            NodeKind::ParenExpr => SimpleAssignTarget::Paren({ ParenExpr::from_node_id(id, ast) }),
+            NodeKind::SuperPropExpr => {
+                SimpleAssignTarget::SuperProp({ SuperPropExpr::from_node_id(id, ast) })
+            }
             _ => unreachable!(),
         }
     }
@@ -2324,12 +2116,8 @@ impl NodeIdTrait for OptChainBase {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::MemberExpr => {
-                OptChainBase::Member(unsafe { MemberExpr::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::OptCall => {
-                OptChainBase::Call(unsafe { OptCall::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::MemberExpr => OptChainBase::Member({ MemberExpr::from_node_id(id, ast) }),
+            NodeKind::OptCall => OptChainBase::Call({ OptCall::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -2408,9 +2196,7 @@ impl NodeIdTrait for ParamOrTsParamProp {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Param => {
-                ParamOrTsParamProp::Param(unsafe { Param::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::Param => ParamOrTsParamProp::Param({ Param::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -2452,28 +2238,22 @@ impl NodeIdTrait for ClassMember {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::AutoAccessor => {
-                ClassMember::AutoAccessor(unsafe { AutoAccessor::from_node_id_unchecked(id, ast) })
+                ClassMember::AutoAccessor({ AutoAccessor::from_node_id(id, ast) })
             }
-            NodeKind::ClassMethod => {
-                ClassMember::Method(unsafe { ClassMethod::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::ClassProp => {
-                ClassMember::ClassProp(unsafe { ClassProp::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::ClassMethod => ClassMember::Method({ ClassMethod::from_node_id(id, ast) }),
+            NodeKind::ClassProp => ClassMember::ClassProp({ ClassProp::from_node_id(id, ast) }),
             NodeKind::Constructor => {
-                ClassMember::Constructor(unsafe { Constructor::from_node_id_unchecked(id, ast) })
+                ClassMember::Constructor({ Constructor::from_node_id(id, ast) })
             }
-            NodeKind::EmptyStmt => {
-                ClassMember::Empty(unsafe { EmptyStmt::from_node_id_unchecked(id, ast) })
+            NodeKind::EmptyStmt => ClassMember::Empty({ EmptyStmt::from_node_id(id, ast) }),
+            NodeKind::PrivateMethod => {
+                ClassMember::PrivateMethod({ PrivateMethod::from_node_id(id, ast) })
             }
-            NodeKind::PrivateMethod => ClassMember::PrivateMethod(unsafe {
-                PrivateMethod::from_node_id_unchecked(id, ast)
-            }),
             NodeKind::PrivateProp => {
-                ClassMember::PrivateProp(unsafe { PrivateProp::from_node_id_unchecked(id, ast) })
+                ClassMember::PrivateProp({ PrivateProp::from_node_id(id, ast) })
             }
             NodeKind::StaticBlock => {
-                ClassMember::StaticBlock(unsafe { StaticBlock::from_node_id_unchecked(id, ast) })
+                ClassMember::StaticBlock({ StaticBlock::from_node_id(id, ast) })
             }
             _ => unreachable!(),
         }
@@ -2599,24 +2379,16 @@ impl NodeIdTrait for Key {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::BigInt => Key::Public(PropName::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
+            NodeKind::BigInt => Key::Public(PropName::BigInt({ BigInt::from_node_id(id, ast) })),
+            NodeKind::ComputedPropName => Key::Public(PropName::Computed({
+                ComputedPropName::from_node_id(id, ast)
             })),
-            NodeKind::ComputedPropName => Key::Public(PropName::Computed(unsafe {
-                ComputedPropName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::IdentName => Key::Public(PropName::Ident(unsafe {
-                IdentName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Number => Key::Public(PropName::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => {
-                Key::Private(unsafe { PrivateName::from_node_id_unchecked(id, ast) })
+            NodeKind::IdentName => {
+                Key::Public(PropName::Ident({ IdentName::from_node_id(id, ast) }))
             }
-            NodeKind::Str => Key::Public(PropName::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::Number => Key::Public(PropName::Num({ Number::from_node_id(id, ast) })),
+            NodeKind::PrivateName => Key::Private({ PrivateName::from_node_id(id, ast) }),
+            NodeKind::Str => Key::Public(PropName::Str({ Str::from_node_id(id, ast) })),
             _ => unreachable!(),
         }
     }
@@ -2655,22 +2427,12 @@ impl NodeIdTrait for Prop {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::AssignProp => {
-                Prop::Assign(unsafe { AssignProp::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::GetterProp => {
-                Prop::Getter(unsafe { GetterProp::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::Ident => Prop::Shorthand(unsafe { Ident::from_node_id_unchecked(id, ast) }),
-            NodeKind::KeyValueProp => {
-                Prop::KeyValue(unsafe { KeyValueProp::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::MethodProp => {
-                Prop::Method(unsafe { MethodProp::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::SetterProp => {
-                Prop::Setter(unsafe { SetterProp::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::AssignProp => Prop::Assign({ AssignProp::from_node_id(id, ast) }),
+            NodeKind::GetterProp => Prop::Getter({ GetterProp::from_node_id(id, ast) }),
+            NodeKind::Ident => Prop::Shorthand({ Ident::from_node_id(id, ast) }),
+            NodeKind::KeyValueProp => Prop::KeyValue({ KeyValueProp::from_node_id(id, ast) }),
+            NodeKind::MethodProp => Prop::Method({ MethodProp::from_node_id(id, ast) }),
+            NodeKind::SetterProp => Prop::Setter({ SetterProp::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -2768,17 +2530,13 @@ impl NodeIdTrait for PropName {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::BigInt => {
-                PropName::BigInt(unsafe { BigInt::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::BigInt => PropName::BigInt({ BigInt::from_node_id(id, ast) }),
             NodeKind::ComputedPropName => {
-                PropName::Computed(unsafe { ComputedPropName::from_node_id_unchecked(id, ast) })
+                PropName::Computed({ ComputedPropName::from_node_id(id, ast) })
             }
-            NodeKind::IdentName => {
-                PropName::Ident(unsafe { IdentName::from_node_id_unchecked(id, ast) })
-            }
-            NodeKind::Number => PropName::Num(unsafe { Number::from_node_id_unchecked(id, ast) }),
-            NodeKind::Str => PropName::Str(unsafe { Str::from_node_id_unchecked(id, ast) }),
+            NodeKind::IdentName => PropName::Ident({ IdentName::from_node_id(id, ast) }),
+            NodeKind::Number => PropName::Num({ Number::from_node_id(id, ast) }),
+            NodeKind::Str => PropName::Str({ Str::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -2818,124 +2576,68 @@ impl NodeIdTrait for Pat {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => Pat::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrayPat => Pat::Array(unsafe { ArrayPat::from_node_id_unchecked(id, ast) }),
-            NodeKind::ArrowExpr => Pat::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignExpr => Pat::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignPat => {
-                Pat::Assign(unsafe { AssignPat::from_node_id_unchecked(id, ast) })
+            NodeKind::ArrayLit => Pat::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) })),
+            NodeKind::ArrayPat => Pat::Array({ ArrayPat::from_node_id(id, ast) }),
+            NodeKind::ArrowExpr => Pat::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) })),
+            NodeKind::AssignExpr => Pat::Expr(Expr::Assign({ AssignExpr::from_node_id(id, ast) })),
+            NodeKind::AssignPat => Pat::Assign({ AssignPat::from_node_id(id, ast) }),
+            NodeKind::AwaitExpr => Pat::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) })),
+            NodeKind::BigInt => {
+                Pat::Expr(Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })))
             }
-            NodeKind::AwaitExpr => Pat::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BigInt => Pat::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BinExpr => Pat::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BindingIdent => {
-                Pat::Ident(unsafe { BindingIdent::from_node_id_unchecked(id, ast) })
+            NodeKind::BinExpr => Pat::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) })),
+            NodeKind::BindingIdent => Pat::Ident({ BindingIdent::from_node_id(id, ast) }),
+            NodeKind::Bool => Pat::Expr(Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) }))),
+            NodeKind::CallExpr => Pat::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) })),
+            NodeKind::ClassExpr => Pat::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) })),
+            NodeKind::CondExpr => Pat::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) })),
+            NodeKind::FnExpr => Pat::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })),
+            NodeKind::Ident => Pat::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })),
+            NodeKind::Invalid => Pat::Invalid({ Invalid::from_node_id(id, ast) }),
+            NodeKind::JSXElement => {
+                Pat::Expr(Expr::JSXElement({ JSXElement::from_node_id(id, ast) }))
             }
-            NodeKind::Bool => Pat::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CallExpr => Pat::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassExpr => Pat::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::CondExpr => Pat::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnExpr => {
-                Pat::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            NodeKind::JSXEmptyExpr => {
+                Pat::Expr(Expr::JSXEmpty({ JSXEmptyExpr::from_node_id(id, ast) }))
             }
-            NodeKind::Ident => Pat::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Invalid => Pat::Invalid(unsafe { Invalid::from_node_id_unchecked(id, ast) }),
-            NodeKind::JSXElement => Pat::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXEmptyExpr => Pat::Expr(Expr::JSXEmpty(unsafe {
-                JSXEmptyExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXFragment => Pat::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXMemberExpr => Pat::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXNamespacedName => Pat::Expr(Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => Pat::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MetaPropExpr => Pat::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::NewExpr => Pat::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Null => Pat::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Number => Pat::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectLit => Pat::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ObjectPat => {
-                Pat::Object(unsafe { ObjectPat::from_node_id_unchecked(id, ast) })
+            NodeKind::JSXFragment => {
+                Pat::Expr(Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }))
             }
-            NodeKind::OptChainExpr => Pat::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
+            NodeKind::JSXMemberExpr => {
+                Pat::Expr(Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXNamespacedName => Pat::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
             })),
-            NodeKind::ParenExpr => Pat::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => Pat::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Regex => Pat::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::RestPat => Pat::Rest(unsafe { RestPat::from_node_id_unchecked(id, ast) }),
-            NodeKind::SeqExpr => Pat::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Str => Pat::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SuperPropExpr => Pat::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TaggedTpl => Pat::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThisExpr => Pat::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Tpl => Pat::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) })),
-            NodeKind::UnaryExpr => Pat::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::UpdateExpr => Pat::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::YieldExpr => Pat::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::MemberExpr => Pat::Expr(Expr::Member({ MemberExpr::from_node_id(id, ast) })),
+            NodeKind::MetaPropExpr => {
+                Pat::Expr(Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::NewExpr => Pat::Expr(Expr::New({ NewExpr::from_node_id(id, ast) })),
+            NodeKind::Null => Pat::Expr(Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) }))),
+            NodeKind::Number => Pat::Expr(Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) }))),
+            NodeKind::ObjectLit => Pat::Expr(Expr::Object({ ObjectLit::from_node_id(id, ast) })),
+            NodeKind::ObjectPat => Pat::Object({ ObjectPat::from_node_id(id, ast) }),
+            NodeKind::OptChainExpr => {
+                Pat::Expr(Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ParenExpr => Pat::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) })),
+            NodeKind::PrivateName => {
+                Pat::Expr(Expr::PrivateName({ PrivateName::from_node_id(id, ast) }))
+            }
+            NodeKind::Regex => Pat::Expr(Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) }))),
+            NodeKind::RestPat => Pat::Rest({ RestPat::from_node_id(id, ast) }),
+            NodeKind::SeqExpr => Pat::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) })),
+            NodeKind::Str => Pat::Expr(Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) }))),
+            NodeKind::SuperPropExpr => {
+                Pat::Expr(Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::TaggedTpl => Pat::Expr(Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) })),
+            NodeKind::ThisExpr => Pat::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) })),
+            NodeKind::Tpl => Pat::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) })),
+            NodeKind::UnaryExpr => Pat::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) })),
+            NodeKind::UpdateExpr => Pat::Expr(Expr::Update({ UpdateExpr::from_node_id(id, ast) })),
+            NodeKind::YieldExpr => Pat::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) })),
             _ => unreachable!(),
         }
     }
@@ -3017,14 +2719,12 @@ impl NodeIdTrait for ObjectPatProp {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::AssignPatProp => {
-                ObjectPatProp::Assign(unsafe { AssignPatProp::from_node_id_unchecked(id, ast) })
+                ObjectPatProp::Assign({ AssignPatProp::from_node_id(id, ast) })
             }
             NodeKind::KeyValuePatProp => {
-                ObjectPatProp::KeyValue(unsafe { KeyValuePatProp::from_node_id_unchecked(id, ast) })
+                ObjectPatProp::KeyValue({ KeyValuePatProp::from_node_id(id, ast) })
             }
-            NodeKind::RestPat => {
-                ObjectPatProp::Rest(unsafe { RestPat::from_node_id_unchecked(id, ast) })
-            }
+            NodeKind::RestPat => ObjectPatProp::Rest({ RestPat::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -3138,12 +2838,12 @@ impl NodeIdTrait for Lit {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::BigInt => Lit::BigInt(unsafe { BigInt::from_node_id_unchecked(id, ast) }),
-            NodeKind::Bool => Lit::Bool(unsafe { Bool::from_node_id_unchecked(id, ast) }),
-            NodeKind::Null => Lit::Null(unsafe { Null::from_node_id_unchecked(id, ast) }),
-            NodeKind::Number => Lit::Num(unsafe { Number::from_node_id_unchecked(id, ast) }),
-            NodeKind::Regex => Lit::Regex(unsafe { Regex::from_node_id_unchecked(id, ast) }),
-            NodeKind::Str => Lit::Str(unsafe { Str::from_node_id_unchecked(id, ast) }),
+            NodeKind::BigInt => Lit::BigInt({ BigInt::from_node_id(id, ast) }),
+            NodeKind::Bool => Lit::Bool({ Bool::from_node_id(id, ast) }),
+            NodeKind::Null => Lit::Null({ Null::from_node_id(id, ast) }),
+            NodeKind::Number => Lit::Num({ Number::from_node_id(id, ast) }),
+            NodeKind::Regex => Lit::Regex({ Regex::from_node_id(id, ast) }),
+            NodeKind::Str => Lit::Str({ Str::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -3253,9 +2953,9 @@ impl NodeIdTrait for JSXObject {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Ident => JSXObject::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) }),
+            NodeKind::Ident => JSXObject::Ident({ Ident::from_node_id(id, ast) }),
             NodeKind::JSXMemberExpr => {
-                JSXObject::JSXMemberExpr(unsafe { JSXMemberExpr::from_node_id_unchecked(id, ast) })
+                JSXObject::JSXMemberExpr({ JSXMemberExpr::from_node_id(id, ast) })
             }
             _ => unreachable!(),
         }
@@ -3336,117 +3036,77 @@ impl NodeIdTrait for JSXExpr {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::ArrayLit => JSXExpr::Expr(Expr::Array(unsafe {
-                ArrayLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ArrowExpr => JSXExpr::Expr(Expr::Arrow(unsafe {
-                ArrowExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AssignExpr => JSXExpr::Expr(Expr::Assign(unsafe {
-                AssignExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::AwaitExpr => JSXExpr::Expr(Expr::Await(unsafe {
-                AwaitExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::BigInt => JSXExpr::Expr(Expr::Lit(Lit::BigInt(unsafe {
-                BigInt::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::BinExpr => JSXExpr::Expr(Expr::Bin(unsafe {
-                BinExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Bool => JSXExpr::Expr(Expr::Lit(Lit::Bool(unsafe {
-                Bool::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::CallExpr => JSXExpr::Expr(Expr::Call(unsafe {
-                CallExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ClassExpr => JSXExpr::Expr(Expr::Class(unsafe {
-                ClassExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::CondExpr => JSXExpr::Expr(Expr::Cond(unsafe {
-                CondExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::FnExpr => {
-                JSXExpr::Expr(Expr::Fn(unsafe { FnExpr::from_node_id_unchecked(id, ast) }))
+            NodeKind::ArrayLit => JSXExpr::Expr(Expr::Array({ ArrayLit::from_node_id(id, ast) })),
+            NodeKind::ArrowExpr => JSXExpr::Expr(Expr::Arrow({ ArrowExpr::from_node_id(id, ast) })),
+            NodeKind::AssignExpr => {
+                JSXExpr::Expr(Expr::Assign({ AssignExpr::from_node_id(id, ast) }))
             }
-            NodeKind::Ident => JSXExpr::Expr(Expr::Ident(unsafe {
-                Ident::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Invalid => JSXExpr::Expr(Expr::Invalid(unsafe {
-                Invalid::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXElement => JSXExpr::Expr(Expr::JSXElement(unsafe {
-                JSXElement::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::AwaitExpr => JSXExpr::Expr(Expr::Await({ AwaitExpr::from_node_id(id, ast) })),
+            NodeKind::BigInt => {
+                JSXExpr::Expr(Expr::Lit(Lit::BigInt({ BigInt::from_node_id(id, ast) })))
+            }
+            NodeKind::BinExpr => JSXExpr::Expr(Expr::Bin({ BinExpr::from_node_id(id, ast) })),
+            NodeKind::Bool => JSXExpr::Expr(Expr::Lit(Lit::Bool({ Bool::from_node_id(id, ast) }))),
+            NodeKind::CallExpr => JSXExpr::Expr(Expr::Call({ CallExpr::from_node_id(id, ast) })),
+            NodeKind::ClassExpr => JSXExpr::Expr(Expr::Class({ ClassExpr::from_node_id(id, ast) })),
+            NodeKind::CondExpr => JSXExpr::Expr(Expr::Cond({ CondExpr::from_node_id(id, ast) })),
+            NodeKind::FnExpr => JSXExpr::Expr(Expr::Fn({ FnExpr::from_node_id(id, ast) })),
+            NodeKind::Ident => JSXExpr::Expr(Expr::Ident({ Ident::from_node_id(id, ast) })),
+            NodeKind::Invalid => JSXExpr::Expr(Expr::Invalid({ Invalid::from_node_id(id, ast) })),
+            NodeKind::JSXElement => {
+                JSXExpr::Expr(Expr::JSXElement({ JSXElement::from_node_id(id, ast) }))
+            }
             NodeKind::JSXEmptyExpr => {
-                JSXExpr::JSXEmptyExpr(unsafe { JSXEmptyExpr::from_node_id_unchecked(id, ast) })
+                JSXExpr::JSXEmptyExpr({ JSXEmptyExpr::from_node_id(id, ast) })
             }
-            NodeKind::JSXFragment => JSXExpr::Expr(Expr::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXMemberExpr => JSXExpr::Expr(Expr::JSXMember(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::JSXNamespacedName => JSXExpr::Expr(Expr::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MemberExpr => JSXExpr::Expr(Expr::Member(unsafe {
-                MemberExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::MetaPropExpr => JSXExpr::Expr(Expr::MetaProp(unsafe {
-                MetaPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::NewExpr => JSXExpr::Expr(Expr::New(unsafe {
-                NewExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Null => JSXExpr::Expr(Expr::Lit(Lit::Null(unsafe {
-                Null::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::Number => JSXExpr::Expr(Expr::Lit(Lit::Num(unsafe {
-                Number::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::ObjectLit => JSXExpr::Expr(Expr::Object(unsafe {
-                ObjectLit::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::OptChainExpr => JSXExpr::Expr(Expr::OptChain(unsafe {
-                OptChainExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ParenExpr => JSXExpr::Expr(Expr::Paren(unsafe {
-                ParenExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::PrivateName => JSXExpr::Expr(Expr::PrivateName(unsafe {
-                PrivateName::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Regex => JSXExpr::Expr(Expr::Lit(Lit::Regex(unsafe {
-                Regex::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SeqExpr => JSXExpr::Expr(Expr::Seq(unsafe {
-                SeqExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Str => JSXExpr::Expr(Expr::Lit(Lit::Str(unsafe {
-                Str::from_node_id_unchecked(id, ast)
-            }))),
-            NodeKind::SuperPropExpr => JSXExpr::Expr(Expr::SuperProp(unsafe {
-                SuperPropExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::TaggedTpl => JSXExpr::Expr(Expr::TaggedTpl(unsafe {
-                TaggedTpl::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::ThisExpr => JSXExpr::Expr(Expr::This(unsafe {
-                ThisExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::Tpl => {
-                JSXExpr::Expr(Expr::Tpl(unsafe { Tpl::from_node_id_unchecked(id, ast) }))
+            NodeKind::JSXFragment => {
+                JSXExpr::Expr(Expr::JSXFragment({ JSXFragment::from_node_id(id, ast) }))
             }
-            NodeKind::UnaryExpr => JSXExpr::Expr(Expr::Unary(unsafe {
-                UnaryExpr::from_node_id_unchecked(id, ast)
+            NodeKind::JSXMemberExpr => {
+                JSXExpr::Expr(Expr::JSXMember({ JSXMemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::JSXNamespacedName => JSXExpr::Expr(Expr::JSXNamespacedName({
+                JSXNamespacedName::from_node_id(id, ast)
             })),
-            NodeKind::UpdateExpr => JSXExpr::Expr(Expr::Update(unsafe {
-                UpdateExpr::from_node_id_unchecked(id, ast)
-            })),
-            NodeKind::YieldExpr => JSXExpr::Expr(Expr::Yield(unsafe {
-                YieldExpr::from_node_id_unchecked(id, ast)
-            })),
+            NodeKind::MemberExpr => {
+                JSXExpr::Expr(Expr::Member({ MemberExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::MetaPropExpr => {
+                JSXExpr::Expr(Expr::MetaProp({ MetaPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::NewExpr => JSXExpr::Expr(Expr::New({ NewExpr::from_node_id(id, ast) })),
+            NodeKind::Null => JSXExpr::Expr(Expr::Lit(Lit::Null({ Null::from_node_id(id, ast) }))),
+            NodeKind::Number => {
+                JSXExpr::Expr(Expr::Lit(Lit::Num({ Number::from_node_id(id, ast) })))
+            }
+            NodeKind::ObjectLit => {
+                JSXExpr::Expr(Expr::Object({ ObjectLit::from_node_id(id, ast) }))
+            }
+            NodeKind::OptChainExpr => {
+                JSXExpr::Expr(Expr::OptChain({ OptChainExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::ParenExpr => JSXExpr::Expr(Expr::Paren({ ParenExpr::from_node_id(id, ast) })),
+            NodeKind::PrivateName => {
+                JSXExpr::Expr(Expr::PrivateName({ PrivateName::from_node_id(id, ast) }))
+            }
+            NodeKind::Regex => {
+                JSXExpr::Expr(Expr::Lit(Lit::Regex({ Regex::from_node_id(id, ast) })))
+            }
+            NodeKind::SeqExpr => JSXExpr::Expr(Expr::Seq({ SeqExpr::from_node_id(id, ast) })),
+            NodeKind::Str => JSXExpr::Expr(Expr::Lit(Lit::Str({ Str::from_node_id(id, ast) }))),
+            NodeKind::SuperPropExpr => {
+                JSXExpr::Expr(Expr::SuperProp({ SuperPropExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::TaggedTpl => {
+                JSXExpr::Expr(Expr::TaggedTpl({ TaggedTpl::from_node_id(id, ast) }))
+            }
+            NodeKind::ThisExpr => JSXExpr::Expr(Expr::This({ ThisExpr::from_node_id(id, ast) })),
+            NodeKind::Tpl => JSXExpr::Expr(Expr::Tpl({ Tpl::from_node_id(id, ast) })),
+            NodeKind::UnaryExpr => JSXExpr::Expr(Expr::Unary({ UnaryExpr::from_node_id(id, ast) })),
+            NodeKind::UpdateExpr => {
+                JSXExpr::Expr(Expr::Update({ UpdateExpr::from_node_id(id, ast) }))
+            }
+            NodeKind::YieldExpr => JSXExpr::Expr(Expr::Yield({ YieldExpr::from_node_id(id, ast) })),
             _ => unreachable!(),
         }
     }
@@ -3482,15 +3142,13 @@ impl NodeIdTrait for JSXElementName {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::Ident => {
-                JSXElementName::Ident(unsafe { Ident::from_node_id_unchecked(id, ast) })
+            NodeKind::Ident => JSXElementName::Ident({ Ident::from_node_id(id, ast) }),
+            NodeKind::JSXMemberExpr => {
+                JSXElementName::JSXMemberExpr({ JSXMemberExpr::from_node_id(id, ast) })
             }
-            NodeKind::JSXMemberExpr => JSXElementName::JSXMemberExpr(unsafe {
-                JSXMemberExpr::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::JSXNamespacedName => JSXElementName::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            }),
+            NodeKind::JSXNamespacedName => {
+                JSXElementName::JSXNamespacedName({ JSXNamespacedName::from_node_id(id, ast) })
+            }
             _ => unreachable!(),
         }
     }
@@ -3525,12 +3183,10 @@ impl NodeIdTrait for JSXAttrOrSpread {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::JSXAttr => {
-                JSXAttrOrSpread::JSXAttr(unsafe { JSXAttr::from_node_id_unchecked(id, ast) })
+            NodeKind::JSXAttr => JSXAttrOrSpread::JSXAttr({ JSXAttr::from_node_id(id, ast) }),
+            NodeKind::SpreadElement => {
+                JSXAttrOrSpread::SpreadElement({ SpreadElement::from_node_id(id, ast) })
             }
-            NodeKind::SpreadElement => JSXAttrOrSpread::SpreadElement(unsafe {
-                SpreadElement::from_node_id_unchecked(id, ast)
-            }),
             _ => unreachable!(),
         }
     }
@@ -3580,12 +3236,10 @@ impl NodeIdTrait for JSXAttrName {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::IdentName => {
-                JSXAttrName::Ident(unsafe { IdentName::from_node_id_unchecked(id, ast) })
+            NodeKind::IdentName => JSXAttrName::Ident({ IdentName::from_node_id(id, ast) }),
+            NodeKind::JSXNamespacedName => {
+                JSXAttrName::JSXNamespacedName({ JSXNamespacedName::from_node_id(id, ast) })
             }
-            NodeKind::JSXNamespacedName => JSXAttrName::JSXNamespacedName(unsafe {
-                JSXNamespacedName::from_node_id_unchecked(id, ast)
-            }),
             _ => unreachable!(),
         }
     }
@@ -3607,16 +3261,14 @@ impl NodeIdTrait for JSXAttrValue {
     #[inline]
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
-            NodeKind::JSXElement => {
-                JSXAttrValue::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
+            NodeKind::JSXElement => JSXAttrValue::JSXElement({ JSXElement::from_node_id(id, ast) }),
+            NodeKind::JSXExprContainer => {
+                JSXAttrValue::JSXExprContainer({ JSXExprContainer::from_node_id(id, ast) })
             }
-            NodeKind::JSXExprContainer => JSXAttrValue::JSXExprContainer(unsafe {
-                JSXExprContainer::from_node_id_unchecked(id, ast)
-            }),
             NodeKind::JSXFragment => {
-                JSXAttrValue::JSXFragment(unsafe { JSXFragment::from_node_id_unchecked(id, ast) })
+                JSXAttrValue::JSXFragment({ JSXFragment::from_node_id(id, ast) })
             }
-            NodeKind::Str => JSXAttrValue::Str(unsafe { Str::from_node_id_unchecked(id, ast) }),
+            NodeKind::Str => JSXAttrValue::Str({ Str::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
@@ -3670,20 +3322,18 @@ impl NodeIdTrait for JSXElementChild {
     fn from_node_id(id: NodeId, ast: &Ast) -> Self {
         match &ast.nodes[id].kind {
             NodeKind::JSXElement => {
-                JSXElementChild::JSXElement(unsafe { JSXElement::from_node_id_unchecked(id, ast) })
+                JSXElementChild::JSXElement({ JSXElement::from_node_id(id, ast) })
             }
-            NodeKind::JSXExprContainer => JSXElementChild::JSXExprContainer(unsafe {
-                JSXExprContainer::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::JSXFragment => JSXElementChild::JSXFragment(unsafe {
-                JSXFragment::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::JSXSpreadChild => JSXElementChild::JSXSpreadChild(unsafe {
-                JSXSpreadChild::from_node_id_unchecked(id, ast)
-            }),
-            NodeKind::JSXText => {
-                JSXElementChild::JSXText(unsafe { JSXText::from_node_id_unchecked(id, ast) })
+            NodeKind::JSXExprContainer => {
+                JSXElementChild::JSXExprContainer({ JSXExprContainer::from_node_id(id, ast) })
             }
+            NodeKind::JSXFragment => {
+                JSXElementChild::JSXFragment({ JSXFragment::from_node_id(id, ast) })
+            }
+            NodeKind::JSXSpreadChild => {
+                JSXElementChild::JSXSpreadChild({ JSXSpreadChild::from_node_id(id, ast) })
+            }
+            NodeKind::JSXText => JSXElementChild::JSXText({ JSXText::from_node_id(id, ast) }),
             _ => unreachable!(),
         }
     }
