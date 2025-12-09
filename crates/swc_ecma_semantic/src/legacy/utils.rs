@@ -14,16 +14,20 @@ pub fn find_pat_ids<'ast, N: VisitWith<DestructuringFinder<'ast>>>(
         ast,
         found: Vec::new(),
     };
-    node.visit_with(&mut v, ast);
+    node.visit_with(&mut v);
 
     v.found
 }
 
 impl<'ast> Visit for DestructuringFinder<'ast> {
-    /// No-op (we don't care about expressions)
-    fn visit_expr(&mut self, _: Expr, _ast: &Ast) {}
+    fn ast(&self) -> &Ast {
+        self.ast
+    }
 
-    fn visit_ident(&mut self, i: Ident, _ast: &Ast) {
+    /// No-op (we don't care about expressions)
+    fn visit_expr(&mut self, _: Expr) {}
+
+    fn visit_ident(&mut self, i: Ident) {
         self.found.push(self.ast.get_utf8(i.sym(self.ast)));
     }
 
@@ -32,7 +36,7 @@ impl<'ast> Visit for DestructuringFinder<'ast> {
     // }
 
     /// No-op (we don't care about expressions)
-    fn visit_prop_name(&mut self, _: PropName, _ast: &Ast) {}
+    fn visit_prop_name(&mut self, _: PropName) {}
 
     // fn visit_ts_type(&mut self, _: &TsType) {}
 }

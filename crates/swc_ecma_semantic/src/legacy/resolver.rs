@@ -14,7 +14,7 @@ const LOG: bool = false && cfg!(debug_assertions);
 ///
 /// # When to run
 ///
-/// The resolver expects 'clean' ast. You can get clean ast by parsing, or by
+/// The resolver expects 'clean' self.ast. You can get clean ast by parsing, or by
 /// removing all syntax context in ast nodes.
 ///
 /// # What does it do
@@ -150,7 +150,7 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
         strict_mode: false,
     };
 
-    root.visit_with(&mut resolver, ast);
+    root.visit_with(&mut resolver);
     Semantic {
         top_level_scope_id,
         parent_ids: resolver.parent_ids,
@@ -279,13 +279,13 @@ impl<'ast> Resolver<'ast> {
         self.strict_mode = strict_mode;
     }
 
-    fn visit_stmt_within_child_scope(&mut self, ast: &Ast, s: Stmt) {
+    fn visit_stmt_within_child_scope(&mut self, s: Stmt) {
         self.with_child(ScopeKind::Block, |child| match s {
             Stmt::Block(s) => {
                 child.mark_block(s.node_id());
-                s.visit_children_with(child, ast);
+                s.visit_children_with(child);
             }
-            _ => s.visit_with(child, ast),
+            _ => s.visit_with(child),
         });
     }
 
@@ -347,7 +347,7 @@ impl<'ast> Resolver<'ast> {
     }
 
     /// Modifies a binding identifier.
-    fn modify(&mut self, ast: &'ast Ast, id: Ident, kind: DeclKind) {
+    fn modify(&mut self, id: Ident, kind: DeclKind) {
         let node_id = id.node_id();
 
         if self.symbol_scopes.contains_key(&node_id) {
@@ -357,11 +357,11 @@ impl<'ast> Resolver<'ast> {
         if self.in_type {
             self.scopes[self.current]
                 .declared_types
-                .insert(ast.get_utf8(id.sym(ast)));
+                .insert(self.ast.get_utf8(id.sym(self.ast)));
         } else {
             self.scopes[self.current]
                 .declared_symbols
-                .insert(ast.get_utf8(id.sym(ast)), kind);
+                .insert(self.ast.get_utf8(id.sym(self.ast)), kind);
         }
 
         let scope_id = self.current;
@@ -377,13 +377,13 @@ impl<'ast> Resolver<'ast> {
         self.block_scopes.insert(node_id, scope_id);
     }
 
-    // fn try_resolving_as_type(&mut self, i: &mut Ident, ast: &Ast) {
+    // fn try_resolving_as_type(&mut self, i: &mut Ident) {
     //     if i.ctxt.outer() == self.config.unresolved_mark {
     //         i.ctxt = SyntaxContext::empty()
     //     }
 
     //     self.in_type = true;
-    //     i.visit_with(self, ast);
+    //     i.visit_with(self);
     //     self.in_type = false;
     // }
 }
@@ -534,17 +534,21 @@ impl<'ast> Visit for Resolver<'ast> {
     // // TODO: How should I handle this?
     // typed!(visit_ts_namespace_export_decl, TsNamespaceExportDecl);
 
-    fn enter_node(&mut self, node_id: NodeId, ast: &Ast) {
+    fn ast(&self) -> &Ast {
+        self.ast
+    }
+
+    fn enter_node(&mut self, node_id: NodeId) {
         self.parent_ids[node_id] = self.current_node_id;
         self.current_node_id = node_id;
     }
 
-    fn leave_node(&mut self, node_id: NodeId, ast: &Ast) {
+    fn leave_node(&mut self, node_id: NodeId) {
         self.current_node_id = self.parent_ids[node_id];
     }
 
-    fn visit_arrow_expr(&mut self, e: ArrowExpr, ast: &Ast) {
-        self.enter_node(e.node_id(), ast);
+    fn visit_arrow_expr(&mut self, e: ArrowExpr) {
+        self.enter_node(e.node_id());
 
         self.with_child(ScopeKind::Fn, |child| {
             // e.type_params.visit_with(child);
@@ -553,10 +557,10 @@ impl<'ast> Visit for Resolver<'ast> {
             child.ident_type = IdentType::Binding;
             {
                 let params = e
-                    .params(ast)
+                    .params(self.ast)
                     .iter()
-                    .filter(|p| !ast.get_node_in_sub_range(*p).is_rest())
-                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node_in_sub_range(p)));
+                    .filter(|p| !self.ast.get_node_in_sub_range(*p).is_rest())
+                    .flat_map(|p| find_pat_ids(child.ast, self.ast.get_node_in_sub_range(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -564,10 +568,10 @@ impl<'ast> Visit for Resolver<'ast> {
                         .insert(id, DeclKind::Param);
                 }
             }
-            e.params(ast).visit_with(child, ast);
+            e.params(self.ast).visit_with(child);
             child.ident_type = old;
 
-            match &mut e.body(ast) {
+            match &mut e.body(self.ast) {
                 BlockStmtOrExpr::BlockStmt(s) => {
                     child.mark_block(s.node_id());
 
@@ -575,37 +579,39 @@ impl<'ast> Visit for Resolver<'ast> {
 
                     if !child.strict_mode {
                         child.strict_mode = s
-                            .stmts(ast)
+                            .stmts(self.ast)
                             .first()
-                            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
+                            .map(|stmt| {
+                                self.ast.get_node_in_sub_range(stmt).is_use_strict(self.ast)
+                            })
                             .unwrap_or(false);
                     }
                     // Prevent creating new scope.
-                    s.stmts(ast).visit_with(child, ast);
+                    s.stmts(self.ast).visit_with(child);
                     child.strict_mode = old_strict_mode;
                 }
-                BlockStmtOrExpr::Expr(e) => e.visit_with(child, ast),
+                BlockStmtOrExpr::Expr(e) => e.visit_with(child),
             }
 
             // e.return_type.visit_with(child);
         });
 
-        self.leave_node(e.node_id(), ast);
+        self.leave_node(e.node_id());
     }
 
-    fn visit_assign_pat(&mut self, node: AssignPat, ast: &Ast) {
-        self.enter_node(node.node_id(), ast);
+    fn visit_assign_pat(&mut self, node: AssignPat) {
+        self.enter_node(node.node_id());
 
         // visit the type first so that it doesn't resolve any
         // identifiers from the others
-        node.left(ast).visit_with(self, ast);
-        node.right(ast).visit_with(self, ast);
+        node.left(self.ast).visit_with(self);
+        node.right(self.ast).visit_with(self);
 
-        self.leave_node(node.node_id(), ast);
+        self.leave_node(node.node_id());
     }
 
-    fn visit_binding_ident(&mut self, i: BindingIdent, ast: &Ast) {
-        self.enter_node(i.node_id(), ast);
+    fn visit_binding_ident(&mut self, i: BindingIdent) {
+        self.enter_node(i.node_id());
 
         let ident_type = self.ident_type;
         let in_type = self.in_type;
@@ -614,55 +620,55 @@ impl<'ast> Visit for Resolver<'ast> {
         // i.type_ann.visit_with(self);
 
         self.ident_type = ident_type;
-        i.id(ast).visit_with(self, ast);
+        i.id(self.ast).visit_with(self);
 
         self.in_type = in_type;
         self.ident_type = ident_type;
 
-        self.leave_node(i.node_id(), ast);
+        self.leave_node(i.node_id());
     }
 
-    fn visit_block_stmt(&mut self, block: BlockStmt, ast: &Ast) {
-        self.enter_node(block.node_id(), ast);
+    fn visit_block_stmt(&mut self, block: BlockStmt) {
+        self.enter_node(block.node_id());
 
         self.with_child(ScopeKind::Block, |child| {
             child.mark_block(block.node_id());
-            block.visit_children_with(child, ast);
+            block.visit_children_with(child);
         });
 
-        self.leave_node(block.node_id(), ast);
+        self.leave_node(block.node_id());
     }
 
-    fn visit_break_stmt(&mut self, s: BreakStmt, ast: &Ast) {
-        self.enter_node(s.node_id(), ast);
+    fn visit_break_stmt(&mut self, s: BreakStmt) {
+        self.enter_node(s.node_id());
 
         let old = self.ident_type;
         self.ident_type = IdentType::Label;
-        s.label(ast).visit_with(self, ast);
+        s.label(self.ast).visit_with(self);
         self.ident_type = old;
 
-        self.leave_node(s.node_id(), ast);
+        self.leave_node(s.node_id());
     }
 
-    fn visit_catch_clause(&mut self, c: CatchClause, ast: &Ast) {
+    fn visit_catch_clause(&mut self, c: CatchClause) {
         // Child folder
-        self.enter_node(c.node_id(), ast);
+        self.enter_node(c.node_id());
 
         self.with_child(ScopeKind::Fn, |child| {
             child.ident_type = IdentType::Binding;
-            c.param(ast).visit_with(child, ast);
+            c.param(self.ast).visit_with(child);
             child.ident_type = IdentType::Ref;
 
-            let body = c.body(ast);
+            let body = c.body(self.ast);
             child.mark_block(body.node_id());
-            body.visit_children_with(child, ast);
+            body.visit_children_with(child);
         });
 
-        self.leave_node(c.node_id(), ast);
+        self.leave_node(c.node_id());
     }
 
-    fn visit_class(&mut self, c: Class, ast: &Ast) {
-        self.enter_node(c.node_id(), ast);
+    fn visit_class(&mut self, c: Class) {
+        self.enter_node(c.node_id());
 
         let old_strict_mode = self.strict_mode;
         self.strict_mode = true;
@@ -672,7 +678,7 @@ impl<'ast> Visit for Resolver<'ast> {
         // c.decorators.visit_with(self);
 
         self.ident_type = IdentType::Ref;
-        c.super_class(ast).visit_with(self, ast);
+        c.super_class(self.ast).visit_with(self);
 
         self.ident_type = IdentType::Binding;
         // c.type_params.visit_with(self);
@@ -684,94 +690,94 @@ impl<'ast> Visit for Resolver<'ast> {
         // c.implements.visit_with(self);
         self.ident_type = old;
 
-        c.body(ast).visit_with(self, ast);
+        c.body(self.ast).visit_with(self);
         self.strict_mode = old_strict_mode;
 
-        self.leave_node(c.node_id(), ast);
+        self.leave_node(c.node_id());
     }
 
-    fn visit_class_decl(&mut self, n: ClassDecl, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_class_decl(&mut self, n: ClassDecl) {
+        self.enter_node(n.node_id());
 
         // if n.declare && !self.config.handle_types {
         //     return;
         // }
-        self.modify(self.ast, n.ident(ast), DeclKind::Lexical);
+        self.modify(n.ident(self.ast), DeclKind::Lexical);
 
-        // n.class(ast).decorators.visit_with(self);
+        // n.class(self.ast).decorators.visit_with(self);
 
         // Create a child scope. The class name is only accessible within the class.
 
         self.with_child(ScopeKind::Fn, |child| {
             child.ident_type = IdentType::Ref;
 
-            n.class(ast).visit_with(child, ast);
+            n.class(self.ast).visit_with(child);
         });
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_class_expr(&mut self, n: ClassExpr, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_class_expr(&mut self, n: ClassExpr) {
+        self.enter_node(n.node_id());
 
         // Create a child scope. The class name is only accessible within the class.
 
-        n.class(ast).super_class(ast).visit_with(self, ast);
+        n.class(self.ast).super_class(self.ast).visit_with(self);
 
         self.with_child(ScopeKind::Fn, |child| {
             child.ident_type = IdentType::Binding;
-            n.ident(ast).visit_with(child, ast);
+            n.ident(self.ast).visit_with(child);
             child.ident_type = IdentType::Ref;
 
-            n.class(ast).visit_with(child, ast);
+            n.class(self.ast).visit_with(child);
         });
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_class_method(&mut self, m: ClassMethod, ast: &Ast) {
-        self.enter_node(m.node_id(), ast);
+    fn visit_class_method(&mut self, m: ClassMethod) {
+        self.enter_node(m.node_id());
 
-        m.key(ast).visit_with(self, ast);
+        m.key(self.ast).visit_with(self);
 
-        // for p in m.function(ast).params(ast).iter() {
-        //     let p = ast.get_node(p);
+        // for p in m.function(self.ast).params(self.ast).iter() {
+        //     let p = self.ast.get_node(p);
         //     p.decorators.visit_with(self);
         // }
 
         self.with_child(ScopeKind::Fn, |child| {
-            m.function(ast).visit_with(child, ast)
+            m.function(self.ast).visit_with(child)
         });
 
-        self.leave_node(m.node_id(), ast);
+        self.leave_node(m.node_id());
     }
 
-    fn visit_class_prop(&mut self, p: ClassProp, ast: &Ast) {
-        self.enter_node(p.node_id(), ast);
+    fn visit_class_prop(&mut self, p: ClassProp) {
+        self.enter_node(p.node_id());
 
         // p.decorators.visit_with(self);
 
-        if let PropName::Computed(key) = p.key(ast) {
+        if let PropName::Computed(key) = p.key(self.ast) {
             let old = self.ident_type;
             self.ident_type = IdentType::Binding;
-            key.expr(ast).visit_with(self, ast);
+            key.expr(self.ast).visit_with(self);
             self.ident_type = old;
         }
 
         let old = self.ident_type;
         self.ident_type = IdentType::Ref;
-        p.value(ast).visit_with(self, ast);
+        p.value(self.ast).visit_with(self);
         self.ident_type = old;
 
         // p.type_ann.visit_with(self);
-        self.leave_node(p.node_id(), ast);
+        self.leave_node(p.node_id());
     }
 
-    fn visit_constructor(&mut self, c: Constructor, ast: &Ast) {
-        self.enter_node(c.node_id(), ast);
+    fn visit_constructor(&mut self, c: Constructor) {
+        self.enter_node(c.node_id());
 
-        // for p in c.params(ast).iter() {
-        //     let p = ast.get_node(p);
+        // for p in c.params(self.ast).iter() {
+        //     let p = self.ast.get_node(p);
         //     match p {
         //         ParamOrTsParamProp::TsParamProp(p) => {
         //             p.decorators.visit_with(self);
@@ -789,16 +795,16 @@ impl<'ast> Visit for Resolver<'ast> {
             child.ident_type = IdentType::Binding;
             {
                 let params = c
-                    .params(ast)
+                    .params(self.ast)
                     .iter()
                     .filter(|p| {
-                        let p = ast.get_node_in_sub_range(*p);
+                        let p = self.ast.get_node_in_sub_range(*p);
                         match p {
                             // ParamOrTsParamProp::TsParamProp(_) => false,
-                            ParamOrTsParamProp::Param(p) => !p.pat(ast).is_rest(),
+                            ParamOrTsParamProp::Param(p) => !p.pat(self.ast).is_rest(),
                         }
                     })
-                    .flat_map(|p| find_pat_ids(child.ast, ast.get_node_in_sub_range(p)));
+                    .flat_map(|p| find_pat_ids(child.ast, child.ast.get_node_in_sub_range(p)));
 
                 for id in params {
                     child.scopes[child.current]
@@ -806,58 +812,58 @@ impl<'ast> Visit for Resolver<'ast> {
                         .insert(id, DeclKind::Param);
                 }
             }
-            c.params(ast).visit_with(child, ast);
+            c.params(self.ast).visit_with(child);
             child.ident_type = old;
 
-            if let Some(body) = c.body(ast) {
+            if let Some(body) = c.body(self.ast) {
                 child.mark_block(body.node_id());
-                body.visit_children_with(child, ast);
+                body.visit_children_with(child);
             }
         });
 
-        self.leave_node(c.node_id(), ast);
+        self.leave_node(c.node_id());
     }
 
-    fn visit_continue_stmt(&mut self, s: ContinueStmt, ast: &Ast) {
-        self.enter_node(s.node_id(), ast);
+    fn visit_continue_stmt(&mut self, s: ContinueStmt) {
+        self.enter_node(s.node_id());
 
         let old = self.ident_type;
         self.ident_type = IdentType::Label;
-        s.label(ast).visit_with(self, ast);
+        s.label(self.ast).visit_with(self);
         self.ident_type = old;
 
-        self.leave_node(s.node_id(), ast);
+        self.leave_node(s.node_id());
     }
 
-    fn visit_export_default_decl(&mut self, e: ExportDefaultDecl, ast: &Ast) {
-        self.enter_node(e.node_id(), ast);
+    fn visit_export_default_decl(&mut self, e: ExportDefaultDecl) {
+        self.enter_node(e.node_id());
 
         // Treat default exported functions and classes as declarations
         // even though they are parsed as expressions.
-        match e.decl(ast) {
+        match e.decl(self.ast) {
             DefaultDecl::Fn(f) => {
-                if f.ident(ast).is_some() {
+                if f.ident(self.ast).is_some() {
                     self.with_child(ScopeKind::Fn, |child| {
-                        f.function(ast).visit_with(child, ast);
+                        f.function(self.ast).visit_with(child);
                     });
                 } else {
-                    f.visit_with(self, ast)
+                    f.visit_with(self)
                 }
             }
             DefaultDecl::Class(c) => {
                 // Skip class expression visitor to treat as a declaration.
-                c.class(ast).visit_with(self, ast)
+                c.class(self.ast).visit_with(self)
             }
-            _ => e.visit_children_with(self, ast),
+            _ => e.visit_children_with(self),
         }
 
-        self.leave_node(e.node_id(), ast);
+        self.leave_node(e.node_id());
     }
 
-    fn visit_export_default_expr(&mut self, node: ExportDefaultExpr, ast: &Ast) {
-        self.enter_node(node.node_id(), ast);
+    fn visit_export_default_expr(&mut self, node: ExportDefaultExpr) {
+        self.enter_node(node.node_id());
 
-        node.expr(ast).visit_with(self, ast);
+        node.expr(self.ast).visit_with(self);
 
         // if self.config.handle_types {
         //     if let Expr::Ident(i) = &mut *node.expr {
@@ -865,13 +871,13 @@ impl<'ast> Visit for Resolver<'ast> {
         //     }
         // }
 
-        self.leave_node(node.node_id(), ast);
+        self.leave_node(node.node_id());
     }
 
-    fn visit_export_named_specifier(&mut self, e: ExportNamedSpecifier, ast: &Ast) {
-        self.enter_node(e.node_id(), ast);
+    fn visit_export_named_specifier(&mut self, e: ExportNamedSpecifier) {
+        self.enter_node(e.node_id());
 
-        e.visit_children_with(self, ast);
+        e.visit_children_with(self);
         // if self.config.handle_types {
         //     match &mut e.orig {
         //         ModuleExportName::Ident(orig) => {
@@ -883,17 +889,17 @@ impl<'ast> Visit for Resolver<'ast> {
         //     }
         // }
 
-        self.leave_node(e.node_id(), ast);
+        self.leave_node(e.node_id());
     }
 
-    fn visit_export_specifier(&mut self, s: ExportSpecifier, ast: &Ast) {
+    fn visit_export_specifier(&mut self, s: ExportSpecifier) {
         let old = self.ident_type;
         self.ident_type = IdentType::Ref;
-        s.visit_children_with(self, ast);
+        s.visit_children_with(self);
         self.ident_type = old;
     }
 
-    fn visit_expr(&mut self, expr: Expr, ast: &Ast) {
+    fn visit_expr(&mut self, expr: Expr) {
         // let _span = if LOG {
         //     Some(span!(Level::ERROR, "visit_expr").entered())
         // } else {
@@ -903,93 +909,93 @@ impl<'ast> Visit for Resolver<'ast> {
         let old = self.ident_type;
         self.ident_type = IdentType::Ref;
         // maybe_grow_default(|| expr.visit_children_with(self));
-        expr.visit_children_with(self, ast);
+        expr.visit_children_with(self);
         self.ident_type = old;
     }
 
-    fn visit_fn_decl(&mut self, node: FnDecl, ast: &Ast) {
-        self.enter_node(node.node_id(), ast);
+    fn visit_fn_decl(&mut self, node: FnDecl) {
+        self.enter_node(node.node_id());
 
         // if node.declare && !self.config.handle_types {
         //     return;
         // }
 
         // We don't fold ident as Hoister handles this.
-        // node.function(ast).decorators.visit_with(self, ast);
+        // node.function(self.ast).decorators.visit_with(self);
 
         self.with_child(ScopeKind::Fn, |child| {
-            node.function(ast).visit_with(child, ast)
+            node.function(self.ast).visit_with(child)
         });
 
-        self.leave_node(node.node_id(), ast);
+        self.leave_node(node.node_id());
     }
 
-    fn visit_fn_expr(&mut self, e: FnExpr, ast: &Ast) {
-        self.enter_node(e.node_id(), ast);
+    fn visit_fn_expr(&mut self, e: FnExpr) {
+        self.enter_node(e.node_id());
 
-        // e.function(ast).decorators.visit_with(self);
+        // e.function(self.ast).decorators.visit_with(self);
 
-        if let Some(ident) = e.ident(ast) {
+        if let Some(ident) = e.ident(self.ast) {
             self.with_child(ScopeKind::Fn, |child| {
-                child.modify(child.ast, ident, DeclKind::Function);
+                child.modify(ident, DeclKind::Function);
                 child.with_child(ScopeKind::Fn, |child| {
-                    e.function(ast).visit_with(child, ast);
+                    e.function(self.ast).visit_with(child);
                 });
             });
         } else {
             self.with_child(ScopeKind::Fn, |child| {
-                e.function(ast).visit_with(child, ast);
+                e.function(self.ast).visit_with(child);
             });
         }
 
-        self.leave_node(e.node_id(), ast);
+        self.leave_node(e.node_id());
     }
 
-    fn visit_for_in_stmt(&mut self, n: ForInStmt, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_for_in_stmt(&mut self, n: ForInStmt) {
+        self.enter_node(n.node_id());
 
         self.with_child(ScopeKind::Block, |child| {
-            n.left(ast).visit_with(child, ast);
-            n.right(ast).visit_with(child, ast);
+            n.left(self.ast).visit_with(child);
+            n.right(self.ast).visit_with(child);
 
-            child.visit_stmt_within_child_scope(ast, n.body(ast));
+            child.visit_stmt_within_child_scope(n.body(self.ast));
         });
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_for_of_stmt(&mut self, n: ForOfStmt, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_for_of_stmt(&mut self, n: ForOfStmt) {
+        self.enter_node(n.node_id());
 
         self.with_child(ScopeKind::Block, |child| {
-            n.left(ast).visit_with(child, ast);
-            n.right(ast).visit_with(child, ast);
+            n.left(self.ast).visit_with(child);
+            n.right(self.ast).visit_with(child);
 
-            child.visit_stmt_within_child_scope(ast, n.body(ast));
+            child.visit_stmt_within_child_scope(n.body(self.ast));
         });
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_for_stmt(&mut self, n: ForStmt, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_for_stmt(&mut self, n: ForStmt) {
+        self.enter_node(n.node_id());
 
         self.with_child(ScopeKind::Block, |child| {
             child.ident_type = IdentType::Binding;
-            n.init(ast).visit_with(child, ast);
+            n.init(self.ast).visit_with(child);
             child.ident_type = IdentType::Ref;
-            n.test(ast).visit_with(child, ast);
+            n.test(self.ast).visit_with(child);
             child.ident_type = IdentType::Ref;
-            n.update(ast).visit_with(child, ast);
+            n.update(self.ast).visit_with(child);
 
-            child.visit_stmt_within_child_scope(ast, n.body(ast));
+            child.visit_stmt_within_child_scope(n.body(self.ast));
         });
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_function(&mut self, f: Function, ast: &Ast) {
-        self.enter_node(f.node_id(), ast);
+    fn visit_function(&mut self, f: Function) {
+        self.enter_node(f.node_id());
 
         self.mark_block(f.node_id());
         // f.type_params.visit_with(self);
@@ -999,10 +1005,10 @@ impl<'ast> Visit for Resolver<'ast> {
 
         {
             let params = f
-                .params(ast)
+                .params(self.ast)
                 .iter()
-                .filter(|p| !ast.get_node_in_sub_range(*p).pat(ast).is_rest())
-                .flat_map(|p| find_pat_ids(self.ast, ast.get_node_in_sub_range(p)));
+                .filter(|p| !self.ast.get_node_in_sub_range(*p).pat(self.ast).is_rest())
+                .flat_map(|p| find_pat_ids(self.ast, self.ast.get_node_in_sub_range(p)));
 
             for id in params {
                 self.scopes[self.current]
@@ -1011,45 +1017,45 @@ impl<'ast> Visit for Resolver<'ast> {
             }
         }
         self.ident_type = IdentType::Binding;
-        f.params(ast).visit_with(self, ast);
+        f.params(self.ast).visit_with(self);
 
         // f.return_type.visit_with(self);
 
         self.ident_type = IdentType::Ref;
-        if let Some(body) = f.body(ast) {
+        if let Some(body) = f.body(self.ast) {
             self.mark_block(body.node_id());
             let old_strict_mode = self.strict_mode;
             if !self.strict_mode {
                 self.strict_mode = body
-                    .stmts(ast)
+                    .stmts(self.ast)
                     .first()
-                    .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
+                    .map(|stmt| self.ast.get_node_in_sub_range(stmt).is_use_strict(self.ast))
                     .unwrap_or(false);
             }
             // Prevent creating new scope.
-            body.visit_children_with(self, ast);
+            body.visit_children_with(self);
             self.strict_mode = old_strict_mode;
         }
 
-        self.leave_node(f.node_id(), ast);
+        self.leave_node(f.node_id());
     }
 
-    fn visit_getter_prop(&mut self, f: GetterProp, ast: &Ast) {
-        self.enter_node(f.node_id(), ast);
+    fn visit_getter_prop(&mut self, f: GetterProp) {
+        self.enter_node(f.node_id());
 
         let old = self.ident_type;
         self.ident_type = IdentType::Ref;
-        f.key(ast).visit_with(self, ast);
+        f.key(self.ast).visit_with(self);
         self.ident_type = old;
 
         // f.type_ann.visit_with(self);
 
-        f.body(ast).visit_with(self, ast);
+        f.body(self.ast).visit_with(self);
 
-        self.leave_node(f.node_id(), ast);
+        self.leave_node(f.node_id());
     }
 
-    // fn visit_jsx_element_name(&mut self, node: &mut JSXElementName, ast: &Ast) {
+    // fn visit_jsx_element_name(&mut self, node: &mut JSXElementName) {
     //     if let JSXElementName::Ident(i) = node {
     //         if i.as_ref().starts_with(|c: char| c.is_ascii_lowercase()) {
     //             if cfg!(debug_assertions) && LOG {
@@ -1071,22 +1077,22 @@ impl<'ast> Visit for Resolver<'ast> {
     //     node.visit_children_with(self);
     // }
 
-    fn visit_ident(&mut self, i: Ident, ast: &Ast) {
-        self.enter_node(i.node_id(), ast);
+    fn visit_ident(&mut self, i: Ident) {
+        self.enter_node(i.node_id());
 
         if self.symbol_scopes.contains_key(&i.node_id()) {
-            self.leave_node(i.node_id(), ast);
+            self.leave_node(i.node_id());
             return;
         }
 
         match self.ident_type {
-            IdentType::Binding => self.modify(self.ast, i, self.decl_kind),
+            IdentType::Binding => self.modify(i, self.decl_kind),
             IdentType::Ref => {
                 // if cfg!(debug_assertions) && LOG {
                 //     debug!("IdentRef (type = {}) {}{:?}", self.in_type, sym, ctxt);
                 // }
 
-                if let Some(scope_id) = self.mark_for_ref(ast.get_utf8(i.sym(ast))) {
+                if let Some(scope_id) = self.mark_for_ref(self.ast.get_utf8(i.sym(self.ast))) {
                     // if cfg!(debug_assertions) && LOG {
                     //     debug!("\t -> {:?}", ctxt);
                     // }
@@ -1102,112 +1108,112 @@ impl<'ast> Visit for Resolver<'ast> {
 
                     self.symbol_scopes.insert(i.node_id(), UNRESOLVED_SCOPE_ID);
                     // Support hoisting
-                    self.modify(self.ast, i, self.decl_kind)
+                    self.modify(i, self.decl_kind)
                 }
             }
             // We currently does not touch labels
             IdentType::Label => {}
         }
 
-        self.leave_node(i.node_id(), ast);
+        self.leave_node(i.node_id());
     }
 
-    fn visit_import_decl(&mut self, n: ImportDecl, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_import_decl(&mut self, n: ImportDecl) {
+        self.enter_node(n.node_id());
 
         // Always resolve the import declaration identifiers even if it's type only.
         // We need to analyze these identifiers for type stripping purposes.
         self.ident_type = IdentType::Binding;
         let old_in_type = self.in_type;
-        self.in_type = n.type_only(ast);
-        n.visit_children_with(self, ast);
+        self.in_type = n.type_only(self.ast);
+        n.visit_children_with(self);
         self.in_type = old_in_type;
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_import_named_specifier(&mut self, s: ImportNamedSpecifier, ast: &Ast) {
-        self.enter_node(s.node_id(), ast);
+    fn visit_import_named_specifier(&mut self, s: ImportNamedSpecifier) {
+        self.enter_node(s.node_id());
 
         let old = self.ident_type;
         self.ident_type = IdentType::Binding;
-        s.local(ast).visit_with(self, ast);
+        s.local(self.ast).visit_with(self);
         // if self.config.handle_types {
         //     self.current.declared_types.insert(s.local.sym.clone());
         // }
         self.ident_type = old;
 
-        self.leave_node(s.node_id(), ast);
+        self.leave_node(s.node_id());
     }
 
-    fn visit_import_specifier(&mut self, s: ImportSpecifier, ast: &Ast) {
+    fn visit_import_specifier(&mut self, s: ImportSpecifier) {
         let old = self.ident_type;
         self.ident_type = IdentType::Binding;
 
         match s {
             ImportSpecifier::Named(named) => {
-                if named.imported(ast).is_none() {
-                    s.visit_children_with(self, ast);
+                if named.imported(self.ast).is_none() {
+                    s.visit_children_with(self);
                 } else {
-                    named.local(ast).visit_with(self, ast);
+                    named.local(self.ast).visit_with(self);
                 }
             }
             ImportSpecifier::Namespace(..) | ImportSpecifier::Default(..) => {
-                s.visit_children_with(self, ast)
+                s.visit_children_with(self)
             }
         }
 
         self.ident_type = old;
     }
 
-    fn visit_key_value_pat_prop(&mut self, n: KeyValuePatProp, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_key_value_pat_prop(&mut self, n: KeyValuePatProp) {
+        self.enter_node(n.node_id());
 
-        n.key(ast).visit_with(self, ast);
-        n.value(ast).visit_with(self, ast);
+        n.key(self.ast).visit_with(self);
+        n.value(self.ast).visit_with(self);
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_labeled_stmt(&mut self, s: LabeledStmt, ast: &Ast) {
-        self.enter_node(s.node_id(), ast);
+    fn visit_labeled_stmt(&mut self, s: LabeledStmt) {
+        self.enter_node(s.node_id());
 
         let old = self.ident_type;
         self.ident_type = IdentType::Label;
-        s.label(ast).visit_with(self, ast);
+        s.label(self.ast).visit_with(self);
         self.ident_type = old;
 
-        s.body(ast).visit_with(self, ast);
+        s.body(self.ast).visit_with(self);
 
-        self.leave_node(s.node_id(), ast);
+        self.leave_node(s.node_id());
     }
 
-    fn visit_method_prop(&mut self, m: MethodProp, ast: &Ast) {
-        self.enter_node(m.node_id(), ast);
+    fn visit_method_prop(&mut self, m: MethodProp) {
+        self.enter_node(m.node_id());
 
-        m.key(ast).visit_with(self, ast);
+        m.key(self.ast).visit_with(self);
 
         // Child folder
         self.with_child(ScopeKind::Fn, |child| {
-            m.function(ast).visit_with(child, ast)
+            m.function(self.ast).visit_with(child)
         });
 
-        self.leave_node(m.node_id(), ast);
+        self.leave_node(m.node_id());
     }
 
-    fn visit_module(&mut self, module: Module, ast: &Ast) {
-        self.enter_node(module.node_id(), ast);
+    fn visit_module(&mut self, module: Module) {
+        self.enter_node(module.node_id());
 
         self.strict_mode = true;
         self.is_module = true;
-        module.visit_children_with(self, ast);
+        module.visit_children_with(self);
 
-        self.leave_node(module.node_id(), ast);
+        self.leave_node(module.node_id());
     }
 
-    fn visit_module_items(&mut self, stmts: TypedSubRange<ModuleItem>, ast: &Ast) {
+    fn visit_module_items(&mut self, stmts: TypedSubRange<ModuleItem>) {
         if !self.in_ts_module && self.scopes[self.current].kind != ScopeKind::Fn {
-            return stmts.visit_children_with(self, ast);
+            return stmts.visit_children_with(self);
         }
 
         // Phase 1: Handle hoisting
@@ -1220,117 +1226,117 @@ impl<'ast> Visit for Resolver<'ast> {
                 catch_param_decls: Default::default(),
                 excluded_from_catch: Default::default(),
             };
-            stmts.visit_with(&mut hoister, ast)
+            stmts.visit_with(&mut hoister)
         }
 
         // Phase 2.
-        stmts.visit_children_with(self, ast);
+        stmts.visit_children_with(self);
     }
 
-    fn visit_named_export(&mut self, e: NamedExport, ast: &Ast) {
-        self.enter_node(e.node_id(), ast);
+    fn visit_named_export(&mut self, e: NamedExport) {
+        self.enter_node(e.node_id());
 
-        if e.src(ast).is_some() {
-            self.leave_node(e.node_id(), ast);
+        if e.src(self.ast).is_some() {
+            self.leave_node(e.node_id());
             return;
         }
 
-        e.visit_children_with(self, ast);
+        e.visit_children_with(self);
 
-        self.leave_node(e.node_id(), ast);
+        self.leave_node(e.node_id());
     }
 
-    fn visit_object_lit(&mut self, o: ObjectLit, ast: &Ast) {
-        self.enter_node(o.node_id(), ast);
+    fn visit_object_lit(&mut self, o: ObjectLit) {
+        self.enter_node(o.node_id());
 
         self.with_child(ScopeKind::Block, |child| {
-            o.visit_children_with(child, ast);
+            o.visit_children_with(child);
         });
 
-        self.leave_node(o.node_id(), ast);
+        self.leave_node(o.node_id());
     }
 
-    fn visit_param(&mut self, param: Param, ast: &Ast) {
-        self.enter_node(param.node_id(), ast);
+    fn visit_param(&mut self, param: Param) {
+        self.enter_node(param.node_id());
 
         self.ident_type = IdentType::Binding;
-        param.visit_children_with(self, ast);
+        param.visit_children_with(self);
 
-        self.leave_node(param.node_id(), ast);
+        self.leave_node(param.node_id());
     }
 
-    fn visit_pat(&mut self, p: Pat, ast: &Ast) {
-        p.visit_children_with(self, ast);
+    fn visit_pat(&mut self, p: Pat) {
+        p.visit_children_with(self);
     }
 
-    fn visit_private_method(&mut self, m: PrivateMethod, ast: &Ast) {
-        self.enter_node(m.node_id(), ast);
+    fn visit_private_method(&mut self, m: PrivateMethod) {
+        self.enter_node(m.node_id());
 
-        m.key(ast).visit_with(self, ast);
+        m.key(self.ast).visit_with(self);
 
         {
             // Child folder
 
             self.with_child(ScopeKind::Fn, |child| {
-                m.function(ast).visit_with(child, ast)
+                m.function(self.ast).visit_with(child)
             });
         }
 
-        self.leave_node(m.node_id(), ast);
+        self.leave_node(m.node_id());
     }
 
-    fn visit_private_name(&mut self, node: PrivateName, ast: &Ast) {
-        self.enter_node(node.node_id(), ast);
+    fn visit_private_name(&mut self, node: PrivateName) {
+        self.enter_node(node.node_id());
 
-        self.leave_node(node.node_id(), ast);
+        self.leave_node(node.node_id());
     }
 
-    fn visit_prop_name(&mut self, n: PropName, ast: &Ast) {
+    fn visit_prop_name(&mut self, n: PropName) {
         if let PropName::Computed(c) = n {
-            c.visit_with(self, ast);
+            c.visit_with(self);
         }
     }
 
-    fn visit_rest_pat(&mut self, node: RestPat, ast: &Ast) {
-        self.enter_node(node.node_id(), ast);
+    fn visit_rest_pat(&mut self, node: RestPat) {
+        self.enter_node(node.node_id());
 
-        node.arg(ast).visit_with(self, ast);
+        node.arg(self.ast).visit_with(self);
         // node.type_ann.visit_with(self);
 
-        self.leave_node(node.node_id(), ast);
+        self.leave_node(node.node_id());
     }
 
-    fn visit_script(&mut self, script: Script, ast: &Ast) {
-        self.enter_node(script.node_id(), ast);
+    fn visit_script(&mut self, script: Script) {
+        self.enter_node(script.node_id());
 
         self.strict_mode = script
-            .body(ast)
+            .body(self.ast)
             .first()
-            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
+            .map(|stmt| self.ast.get_node_in_sub_range(stmt).is_use_strict(self.ast))
             .unwrap_or(false);
-        script.visit_children_with(self, ast);
+        script.visit_children_with(self);
 
-        self.leave_node(script.node_id(), ast);
+        self.leave_node(script.node_id());
     }
 
-    fn visit_setter_prop(&mut self, n: SetterProp, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_setter_prop(&mut self, n: SetterProp) {
+        self.enter_node(n.node_id());
 
-        n.key(ast).visit_with(self, ast);
+        n.key(self.ast).visit_with(self);
 
         {
             self.with_child(ScopeKind::Fn, |child| {
                 child.ident_type = IdentType::Binding;
                 // n.this_param.visit_with(child);
-                n.param(ast).visit_with(child, ast);
-                n.body(ast).visit_with(child, ast);
+                n.param(self.ast).visit_with(child);
+                n.body(self.ast).visit_with(child);
             });
         };
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_stmts(&mut self, stmts: TypedSubRange<Stmt>, ast: &Ast) {
+    fn visit_stmts(&mut self, stmts: TypedSubRange<Stmt>) {
         // let _span = if LOG {
         //     Some(span!(Level::ERROR, "visit_stmts").entered())
         // } else {
@@ -1353,43 +1359,43 @@ impl<'ast> Visit for Resolver<'ast> {
                 catch_param_decls: Default::default(),
                 excluded_from_catch: Default::default(),
             };
-            stmts.visit_with(&mut hoister, ast)
+            stmts.visit_with(&mut hoister)
         }
 
         // Phase 2.
-        stmts.visit_children_with(self, ast);
+        stmts.visit_children_with(self);
     }
 
-    fn visit_switch_case(&mut self, n: SwitchCase, ast: &Ast) {
-        self.enter_node(n.node_id(), ast);
+    fn visit_switch_case(&mut self, n: SwitchCase) {
+        self.enter_node(n.node_id());
 
-        n.cons(ast).visit_with(self, ast);
-        n.test(ast).visit_with(self, ast);
+        n.cons(self.ast).visit_with(self);
+        n.test(self.ast).visit_with(self);
 
-        self.leave_node(n.node_id(), ast);
+        self.leave_node(n.node_id());
     }
 
-    fn visit_switch_stmt(&mut self, s: SwitchStmt, ast: &Ast) {
-        self.enter_node(s.node_id(), ast);
+    fn visit_switch_stmt(&mut self, s: SwitchStmt) {
+        self.enter_node(s.node_id());
 
-        s.discriminant(ast).visit_with(self, ast);
+        s.discriminant(self.ast).visit_with(self);
 
         self.with_child(ScopeKind::Block, |child| {
-            s.cases(ast).visit_with(child, ast);
+            s.cases(self.ast).visit_with(child);
         });
 
-        self.leave_node(s.node_id(), ast);
+        self.leave_node(s.node_id());
     }
 
-    // fn visit_ts_as_expr(&mut self, n: TsAsExpr, ast: &Ast) {
+    // fn visit_ts_as_expr(&mut self, n: TsAsExpr) {
     //     // if self.config.handle_types {
     //     //     n.type_ann.visit_with(self);
     //     // }
 
-    //     n.expr(ast).visit_with(self, ast);
+    //     n.expr(self.ast).visit_with(self);
     // }
 
-    // fn visit_ts_call_signature_decl(&mut self, n: &mut TsCallSignatureDecl, ast: &Ast) {
+    // fn visit_ts_call_signature_decl(&mut self, n: &mut TsCallSignatureDecl) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1423,7 +1429,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_constructor_type(&mut self, ty: &mut TsConstructorType, ast: &Ast) {
+    // fn visit_ts_constructor_type(&mut self, ty: &mut TsConstructorType) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1437,7 +1443,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_enum_decl(&mut self, decl: &mut TsEnumDecl, ast: &Ast) {
+    // fn visit_ts_enum_decl(&mut self, decl: &mut TsEnumDecl) {
     //     if decl.declare && !self.config.handle_types {
     //         return;
     //     }
@@ -1458,7 +1464,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_export_assignment(&mut self, node: &mut TsExportAssignment, ast: &Ast) {
+    // fn visit_ts_export_assignment(&mut self, node: &mut TsExportAssignment) {
     //     node.expr.visit_with(self);
 
     //     if self.config.handle_types {
@@ -1468,7 +1474,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     }
     // }
 
-    // fn visit_ts_expr_with_type_args(&mut self, n: &mut TsExprWithTypeArgs, ast: &Ast) {
+    // fn visit_ts_expr_with_type_args(&mut self, n: &mut TsExprWithTypeArgs) {
     //     if self.config.handle_types {
     //         let old = self.in_type;
     //         self.in_type = true;
@@ -1477,7 +1483,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     }
     // }
 
-    // fn visit_ts_fn_type(&mut self, ty: &mut TsFnType, ast: &Ast) {
+    // fn visit_ts_fn_type(&mut self, ty: &mut TsFnType) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1491,7 +1497,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_getter_signature(&mut self, n: &mut TsGetterSignature, ast: &Ast) {
+    // fn visit_ts_getter_signature(&mut self, n: &mut TsGetterSignature) {
     //     if n.computed {
     //         n.key.visit_with(self);
     //     }
@@ -1499,13 +1505,13 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.type_ann.visit_with(self);
     // }
 
-    // fn visit_ts_import_equals_decl(&mut self, n: &mut TsImportEqualsDecl, ast: &Ast) {
+    // fn visit_ts_import_equals_decl(&mut self, n: &mut TsImportEqualsDecl) {
     //     self.modify(&mut n.id, DeclKind::Lexical);
 
     //     n.module_ref.visit_with(self);
     // }
 
-    // fn visit_ts_import_type(&mut self, n: &mut TsImportType, ast: &Ast) {
+    // fn visit_ts_import_type(&mut self, n: &mut TsImportType) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1513,7 +1519,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.type_args.visit_with(self);
     // }
 
-    // fn visit_ts_interface_decl(&mut self, n: &mut TsInterfaceDecl, ast: &Ast) {
+    // fn visit_ts_interface_decl(&mut self, n: &mut TsInterfaceDecl) {
     //     // always resolve the identifier for type stripping purposes
     //     let old_in_type = self.in_type;
     //     let old_ident_type = self.ident_type;
@@ -1541,7 +1547,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     self.ident_type = old_ident_type;
     // }
 
-    // fn visit_ts_mapped_type(&mut self, n: &mut TsMappedType, ast: &Ast) {
+    // fn visit_ts_mapped_type(&mut self, n: &mut TsMappedType) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1555,7 +1561,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.type_ann.visit_with(self);
     // }
 
-    // fn visit_ts_method_signature(&mut self, n: &mut TsMethodSignature, ast: &Ast) {
+    // fn visit_ts_method_signature(&mut self, n: &mut TsMethodSignature) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1572,7 +1578,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_module_decl(&mut self, decl: &mut TsModuleDecl, ast: &Ast) {
+    // fn visit_ts_module_decl(&mut self, decl: &mut TsModuleDecl) {
     //     if decl.declare && !self.config.handle_types {
     //         return;
     //     }
@@ -1593,7 +1599,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_namespace_decl(&mut self, n: &mut TsNamespaceDecl, ast: &Ast) {
+    // fn visit_ts_namespace_decl(&mut self, n: &mut TsNamespaceDecl) {
     //     if n.declare && !self.config.handle_types {
     //         return;
     //     }
@@ -1603,12 +1609,12 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.body.visit_with(self);
     // }
 
-    // fn visit_ts_param_prop_param(&mut self, n: &mut TsParamPropParam, ast: &Ast) {
+    // fn visit_ts_param_prop_param(&mut self, n: &mut TsParamPropParam) {
     //     self.ident_type = IdentType::Binding;
     //     n.visit_children_with(self)
     // }
 
-    // fn visit_ts_property_signature(&mut self, n: &mut TsPropertySignature, ast: &Ast) {
+    // fn visit_ts_property_signature(&mut self, n: &mut TsPropertySignature) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1624,13 +1630,13 @@ impl<'ast> Visit for Resolver<'ast> {
     //     });
     // }
 
-    // fn visit_ts_qualified_name(&mut self, n: &mut TsQualifiedName, ast: &Ast) {
+    // fn visit_ts_qualified_name(&mut self, n: &mut TsQualifiedName) {
     //     self.ident_type = IdentType::Ref;
 
     //     n.left.visit_with(self)
     // }
 
-    // fn visit_ts_satisfies_expr(&mut self, n: &mut TsSatisfiesExpr, ast: &Ast) {
+    // fn visit_ts_satisfies_expr(&mut self, n: &mut TsSatisfiesExpr) {
     //     if self.config.handle_types {
     //         n.type_ann.visit_with(self);
     //     }
@@ -1638,7 +1644,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.expr.visit_with(self);
     // }
 
-    // fn visit_ts_setter_signature(&mut self, n: &mut TsSetterSignature, ast: &Ast) {
+    // fn visit_ts_setter_signature(&mut self, n: &mut TsSetterSignature) {
     //     if n.computed {
     //         n.key.visit_with(self);
     //     }
@@ -1646,7 +1652,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.param.visit_with(self);
     // }
 
-    // fn visit_ts_tuple_element(&mut self, e: &mut TsTupleElement, ast: &Ast) {
+    // fn visit_ts_tuple_element(&mut self, e: &mut TsTupleElement) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1654,7 +1660,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     e.ty.visit_with(self);
     // }
 
-    // fn visit_ts_type_alias_decl(&mut self, n: &mut TsTypeAliasDecl, ast: &Ast) {
+    // fn visit_ts_type_alias_decl(&mut self, n: &mut TsTypeAliasDecl) {
     //     // always resolve the identifier for type stripping purposes
     //     let old_in_type = self.in_type;
     //     self.in_type = true;
@@ -1674,7 +1680,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     self.in_type = old_in_type;
     // }
 
-    // fn visit_ts_type_assertion(&mut self, n: &mut TsTypeAssertion, ast: &Ast) {
+    // fn visit_ts_type_assertion(&mut self, n: &mut TsTypeAssertion) {
     //     if self.config.handle_types {
     //         n.type_ann.visit_with(self);
     //     }
@@ -1682,7 +1688,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     n.expr.visit_with(self);
     // }
 
-    // fn visit_ts_type_param(&mut self, param: &mut TsTypeParam, ast: &Ast) {
+    // fn visit_ts_type_param(&mut self, param: &mut TsTypeParam) {
     //     if !self.config.handle_types {
     //         return;
     //     }
@@ -1694,7 +1700,7 @@ impl<'ast> Visit for Resolver<'ast> {
     //     self.ident_type = ident_type;
     // }
 
-    // fn visit_ts_type_params(&mut self, params: &mut Vec<TsTypeParam>, ast: &Ast) {
+    // fn visit_ts_type_params(&mut self, params: &mut Vec<TsTypeParam>) {
     //     for param in params.iter_mut() {
     //         param.name.visit_with(self);
     //     }
@@ -1702,45 +1708,45 @@ impl<'ast> Visit for Resolver<'ast> {
     //     params.visit_children_with(self);
     // }
 
-    fn visit_using_decl(&mut self, decl: UsingDecl, ast: &Ast) {
-        self.enter_node(decl.node_id(), ast);
+    fn visit_using_decl(&mut self, decl: UsingDecl) {
+        self.enter_node(decl.node_id());
 
         let old_kind = self.decl_kind;
         self.decl_kind = DeclKind::Lexical;
-        decl.decls(ast).visit_with(self, ast);
+        decl.decls(self.ast).visit_with(self);
         self.decl_kind = old_kind;
 
-        self.leave_node(decl.node_id(), ast);
+        self.leave_node(decl.node_id());
     }
 
-    fn visit_var_decl(&mut self, decl: VarDecl, ast: &Ast) {
-        self.enter_node(decl.node_id(), ast);
+    fn visit_var_decl(&mut self, decl: VarDecl) {
+        self.enter_node(decl.node_id());
 
         // if decl.declare && !self.config.handle_types {
         //     return;
         // }
 
         let old_kind = self.decl_kind;
-        self.decl_kind = decl.kind(ast).into();
-        decl.decls(ast).visit_with(self, ast);
+        self.decl_kind = decl.kind(self.ast).into();
+        decl.decls(self.ast).visit_with(self);
         self.decl_kind = old_kind;
 
-        self.leave_node(decl.node_id(), ast);
+        self.leave_node(decl.node_id());
     }
 
-    fn visit_var_declarator(&mut self, decl: VarDeclarator, ast: &Ast) {
-        self.enter_node(decl.node_id(), ast);
+    fn visit_var_declarator(&mut self, decl: VarDeclarator) {
+        self.enter_node(decl.node_id());
 
         // order is important
 
         let old_type = self.ident_type;
         self.ident_type = IdentType::Binding;
-        decl.name(ast).visit_with(self, ast);
+        decl.name(self.ast).visit_with(self);
         self.ident_type = old_type;
 
-        decl.init(ast).visit_children_with(self, ast);
+        decl.init(self.ast).visit_children_with(self);
 
-        self.leave_node(decl.node_id(), ast);
+        self.leave_node(decl.node_id());
     }
 }
 
@@ -1767,9 +1773,9 @@ struct Hoister<'resolver, 'ast> {
 }
 
 impl<'resolver, 'ast> Hoister<'resolver, 'ast> {
-    fn add_pat_id(&mut self, ast: &'ast Ast, id: BindingIdent) {
-        let id = id.id(ast);
-        let sym = ast.get_utf8(id.sym(ast));
+    fn add_pat_id(&mut self, id: BindingIdent) {
+        let id = id.id(self.ast());
+        let sym = self.resolver.ast.get_utf8(id.sym(self.resolver.ast));
         if self.in_catch_body {
             // If we have a binding, it's different variable.
             if self.resolver.mark_for_ref_inner(sym, true).is_some()
@@ -1786,26 +1792,30 @@ impl<'resolver, 'ast> Hoister<'resolver, 'ast> {
             }
         }
 
-        self.resolver.modify(ast, id, self.kind)
+        self.resolver.modify(id, self.kind)
     }
 }
 
 impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     // noop_visit_type!();
 
-    #[inline]
-    fn visit_arrow_expr(&mut self, _: ArrowExpr, ast: &Ast) {}
-
-    fn visit_assign_pat_prop(&mut self, node: AssignPatProp, ast: &Ast) {
-        node.visit_children_with(self, ast);
-
-        self.add_pat_id(self.resolver.ast, node.key(ast));
+    fn ast(&self) -> &Ast {
+        self.resolver.ast
     }
 
-    fn visit_block_stmt(&mut self, n: BlockStmt, ast: &Ast) {
+    #[inline]
+    fn visit_arrow_expr(&mut self, _: ArrowExpr) {}
+
+    fn visit_assign_pat_prop(&mut self, node: AssignPatProp) {
+        node.visit_children_with(self);
+
+        self.add_pat_id(node.key(self.resolver.ast));
+    }
+
+    fn visit_block_stmt(&mut self, n: BlockStmt) {
         let old_in_block = self.in_block;
         self.in_block = true;
-        n.visit_children_with(self, ast);
+        n.visit_children_with(self);
         self.in_block = old_in_block;
     }
 
@@ -1843,20 +1853,20 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     ///      }
     /// ```
     #[inline]
-    fn visit_catch_clause(&mut self, c: CatchClause, ast: &Ast) {
+    fn visit_catch_clause(&mut self, c: CatchClause) {
         let old_exclude = self.excluded_from_catch.clone();
         self.excluded_from_catch = Default::default();
 
         let old_in_catch_body = self.in_catch_body;
 
-        let params = find_pat_ids(self.resolver.ast, c.param(ast));
+        let params = find_pat_ids(self.resolver.ast, c.param(self.resolver.ast));
 
         let orig = self.catch_param_decls.clone();
 
         self.catch_param_decls.extend(params);
 
         self.in_catch_body = true;
-        c.body(ast).visit_with(self, ast);
+        c.body(self.resolver.ast).visit_with(self);
 
         // let mut excluded = find_ids::<_, Id>(&c.body);
 
@@ -1868,7 +1878,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         // });
 
         self.in_catch_body = false;
-        c.param(ast).visit_with(self, ast);
+        c.param(self.resolver.ast).visit_with(self);
 
         self.catch_param_decls = orig;
 
@@ -1876,7 +1886,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         self.excluded_from_catch = old_exclude;
     }
 
-    fn visit_class_decl(&mut self, node: ClassDecl, ast: &Ast) {
+    fn visit_class_decl(&mut self, node: ClassDecl) {
         // if node.declare && !self.resolver.config.handle_types {
         //     return;
         // }
@@ -1884,7 +1894,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
             return;
         }
         self.resolver
-            .modify(self.resolver.ast, node.ident(ast), DeclKind::Lexical);
+            .modify(node.ident(self.resolver.ast), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -1895,11 +1905,11 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     }
 
     #[inline]
-    fn visit_constructor(&mut self, _: Constructor, ast: &Ast) {}
+    fn visit_constructor(&mut self, _: Constructor) {}
 
     #[inline]
-    fn visit_decl(&mut self, decl: Decl, ast: &Ast) {
-        decl.visit_children_with(self, ast);
+    fn visit_decl(&mut self, decl: Decl) {
+        decl.visit_children_with(self);
 
         // if self.resolver.config.handle_types {
         //     match decl {
@@ -1953,43 +1963,43 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         // }
     }
 
-    fn visit_export_default_decl(&mut self, node: ExportDefaultDecl, ast: &Ast) {
+    fn visit_export_default_decl(&mut self, node: ExportDefaultDecl) {
         // Treat default exported functions and classes as declarations
         // even though they are parsed as expressions.
-        match node.decl(ast) {
+        match node.decl(self.resolver.ast) {
             DefaultDecl::Fn(f) => {
-                if let Some(id) = f.ident(ast) {
-                    self.resolver.modify(self.resolver.ast, id, DeclKind::Var);
+                if let Some(id) = f.ident(self.resolver.ast) {
+                    self.resolver.modify(id, DeclKind::Var);
                 }
 
-                f.visit_with(self, ast)
+                f.visit_with(self)
             }
             DefaultDecl::Class(c) => {
-                if let Some(id) = c.ident(ast) {
-                    self.resolver
-                        .modify(self.resolver.ast, id, DeclKind::Lexical);
+                if let Some(id) = c.ident(self.resolver.ast) {
+                    self.resolver.modify(id, DeclKind::Lexical);
                 }
 
-                c.visit_with(self, ast)
+                c.visit_with(self)
             }
             _ => {
-                node.visit_children_with(self, ast);
+                node.visit_children_with(self);
             }
         }
     }
 
     #[inline]
-    fn visit_expr(&mut self, _: Expr, ast: &Ast) {}
+    fn visit_expr(&mut self, _: Expr) {}
 
-    fn visit_fn_decl(&mut self, node: FnDecl, ast: &Ast) {
+    fn visit_fn_decl(&mut self, node: FnDecl) {
         // if node.declare && !self.resolver.config.handle_types {
         //     return;
         // }
 
-        if self
-            .catch_param_decls
-            .contains(self.resolver.ast.get_utf8(node.ident(ast).sym(ast)))
-        {
+        if self.catch_param_decls.contains(
+            self.resolver
+                .ast
+                .get_utf8(node.ident(self.ast()).sym(self.ast())),
+        ) {
             return;
         }
 
@@ -2001,7 +2011,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
             // If we are in nested block, and variable named `foo` is lexically declared or
             // a parameter, we should ignore function foo while handling upper scopes.
             if let Some(DeclKind::Lexical | DeclKind::Param) = self.resolver.is_declared(
-                ast.get_utf8(node.ident(ast).sym(ast)),
+                self.ast().get_utf8(node.ident(self.ast()).sym(self.ast())),
                 self.resolver.current,
             ) {
                 return;
@@ -2009,31 +2019,16 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         }
 
         self.resolver
-            .modify(self.resolver.ast, node.ident(ast), DeclKind::Function);
+            .modify(node.ident(self.ast()), DeclKind::Function);
     }
 
     #[inline]
-    fn visit_function(&mut self, _: Function, ast: &Ast) {}
+    fn visit_function(&mut self, _: Function) {}
 
-    fn visit_import_default_specifier(&mut self, n: ImportDefaultSpecifier, ast: &Ast) {
-        n.visit_children_with(self, ast);
+    fn visit_import_default_specifier(&mut self, n: ImportDefaultSpecifier) {
+        n.visit_children_with(self);
 
-        self.resolver
-            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
-
-        // if self.resolver.config.handle_types {
-        //     self.resolver
-        //         .current
-        //         .declared_types
-        //         .insert(n.local.sym.clone());
-        // }
-    }
-
-    fn visit_import_named_specifier(&mut self, n: ImportNamedSpecifier, ast: &Ast) {
-        n.visit_children_with(self, ast);
-
-        self.resolver
-            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
+        self.resolver.modify(n.local(self.ast()), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -2043,11 +2038,23 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
         // }
     }
 
-    fn visit_import_star_as_specifier(&mut self, n: ImportStarAsSpecifier, ast: &Ast) {
-        n.visit_children_with(self, ast);
+    fn visit_import_named_specifier(&mut self, n: ImportNamedSpecifier) {
+        n.visit_children_with(self);
 
-        self.resolver
-            .modify(self.resolver.ast, n.local(ast), DeclKind::Lexical);
+        self.resolver.modify(n.local(self.ast()), DeclKind::Lexical);
+
+        // if self.resolver.config.handle_types {
+        //     self.resolver
+        //         .current
+        //         .declared_types
+        //         .insert(n.local.sym.clone());
+        // }
+    }
+
+    fn visit_import_star_as_specifier(&mut self, n: ImportStarAsSpecifier) {
+        n.visit_children_with(self);
+
+        self.resolver.modify(n.local(self.ast()), DeclKind::Lexical);
 
         // if self.resolver.config.handle_types {
         //     self.resolver
@@ -2058,88 +2065,88 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     }
 
     #[inline]
-    fn visit_param(&mut self, _: Param, ast: &Ast) {}
+    fn visit_param(&mut self, _: Param) {}
 
-    fn visit_pat(&mut self, node: Pat, ast: &Ast) {
+    fn visit_pat(&mut self, node: Pat) {
         match node {
             Pat::Ident(i) => {
-                self.add_pat_id(self.resolver.ast, i);
+                self.add_pat_id(i);
             }
 
-            _ => node.visit_children_with(self, ast),
+            _ => node.visit_children_with(self),
         }
     }
 
     #[inline]
-    fn visit_assign_target(&mut self, _: AssignTarget, ast: &Ast) {}
+    fn visit_assign_target(&mut self, _: AssignTarget) {}
 
     #[inline]
-    fn visit_setter_prop(&mut self, _: SetterProp, ast: &Ast) {}
+    fn visit_setter_prop(&mut self, _: SetterProp) {}
 
-    fn visit_switch_stmt(&mut self, s: SwitchStmt, ast: &Ast) {
-        s.discriminant(ast).visit_with(self, ast);
+    fn visit_switch_stmt(&mut self, s: SwitchStmt) {
+        s.discriminant(self.ast()).visit_with(self);
 
         let old_in_block = self.in_block;
         self.in_block = true;
-        s.cases(ast).visit_with(self, ast);
+        s.cases(self.ast()).visit_with(self);
         self.in_block = old_in_block;
     }
 
     #[inline]
-    fn visit_tagged_tpl(&mut self, _: TaggedTpl, ast: &Ast) {}
+    fn visit_tagged_tpl(&mut self, _: TaggedTpl) {}
 
     #[inline]
-    fn visit_tpl(&mut self, _: Tpl, ast: &Ast) {}
+    fn visit_tpl(&mut self, _: Tpl) {}
 
     // #[inline]
-    // fn visit_ts_module_block(&mut self, _: TsModuleBlock, ast: &Ast) {}
+    // fn visit_ts_module_block(&mut self, _: TsModuleBlock) {}
 
     #[inline]
-    fn visit_using_decl(&mut self, node: UsingDecl, ast: &Ast) {
+    fn visit_using_decl(&mut self, node: UsingDecl) {
         if self.in_block {
             return;
         }
 
         let old_kind = self.kind;
         self.kind = DeclKind::Lexical;
-        node.visit_children_with(self, ast);
+        node.visit_children_with(self);
         self.kind = old_kind;
     }
 
-    fn visit_var_decl(&mut self, node: VarDecl, ast: &Ast) {
+    fn visit_var_decl(&mut self, node: VarDecl) {
         // if node.declare && !self.resolver.config.handle_types {
         //     return;
         // }
 
         if self.in_block {
-            match node.kind(ast) {
+            match node.kind(self.ast()) {
                 VarDeclKind::Const | VarDeclKind::Let => return,
                 _ => {}
             }
         }
 
         let old_kind = self.kind;
-        self.kind = node.kind(ast).into();
+        self.kind = node.kind(self.ast()).into();
 
-        node.visit_children_with(self, ast);
+        node.visit_children_with(self);
 
         self.kind = old_kind;
     }
 
-    fn visit_var_decl_or_expr(&mut self, n: VarDeclOrExpr, ast: &Ast) {
+    fn visit_var_decl_or_expr(&mut self, n: VarDeclOrExpr) {
         if let VarDeclOrExpr::VarDecl(v) = n {
-            let kind = v.kind(ast);
+            let kind = v.kind(self.ast());
             if kind == VarDeclKind::Let || kind == VarDeclKind::Const {
                 return;
             }
         }
 
-        n.visit_children_with(self, ast);
+        n.visit_children_with(self);
     }
 
-    fn visit_for_head(&mut self, n: ForHead, ast: &Ast) {
+    fn visit_for_head(&mut self, n: ForHead) {
         if let ForHead::VarDecl(v) = n {
-            let kind = v.kind(ast);
+            let kind = v.kind(self.ast());
             if kind == VarDeclKind::Let || kind == VarDeclKind::Const {
                 return;
             }
@@ -2158,12 +2165,12 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
             return;
         }
 
-        n.visit_children_with(self, ast);
+        n.visit_children_with(self);
     }
 
     #[inline]
-    fn visit_var_declarator(&mut self, node: VarDeclarator, ast: &Ast) {
-        node.name(ast).visit_with(self, ast);
+    fn visit_var_declarator(&mut self, node: VarDeclarator) {
+        node.name(self.ast()).visit_with(self);
     }
 
     /// should visit var decls first, cause var decl may appear behind the
@@ -2179,23 +2186,23 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
     /// If we deal with the `var Ic` first, we can know
     /// that there is already an global declaration of Ic when deal with the try
     /// block.
-    fn visit_module_items(&mut self, items: TypedSubRange<ModuleItem>, ast: &Ast) {
-        items.visit_children_with(self, ast);
+    fn visit_module_items(&mut self, items: TypedSubRange<ModuleItem>) {
+        items.visit_children_with(self);
     }
 
     /// see docs for `self.visit_module_items`
-    fn visit_stmts(&mut self, stmts: TypedSubRange<Stmt>, ast: &Ast) {
+    fn visit_stmts(&mut self, stmts: TypedSubRange<Stmt>) {
         let others = stmts
             .iter()
             .filter_map(|item| {
-                let item = ast.get_node_in_sub_range(item);
+                let item = self.ast().get_node_in_sub_range(item);
                 match item {
                     Stmt::Decl(Decl::Var(..)) => {
-                        item.visit_with(self, ast);
+                        item.visit_with(self);
                         None
                     }
                     Stmt::Decl(Decl::Fn(..)) => {
-                        item.visit_with(self, ast);
+                        item.visit_with(self);
                         None
                     }
                     _ => Some(item),
@@ -2204,7 +2211,7 @@ impl<'resolver, 'ast> Visit for Hoister<'resolver, 'ast> {
             .collect::<Vec<_>>();
 
         for other_stmt in others {
-            other_stmt.visit_with(self, ast);
+            other_stmt.visit_with(self);
         }
     }
 }
