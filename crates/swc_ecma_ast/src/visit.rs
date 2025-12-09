@@ -10,18 +10,18 @@ macro_rules! dummy_visit_mut_impl {
     ($ident:ident) => {
         impl<V: ?Sized + Visit> VisitWith<V> for $ident {
             #[inline]
-            fn visit_with(self, _visitor: &mut V, _ast: &crate::Ast) {}
+            fn visit_with(self, _visitor: &mut V) {}
 
             #[inline]
-            fn visit_children_with(self, _visitor: &mut V, _ast: &crate::Ast) {}
+            fn visit_children_with(self, _visitor: &mut V) {}
         }
 
         impl<V: ?Sized + VisitMut> VisitMutWith<V> for $ident {
             #[inline]
-            fn visit_mut_with(self, _visitor: &mut V, _ast: &mut crate::Ast) {}
+            fn visit_mut_with(self, _visitor: &mut V) {}
 
             #[inline]
-            fn visit_mut_children_with(self, _visitor: &mut V, _ast: &mut crate::Ast) {}
+            fn visit_mut_children_with(self, _visitor: &mut V) {}
         }
     };
 }

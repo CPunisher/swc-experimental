@@ -31,7 +31,8 @@ impl Semantic {
     }
 }
 
-pub struct SemanticBuilder {
+pub struct SemanticBuilder<'a> {
+    ast: &'a Ast,
     scopes: IndexVec<ScopeId, Scope>,
     current_scope_id: ScopeId,
     /// Map node ids to symbol ids
@@ -42,7 +43,7 @@ pub struct SemanticBuilder {
     references: IndexVec<ReferenceId, Reference>,
 }
 
-impl SemanticBuilder {
+impl SemanticBuilder<'_> {
     fn enter_scope(&mut self, flags: ScopeFlags, node_id: NodeId) -> ScopeId {
         let parent_scope_id = self.current_scope_id;
         let parent_flags = self.scopes[parent_scope_id].flags();
@@ -66,18 +67,22 @@ impl SemanticBuilder {
     fn create_reference(&mut self) {}
 }
 
-impl Visit for SemanticBuilder {
-    fn visit_module(&mut self, node: Module, ast: &Ast) {
-        self.enter_scope(ScopeFlags::Fn, node.node_id());
-        node.visit_children_with(self, ast);
+impl<'a> Visit for SemanticBuilder<'a> {
+    fn ast(&self) -> &Ast {
+        self.ast
     }
 
-    fn visit_script(&mut self, node: Script, ast: &Ast) {
+    fn visit_module(&mut self, node: Module) {
+        self.enter_scope(ScopeFlags::Fn, node.node_id());
+        node.visit_children_with(self);
+    }
+
+    fn visit_script(&mut self, node: Script) {
         let strict = node
-            .body(ast)
+            .body(self.ast)
             .iter()
             .next()
-            .map(|stmt| ast.get_node_in_sub_range(stmt).is_use_strict(ast))
+            .map(|stmt| self.ast.get_node_in_sub_range(stmt).is_use_strict(self.ast))
             .unwrap_or(false);
 
         let mut flags = ScopeFlags::Fn;
@@ -86,59 +91,59 @@ impl Visit for SemanticBuilder {
         }
 
         self.enter_scope(flags, node.node_id());
-        node.visit_children_with(self, ast);
+        node.visit_children_with(self);
     }
 
-    fn visit_function(&mut self, node: Function, ast: &Ast) {
+    fn visit_function(&mut self, node: Function) {
         self.enter_scope(ScopeFlags::Fn, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_arrow_expr(&mut self, node: ArrowExpr, ast: &Ast) {
+    fn visit_arrow_expr(&mut self, node: ArrowExpr) {
         self.enter_scope(ScopeFlags::Fn, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_block_stmt(&mut self, node: BlockStmt, ast: &Ast) {
+    fn visit_block_stmt(&mut self, node: BlockStmt) {
         self.enter_scope(ScopeFlags::Block, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_catch_clause(&mut self, node: CatchClause, ast: &Ast) {
+    fn visit_catch_clause(&mut self, node: CatchClause) {
         self.enter_scope(ScopeFlags::Fn, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_class(&mut self, node: Class, ast: &Ast) {
+    fn visit_class(&mut self, node: Class) {
         self.enter_scope(ScopeFlags::Block, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_for_stmt(&mut self, node: ForStmt, ast: &Ast) {
+    fn visit_for_stmt(&mut self, node: ForStmt) {
         self.enter_scope(ScopeFlags::Block, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_for_in_stmt(&mut self, node: ForInStmt, ast: &Ast) {
+    fn visit_for_in_stmt(&mut self, node: ForInStmt) {
         self.enter_scope(ScopeFlags::Block, node.node_id());
 
         self.leave_scope();
     }
 
-    fn visit_for_of_stmt(&mut self, node: ForOfStmt, ast: &Ast) {
+    fn visit_for_of_stmt(&mut self, node: ForOfStmt) {
         self.enter_scope(ScopeFlags::Block, node.node_id());
 
         self.leave_scope();
     }
 
     // declarations
-    fn visit_decl(&mut self, node: Decl, ast: &Ast) {
+    fn visit_decl(&mut self, node: Decl) {
         match node {
             Decl::Class(class_decl) => todo!(),
             Decl::Fn(fn_decl) => todo!(),
