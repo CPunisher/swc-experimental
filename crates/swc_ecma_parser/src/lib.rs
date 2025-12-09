@@ -161,28 +161,30 @@ pub use lexer::source::StringSource;
 pub use parser::*;
 pub use syntax::{EsSyntax, Syntax, SyntaxFlags, TsSyntax};
 
-pub struct ParseRet<T> {
+pub struct ParseRet<T, I> {
     pub ast: Ast,
     pub errors: Vec<Error>,
     pub root: T,
+    pub input: I,
 }
 
-impl<T> ParseRet<T> {
-    pub fn map_root<U, F: FnOnce(T) -> U>(self, op: F) -> ParseRet<U> {
+impl<T, I> ParseRet<T, I> {
+    pub fn map_root<U, F: FnOnce(T) -> U>(self, op: F) -> ParseRet<U, I> {
         ParseRet {
             ast: self.ast,
             errors: self.errors,
             root: op(self.root),
+            input: self.input,
         }
     }
 }
 
-pub fn with_file_parser<T>(
-    src: &str,
+pub fn with_file_parser<'a, T>(
+    src: &'a str,
     syntax: Syntax,
     target: EsVersion,
-    comments: Option<&dyn Comments>,
-    op: impl FnOnce(Parser<self::Lexer>) -> T,
+    comments: Option<&'a dyn Comments>,
+    op: impl FnOnce(Parser<self::Lexer<'a>>) -> T,
 ) -> T {
     let lexer = self::Lexer::new(syntax, target, StringSource::new(src), comments);
     let p = Parser::new_from(lexer);
@@ -199,12 +201,12 @@ macro_rules! expose {
         ///
         /// This is an alias for [Parser], [Lexer] and [SourceFileInput], but
         /// instantiation of generics occur in `swc_ecma_parser` crate.
-        pub fn $name(
-            src: &str,
+        pub fn $name<'a>(
+            src: &'a str,
             syntax: Syntax,
             target: EsVersion,
-            comments: Option<&dyn Comments>,
-        ) -> PResult<ParseRet<$T>> {
+            comments: Option<&'a dyn Comments>,
+        ) -> PResult<ParseRet<$T, self::Lexer<'a>>> {
             with_file_parser(src, syntax, target, comments, $($t)*)
         }
     };

@@ -147,7 +147,7 @@ impl<I: Tokens> Parser<I> {
         self.input.iter.take_script_module_errors()
     }
 
-    pub fn parse_script(mut self) -> PResult<ParseRet<Script>> {
+    pub fn parse_script(mut self) -> PResult<ParseRet<Script, I>> {
         trace_cur!(self, parse_script);
 
         let ctx = (self.ctx() & !Context::Module) | Context::TopLevel;
@@ -165,11 +165,12 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: ret,
+            input: self.input.iter,
             errors,
         })
     }
 
-    pub fn parse_commonjs(mut self) -> PResult<ParseRet<Script>> {
+    pub fn parse_commonjs(mut self) -> PResult<ParseRet<Script, I>> {
         trace_cur!(self, parse_commonjs);
 
         // CommonJS module is acctually in a function scope
@@ -191,11 +192,12 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: ret,
+            input: self.input.iter,
             errors,
         })
     }
 
-    pub fn parse_typescript_module(mut self) -> PResult<ParseRet<Module>> {
+    pub fn parse_typescript_module(mut self) -> PResult<ParseRet<Module, I>> {
         trace_cur!(self, parse_typescript_module);
 
         debug_assert!(self.syntax().typescript());
@@ -218,6 +220,7 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: ret,
+            input: self.input.iter,
             errors,
         })
     }
@@ -227,7 +230,7 @@ impl<I: Tokens> Parser<I> {
     ///
     /// Note: This is not perfect yet. It means, some strict mode violations may
     /// not be reported even if the method returns [Module].
-    pub fn parse_program(mut self) -> PResult<ParseRet<Program>> {
+    pub fn parse_program(mut self) -> PResult<ParseRet<Program, I>> {
         let start = self.cur_pos();
         let shebang = self.parse_shebang()?;
 
@@ -277,11 +280,12 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: ret,
+            input: self.input.iter,
             errors,
         })
     }
 
-    pub fn parse_module(mut self) -> PResult<ParseRet<Module>> {
+    pub fn parse_module(mut self) -> PResult<ParseRet<Module, I>> {
         let ctx = self.ctx()
             | Context::Module
             | Context::CanBeModule
@@ -303,11 +307,12 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: ret,
+            input: self.input.iter,
             errors,
         })
     }
 
-    pub fn parse_expr(mut self) -> PResult<ParseRet<Expr>> {
+    pub fn parse_expr(mut self) -> PResult<ParseRet<Expr, I>> {
         // This allow to parse `import.meta`
         let ctx = self.ctx();
         self.set_ctx(ctx.union(Context::CanBeModule));
@@ -317,6 +322,7 @@ impl<I: Tokens> Parser<I> {
         Ok(ParseRet {
             ast: self.ast,
             root: expr,
+            input: self.input.iter,
             errors,
         })
     }
