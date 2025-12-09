@@ -26,7 +26,7 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
 
     visit_mut_functions.extend(quote! {
         #[inline]
-        fn ast(&self) -> &mut Ast;
+        fn ast(&mut self) -> &mut Ast;
         #[inline]
         fn enter_node(&mut self, node_id: NodeId) {}
         #[inline]

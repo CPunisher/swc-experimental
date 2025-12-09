@@ -6149,7 +6149,7 @@ impl<V: ?Sized + Visit> VisitWith<V> for Option<JSXClosingElement> {
 }
 pub trait VisitMut {
     #[inline]
-    fn ast(&self) -> &mut Ast;
+    fn ast(&mut self) -> &mut Ast;
     #[inline]
     fn enter_node(&mut self, node_id: NodeId) {}
     #[inline]
