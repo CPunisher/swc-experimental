@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use colored::Colorize;
 use swc_core::common::comments::SingleThreadedComments;
-use swc_experimental_ecma_ast::{NodeId, Program, Visit};
+use swc_experimental_ecma_ast::{Ast, NodeId, Program, Visit};
 use swc_experimental_ecma_parser::{Lexer, Parser, StringSource};
 
 use crate::{AppArgs, cases::Case, suite::TestResult};
@@ -48,10 +48,11 @@ impl NoMemoryHoleRunner {
             };
 
             let mut use_visitor = Use {
+                ast: &ret.ast,
                 used: HashSet::new(),
             };
 
-            use_visitor.visit_program(ret.root, &ret.ast);
+            use_visitor.visit_program(ret.root);
 
             if use_visitor.used.len() != ret.ast.nodes_len() as usize {
                 results.push(TestResult::Failed {
@@ -68,12 +69,17 @@ impl NoMemoryHoleRunner {
     }
 }
 
-struct Use {
+struct Use<'a> {
+    ast: &'a Ast,
     used: HashSet<NodeId>,
 }
 
-impl Visit for Use {
-    fn enter_node(&mut self, node_id: NodeId, _ast: &swc_experimental_ecma_ast::Ast) {
+impl Visit for Use<'_> {
+    fn ast(&self) -> &swc_experimental_ecma_ast::Ast {
+        self.ast
+    }
+
+    fn enter_node(&mut self, node_id: NodeId) {
         self.used.insert(node_id);
     }
 }

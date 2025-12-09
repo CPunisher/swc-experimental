@@ -45,18 +45,26 @@ fn test_new(src: &str) -> usize {
     let parser = Parser::new_from(lexer);
     let ret = parser.parse_module().unwrap();
 
-    struct Counter {
+    struct Counter<'a> {
+        ast: &'a Ast,
         count: usize,
     }
 
-    impl swc_experimental_ecma_visit::Visit for Counter {
-        fn visit_ident(&mut self, _node: swc_experimental_ecma_ast::Ident, _ast: &Ast) {
+    impl swc_experimental_ecma_visit::Visit for Counter<'_> {
+        fn ast(&self) -> &swc_experimental_ecma_ast::Ast {
+            self.ast
+        }
+
+        fn visit_ident(&mut self, _node: swc_experimental_ecma_ast::Ident) {
             self.count += 1;
         }
     }
 
-    let mut counter = Counter { count: 0 };
-    ret.root.visit_with(&mut counter, &ret.ast);
+    let mut counter = Counter {
+        ast: &ret.ast,
+        count: 0,
+    };
+    ret.root.visit_with(&mut counter);
     counter.count
 }
 
