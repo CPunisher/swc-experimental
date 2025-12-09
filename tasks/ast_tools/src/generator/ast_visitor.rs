@@ -16,8 +16,8 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
     let mut visit_mut_with_impls = TokenStream::new();
 
     visit_functions.extend(quote! {
-        #[inline]
         fn ast(&self) -> &Ast;
+
         #[inline]
         fn enter_node(&mut self, node_id: NodeId) {}
         #[inline]
@@ -25,8 +25,8 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
     });
 
     visit_mut_functions.extend(quote! {
-        #[inline]
         fn ast(&mut self) -> &mut Ast;
+
         #[inline]
         fn enter_node(&mut self, node_id: NodeId) {}
         #[inline]

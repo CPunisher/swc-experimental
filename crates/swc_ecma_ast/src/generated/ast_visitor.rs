@@ -2,7 +2,6 @@
 use crate::{Ast, ast::*, node_id::*};
 use swc_core::common::Span;
 pub trait Visit {
-    #[inline]
     fn ast(&self) -> &Ast;
     #[inline]
     fn enter_node(&mut self, node_id: NodeId) {}
@@ -6148,7 +6147,6 @@ impl<V: ?Sized + Visit> VisitWith<V> for Option<JSXClosingElement> {
     }
 }
 pub trait VisitMut {
-    #[inline]
     fn ast(&mut self) -> &mut Ast;
     #[inline]
     fn enter_node(&mut self, node_id: NodeId) {}
