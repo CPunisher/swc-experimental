@@ -1,5 +1,4 @@
 use swc_core::atoms::{Atom, Wtf8Atom};
-use swc_core::common::SyntaxContext;
 use swc_core::ecma::ast as legacy;
 use swc_experimental_ecma_ast::{
     self as experimental, Ast, NodeIdTrait, OptionalUtf8Ref, OptionalWtf8Ref, TypedSubRange,
@@ -293,7 +292,7 @@ impl AstCompat<'_> {
         legacy::BlockStmt {
             span: block_stmt.span(self.ast),
             stmts: self.compat_type_sub_range(block_stmt.stmts(self.ast), Self::compat_stmt),
-            ctxt: SyntaxContext::from_u32(self.semantic.body_scope(block_stmt).raw()),
+            ctxt: self.semantic.body_scope(block_stmt).to_ctxt(),
         }
     }
 
@@ -573,7 +572,7 @@ impl AstCompat<'_> {
     fn compat_ident(&mut self, ident: experimental::Ident) -> legacy::Ident {
         legacy::Ident {
             span: ident.span(self.ast),
-            ctxt: SyntaxContext::from_u32(self.semantic.node_scope(ident).raw()),
+            ctxt: self.semantic.node_scope(ident).to_ctxt(),
             sym: self.compat_utf8_ref(ident.sym(self.ast)),
             optional: ident.optional(self.ast),
         }

@@ -12,6 +12,7 @@ version               = "0.1.1"
 bitflags   = { workspace = true }
 oxc_index  = { workspace = true }
 rustc-hash = { workspace = true }
+swc_core   = { workspace = true, features = ["__common"] }
 
 swc_experimental_ecma_ast   = { workspace = true }
 swc_experimental_ecma_visit = { workspace = true }

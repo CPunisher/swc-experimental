@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use oxc_index::IndexVec;
 use rustc_hash::{FxHashMap, FxHashSet};
 use swc_experimental_ecma_ast::*;
@@ -125,6 +127,8 @@ const LOG: bool = false && cfg!(debug_assertions);
 pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> Semantic {
     let top_level_scope = Scope::new(ScopeKind::Fn, None);
     let mut scopes = IndexVec::default();
+    // Empty scope for unresolved placeholder
+    let unresolved_scope_id = scopes.push(Scope::new(ScopeKind::Fn, None));
     let top_level_scope_id = scopes.push(top_level_scope);
 
     let node_cap = ast.nodes_capacity();
@@ -140,6 +144,7 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
         scopes,
 
         top_level_scope_id,
+        unresolved_scope_id,
         current: top_level_scope_id,
 
         ident_type: IdentType::Ref,
@@ -153,16 +158,16 @@ pub fn resolver<'ast, N: VisitWith<Resolver<'ast>>>(root: N, ast: &'ast Ast) -> 
     root.visit_with(&mut resolver);
     Semantic {
         top_level_scope_id,
+        unresolved_scope_id,
         parent_ids: resolver.parent_ids,
         symbol_scopes: resolver.symbol_scopes,
         block_scopes: resolver.block_scopes,
     }
 }
 
-pub const UNRESOLVED_SCOPE_ID: ScopeId = ScopeId::from_raw(u32::MAX);
-
 pub struct Semantic {
     top_level_scope_id: ScopeId,
+    unresolved_scope_id: ScopeId,
     parent_ids: IndexVec<NodeId, NodeId>,
     symbol_scopes: FxHashMap<NodeId, ScopeId>,
     block_scopes: FxHashMap<NodeId, ScopeId>,
@@ -177,7 +182,7 @@ impl Semantic {
     #[inline]
     pub fn node_scope(&self, ident: Ident) -> ScopeId {
         let Some(scope_id) = self.symbol_scopes.get(&ident.node_id()).cloned() else {
-            return UNRESOLVED_SCOPE_ID;
+            return self.unresolved_scope_id;
         };
 
         scope_id
@@ -186,7 +191,7 @@ impl Semantic {
     #[inline]
     pub fn body_scope(&self, block: BlockStmt) -> ScopeId {
         let Some(scope_id) = self.block_scopes.get(&block.node_id()).cloned() else {
-            return UNRESOLVED_SCOPE_ID;
+            return self.unresolved_scope_id;
         };
 
         scope_id
@@ -195,6 +200,11 @@ impl Semantic {
     #[inline]
     pub fn top_level_scope_id(&self) -> ScopeId {
         self.top_level_scope_id
+    }
+
+    #[inline]
+    pub fn unresolved_scope_id(&self) -> ScopeId {
+        self.unresolved_scope_id
     }
 }
 
@@ -238,6 +248,7 @@ pub struct Resolver<'ast> {
     block_scopes: FxHashMap<NodeId, ScopeId>,
 
     top_level_scope_id: ScopeId,
+    unresolved_scope_id: ScopeId,
     scopes: IndexVec<ScopeId, Scope<'ast>>,
     current: ScopeId,
 
@@ -339,7 +350,7 @@ impl<'ast> Resolver<'ast> {
                     "undefined" | "NaN" | "Infinity"
                         if cur == self.top_level_scope_id && !self.is_module =>
                     {
-                        Some(UNRESOLVED_SCOPE_ID)
+                        Some(self.unresolved_scope_id)
                     }
                     _ => Some(cur),
                 };
@@ -1115,7 +1126,8 @@ impl<'ast> Visit for Resolver<'ast> {
                     //     debug!("\t -> {:?}", ctxt);
                     // }
 
-                    self.symbol_scopes.insert(i.node_id(), UNRESOLVED_SCOPE_ID);
+                    self.symbol_scopes
+                        .insert(i.node_id(), self.unresolved_scope_id);
                     // Support hoisting
                     self.modify(i, self.decl_kind)
                 }

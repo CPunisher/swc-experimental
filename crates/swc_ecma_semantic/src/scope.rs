@@ -1,9 +1,9 @@
-use bitflags::bitflags;
-use swc_experimental_ecma_ast::NodeId;
+use std::num::NonZeroU32;
 
-oxc_index::define_index_type! {
-    pub struct ScopeId = u32;
-}
+use bitflags::bitflags;
+use oxc_index::Idx;
+use swc_core::common::SyntaxContext;
+use swc_experimental_ecma_ast::NodeId;
 
 pub struct Scope {
     parent: Option<ScopeId>,
@@ -37,5 +37,26 @@ bitflags! {
         const StrictMode = 1 << 0;
         const Block      = 1 << 1;
         const Fn         = 1 << 2;
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ScopeId(pub(crate) NonZeroU32);
+
+impl Idx for ScopeId {
+    const MAX: usize = u32::MAX as usize;
+
+    unsafe fn from_usize_unchecked(idx: usize) -> Self {
+        unsafe { Self(NonZeroU32::new_unchecked(idx as u32 + 1)) }
+    }
+
+    fn index(self) -> usize {
+        self.0.get() as usize - 1
+    }
+}
+
+impl ScopeId {
+    pub fn to_ctxt(self) -> SyntaxContext {
+        SyntaxContext::from_u32(self.0.get())
     }
 }
