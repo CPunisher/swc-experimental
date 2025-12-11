@@ -1454,7 +1454,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_ast"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "num-bigint",
  "oxc_index",
@@ -1465,7 +1465,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_ast_compat"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "swc_core",
  "swc_experimental_ecma_ast",
@@ -1474,7 +1474,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_parser"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bitflags",
  "either",
@@ -1489,7 +1489,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_semantic"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bitflags",
  "oxc_index",
@@ -1501,7 +1501,7 @@ dependencies = [
 
 [[package]]
 name = "swc_experimental_ecma_visit"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "swc_experimental_ecma_ast",
 ]

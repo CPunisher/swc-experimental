@@ -42,11 +42,11 @@ syn          = { version = "2", default-features = false }
 
 # Workspace
 swc_experimental_ast_macros      = { version = "0.1.0", path = "crates/swc_ast_macros" }
-swc_experimental_ecma_ast        = { version = "0.1.0", path = "crates/swc_ecma_ast" }
-swc_experimental_ecma_ast_compat = { version = "0.1.0", path = "crates/swc_ecma_ast_compat" }
-swc_experimental_ecma_parser     = { version = "0.1.0", path = "crates/swc_ecma_parser" }
-swc_experimental_ecma_semantic   = { version = "0.1.0", path = "crates/swc_ecma_semantic" }
-swc_experimental_ecma_visit      = { version = "0.1.0", path = "crates/swc_ecma_visit" }
+swc_experimental_ecma_ast        = { version = "0.2.0", path = "crates/swc_ecma_ast" }
+swc_experimental_ecma_ast_compat = { version = "0.2.0", path = "crates/swc_ecma_ast_compat" }
+swc_experimental_ecma_parser     = { version = "0.2.0", path = "crates/swc_ecma_parser" }
+swc_experimental_ecma_semantic   = { version = "0.2.0", path = "crates/swc_ecma_semantic" }
+swc_experimental_ecma_visit      = { version = "0.2.0", path = "crates/swc_ecma_visit" }
 
 # Dev
 colored   = "3.0.0"
