@@ -210,14 +210,14 @@ pub struct OptionalTypedSubRange<T> {
 }
 
 impl<T> OptionalTypedSubRange<T> {
-    pub const fn to_option(self) -> Option<TypedSubRange<T>> {
+    pub const fn to_option(&self) -> Option<TypedSubRange<T>> {
         if self.inner.is_none() {
             return None;
         }
-        return Some(TypedSubRange {
+        Some(TypedSubRange {
             inner: self.inner.unwrap(),
             _phantom: PhantomData,
-        });
+        })
     }
 }
 
