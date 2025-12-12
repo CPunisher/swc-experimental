@@ -52,6 +52,7 @@ pub struct Ast {
 }
 
 /// Untyped AST node
+#[derive(Clone)]
 pub struct AstNode {
     span: Span,
     kind: NodeKind,
@@ -83,6 +84,7 @@ impl AstNode {
 /// # Safety:
 /// It is only access the by the property accesses of typed AST node, and the construction of typed AST is
 /// another safety guarantee.
+#[derive(Clone, Copy)]
 pub union NodeData {
     empty: (),
     extra_data_start: ExtraDataId,
@@ -430,6 +432,11 @@ impl Ast {
     #[inline]
     pub fn free_node(&mut self, node_id: NodeId) {
         self.nodes.free_node(node_id);
+    }
+
+    #[inline]
+    pub fn replace_node<T: NodeIdTrait>(&mut self, dest: T, source: T) {
+        self.nodes.replace_node(dest.node_id(), source.node_id());
     }
 
     #[inline]

@@ -59,6 +59,12 @@ impl NodeList {
     }
 
     #[inline]
+    pub fn replace_node(&mut self, dest: NodeId, src: NodeId) {
+        self.inner[dest] = self.inner[src].clone();
+        self.free_node(src);
+    }
+
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = (NodeId, &AstNode)> {
         self.inner.iter_enumerated()
     }

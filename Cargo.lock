@@ -1500,6 +1500,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_experimental_ecma_transforms_base"
+version = "0.2.0"
+dependencies = [
+ "indexmap",
+ "rustc-hash",
+ "swc_core",
+ "swc_experimental_ecma_ast",
+]
+
+[[package]]
 name = "swc_experimental_ecma_visit"
 version = "0.2.0"
 dependencies = [
@@ -1559,6 +1569,7 @@ dependencies = [
  "swc_experimental_ecma_ast",
  "swc_experimental_ecma_parser",
  "swc_experimental_ecma_semantic",
+ "swc_experimental_ecma_transforms_base",
 ]
 
 [[package]]

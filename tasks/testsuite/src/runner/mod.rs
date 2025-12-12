@@ -1,4 +1,5 @@
-pub mod misc_parser;
-pub mod no_memory_hole;
+pub mod parser_misc;
+pub mod parser_no_memory_hole;
+pub mod parser_test262;
 pub mod semantic;
-pub mod test262_parser;
+pub mod transform_remove_paren;
