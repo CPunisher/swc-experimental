@@ -620,15 +620,9 @@ impl ImportDefaultSpecifier {
     }
     #[inline]
     pub fn local(&self, ast: &crate::Ast) -> Ident {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Ident::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -638,14 +632,8 @@ impl ImportDefaultSpecifier {
     }
     #[inline]
     pub fn set_local(&self, ast: &mut crate::Ast, local: Ident) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = local.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = local.node_id().index() as u32;
     }
 }
 impl ImportStarAsSpecifier {
@@ -663,15 +651,9 @@ impl ImportStarAsSpecifier {
     }
     #[inline]
     pub fn local(&self, ast: &crate::Ast) -> Ident {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Ident::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -681,14 +663,8 @@ impl ImportStarAsSpecifier {
     }
     #[inline]
     pub fn set_local(&self, ast: &mut crate::Ast, local: Ident) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = local.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = local.node_id().index() as u32;
     }
 }
 impl ExportDecl {
@@ -706,15 +682,9 @@ impl ExportDecl {
     }
     #[inline]
     pub fn decl(&self, ast: &crate::Ast) -> Decl {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Decl::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Decl::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -724,14 +694,8 @@ impl ExportDecl {
     }
     #[inline]
     pub fn set_decl(&self, ast: &mut crate::Ast, decl: Decl) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = decl.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = decl.node_id().index() as u32;
     }
 }
 impl NamedExport {
@@ -920,15 +884,11 @@ impl ExportNamespaceSpecifier {
     }
     #[inline]
     pub fn name(&self, ast: &crate::Ast) -> ModuleExportName {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { ModuleExportName::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe {
+            ModuleExportName::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
+        }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -938,14 +898,8 @@ impl ExportNamespaceSpecifier {
     }
     #[inline]
     pub fn set_name(&self, ast: &mut crate::Ast, name: ModuleExportName) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = name.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = name.node_id().index() as u32;
     }
 }
 impl ModuleExportName {
@@ -1009,15 +963,9 @@ impl ExportDefaultSpecifier {
     }
     #[inline]
     pub fn exported(&self, ast: &crate::Ast) -> Ident {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Ident::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1027,14 +975,8 @@ impl ExportDefaultSpecifier {
     }
     #[inline]
     pub fn set_exported(&self, ast: &mut crate::Ast, exported: Ident) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = exported.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = exported.node_id().index() as u32;
     }
 }
 impl ExportNamedSpecifier {
@@ -1141,15 +1083,9 @@ impl ExportDefaultDecl {
     }
     #[inline]
     pub fn decl(&self, ast: &crate::Ast) -> DefaultDecl {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { DefaultDecl::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { DefaultDecl::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1159,14 +1095,8 @@ impl ExportDefaultDecl {
     }
     #[inline]
     pub fn set_decl(&self, ast: &mut crate::Ast, decl: DefaultDecl) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = decl.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = decl.node_id().index() as u32;
     }
 }
 impl DefaultDecl {
@@ -1230,15 +1160,9 @@ impl ExportDefaultExpr {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1248,14 +1172,8 @@ impl ExportDefaultExpr {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl ExportAll {
@@ -1672,15 +1590,9 @@ impl ExprStmt {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1690,14 +1602,8 @@ impl ExprStmt {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl EmptyStmt {
@@ -1821,15 +1727,10 @@ impl ReturnStmt {
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Option<Expr> {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .optional_node
-        };
-        ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, ast) })
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        let opt = crate::OptionalNodeId::from_raw(raw);
+        opt.map(|id| unsafe { Expr::from_node_id_unchecked(id, ast) })
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1839,14 +1740,8 @@ impl ReturnStmt {
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Option<Expr>) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .optional_node = arg.map(|n| n.node_id()).into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = crate::OptionalNodeId::from(arg.map(|n| n.node_id())).into_raw();
     }
 }
 impl LabeledStmt {
@@ -1930,15 +1825,10 @@ impl BreakStmt {
     }
     #[inline]
     pub fn label(&self, ast: &crate::Ast) -> Option<Ident> {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .optional_node
-        };
-        ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, ast) })
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        let opt = crate::OptionalNodeId::from_raw(raw);
+        opt.map(|id| unsafe { Ident::from_node_id_unchecked(id, ast) })
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1948,14 +1838,8 @@ impl BreakStmt {
     }
     #[inline]
     pub fn set_label(&self, ast: &mut crate::Ast, label: Option<Ident>) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .optional_node = label.map(|n| n.node_id()).into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = crate::OptionalNodeId::from(label.map(|n| n.node_id())).into_raw();
     }
 }
 impl ContinueStmt {
@@ -1973,15 +1857,10 @@ impl ContinueStmt {
     }
     #[inline]
     pub fn label(&self, ast: &crate::Ast) -> Option<Ident> {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .optional_node
-        };
-        ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, ast) })
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        let opt = crate::OptionalNodeId::from_raw(raw);
+        opt.map(|id| unsafe { Ident::from_node_id_unchecked(id, ast) })
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1991,14 +1870,8 @@ impl ContinueStmt {
     }
     #[inline]
     pub fn set_label(&self, ast: &mut crate::Ast, label: Option<Ident>) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .optional_node = label.map(|n| n.node_id()).into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = crate::OptionalNodeId::from(label.map(|n| n.node_id())).into_raw();
     }
 }
 impl IfStmt {
@@ -2171,15 +2044,9 @@ impl ThrowStmt {
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -2189,14 +2056,8 @@ impl ThrowStmt {
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = arg.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = arg.node_id().index() as u32;
     }
 }
 impl TryStmt {
@@ -4110,27 +3971,21 @@ impl UnaryExpr {
     }
     #[inline]
     pub fn op(&self, ast: &crate::Ast) -> UnaryOp {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .other
-        };
-        UnaryOp::from_extra_data(ret)
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        UnaryOp::from_extra_data(_b0 as u64)
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[1usize];
+        let _b1 = u32_bytes[2usize];
+        let _b2 = u32_bytes[3usize];
+        let _b3 = node.inline_data[0usize];
+        let raw = u32::from_ne_bytes([_b0, _b1, _b2, _b3]);
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -4140,25 +3995,22 @@ impl UnaryExpr {
     }
     #[inline]
     pub fn set_op(&self, ast: &mut crate::Ast, op: UnaryOp) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .other = op.to_extra_data()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [(op.to_extra_data() & 0xFF) as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = arg.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = (arg.node_id().index() as u32).to_ne_bytes();
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[1usize] = field_bytes[0usize];
+        u32_bytes[2usize] = field_bytes[1usize];
+        u32_bytes[3usize] = field_bytes[2usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
+        node.inline_data[0usize] = field_bytes[3usize];
     }
 }
 impl UpdateExpr {
@@ -4176,39 +4028,28 @@ impl UpdateExpr {
     }
     #[inline]
     pub fn op(&self, ast: &crate::Ast) -> UpdateOp {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .other
-        };
-        UpdateOp::from_extra_data(ret)
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        UpdateOp::from_extra_data(_b0 as u64)
     }
     #[inline]
     pub fn prefix(&self, ast: &crate::Ast) -> bool {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .bool
-        };
-        ret.into()
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[1usize];
+        _b0 != 0
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[2usize];
+        let _b1 = u32_bytes[3usize];
+        let _b2 = node.inline_data[0usize];
+        let _b3 = node.inline_data[1usize];
+        let raw = u32::from_ne_bytes([_b0, _b1, _b2, _b3]);
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -4218,36 +4059,30 @@ impl UpdateExpr {
     }
     #[inline]
     pub fn set_op(&self, ast: &mut crate::Ast, op: UpdateOp) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .other = op.to_extra_data()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [(op.to_extra_data() & 0xFF) as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
     #[inline]
     pub fn set_prefix(&self, ast: &mut crate::Ast, prefix: bool) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .bool = prefix.into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [prefix as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[1usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 2usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = arg.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = (arg.node_id().index() as u32).to_ne_bytes();
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[2usize] = field_bytes[0usize];
+        u32_bytes[3usize] = field_bytes[1usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
+        node.inline_data[0usize] = field_bytes[2usize];
+        node.inline_data[1usize] = field_bytes[3usize];
     }
 }
 impl BinExpr {
@@ -5188,27 +5023,22 @@ impl YieldExpr {
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Option<Expr> {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .optional_node
-        };
-        ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, ast) })
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        let _b1 = u32_bytes[1usize];
+        let _b2 = u32_bytes[2usize];
+        let _b3 = u32_bytes[3usize];
+        let raw = u32::from_ne_bytes([_b0, _b1, _b2, _b3]);
+        let opt = crate::OptionalNodeId::from_raw(raw);
+        opt.map(|id| unsafe { Expr::from_node_id_unchecked(id, ast) })
     }
     #[inline]
     pub fn delegate(&self, ast: &crate::Ast) -> bool {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .bool
-        };
-        ret.into()
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = node.inline_data[0usize];
+        _b0 != 0
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5218,25 +5048,22 @@ impl YieldExpr {
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Option<Expr>) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .optional_node = arg.map(|n| n.node_id()).into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
+            .into_raw()
+            .to_ne_bytes();
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        u32_bytes[1usize] = field_bytes[1usize];
+        u32_bytes[2usize] = field_bytes[2usize];
+        u32_bytes[3usize] = field_bytes[3usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
     #[inline]
     pub fn set_delegate(&self, ast: &mut crate::Ast, delegate: bool) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .bool = delegate.into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [delegate as u8];
+        node.inline_data[0usize] = field_bytes[0usize];
     }
 }
 impl MetaPropExpr {
@@ -5254,15 +5081,10 @@ impl MetaPropExpr {
     }
     #[inline]
     pub fn kind(&self, ast: &crate::Ast) -> MetaPropKind {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .other
-        };
-        MetaPropKind::from_extra_data(ret)
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        MetaPropKind::from_extra_data(_b0 as u64)
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5272,14 +5094,11 @@ impl MetaPropExpr {
     }
     #[inline]
     pub fn set_kind(&self, ast: &mut crate::Ast, kind: MetaPropKind) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .other = kind.to_extra_data()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [(kind.to_extra_data() & 0xFF) as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
 }
 impl AwaitExpr {
@@ -5297,15 +5116,9 @@ impl AwaitExpr {
     }
     #[inline]
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5315,14 +5128,8 @@ impl AwaitExpr {
     }
     #[inline]
     pub fn set_arg(&self, ast: &mut crate::Ast, arg: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = arg.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = arg.node_id().index() as u32;
     }
 }
 impl Tpl {
@@ -5561,15 +5368,9 @@ impl ParenExpr {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5579,14 +5380,8 @@ impl ParenExpr {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl Callee {
@@ -5683,15 +5478,10 @@ impl Import {
     }
     #[inline]
     pub fn phase(&self, ast: &crate::Ast) -> ImportPhase {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .other
-        };
-        ImportPhase::from_extra_data(ret)
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        ImportPhase::from_extra_data(_b0 as u64)
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5701,14 +5491,11 @@ impl Import {
     }
     #[inline]
     pub fn set_phase(&self, ast: &mut crate::Ast, phase: ImportPhase) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .other = phase.to_extra_data()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [(phase.to_extra_data() & 0xFF) as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
 }
 impl ExprOrSpread {
@@ -6061,27 +5848,23 @@ impl OptChainExpr {
     }
     #[inline]
     pub fn optional(&self, ast: &crate::Ast) -> bool {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .bool
-        };
-        ret.into()
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        _b0 != 0
     }
     #[inline]
     pub fn base(&self, ast: &crate::Ast) -> OptChainBase {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { OptChainBase::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[1usize];
+        let _b1 = u32_bytes[2usize];
+        let _b2 = u32_bytes[3usize];
+        let _b3 = node.inline_data[0usize];
+        let raw = u32::from_ne_bytes([_b0, _b1, _b2, _b3]);
+        unsafe {
+            OptChainBase::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
+        }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -6091,25 +5874,22 @@ impl OptChainExpr {
     }
     #[inline]
     pub fn set_optional(&self, ast: &mut crate::Ast, optional: bool) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .bool = optional.into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [optional as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
     #[inline]
     pub fn set_base(&self, ast: &mut crate::Ast, base: OptChainBase) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 1usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = base.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = (base.node_id().index() as u32).to_ne_bytes();
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[1usize] = field_bytes[0usize];
+        u32_bytes[2usize] = field_bytes[1usize];
+        u32_bytes[3usize] = field_bytes[2usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
+        node.inline_data[0usize] = field_bytes[3usize];
     }
 }
 impl OptChainBase {
@@ -7266,15 +7046,9 @@ impl Decorator {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -7284,14 +7058,8 @@ impl Decorator {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl StaticBlock {
@@ -7309,15 +7077,9 @@ impl StaticBlock {
     }
     #[inline]
     pub fn body(&self, ast: &crate::Ast) -> BlockStmt {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { BlockStmt::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { BlockStmt::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -7327,14 +7089,8 @@ impl StaticBlock {
     }
     #[inline]
     pub fn set_body(&self, ast: &mut crate::Ast, body: BlockStmt) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = body.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = body.node_id().index() as u32;
     }
 }
 impl Key {
@@ -8069,15 +7825,9 @@ impl ComputedPropName {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -8087,14 +7837,8 @@ impl ComputedPropName {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl Pat {
@@ -8830,15 +8574,9 @@ impl BindingIdent {
     }
     #[inline]
     pub fn id(&self, ast: &crate::Ast) -> Ident {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Ident::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -8848,14 +8586,8 @@ impl BindingIdent {
     }
     #[inline]
     pub fn set_id(&self, ast: &mut crate::Ast, id: Ident) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = id.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = id.node_id().index() as u32;
     }
 }
 impl Lit {
@@ -9037,15 +8769,10 @@ impl Bool {
     }
     #[inline]
     pub fn value(&self, ast: &crate::Ast) -> bool {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .bool
-        };
-        ret.into()
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        let _b0 = u32_bytes[0usize];
+        _b0 != 0
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9055,14 +8782,11 @@ impl Bool {
     }
     #[inline]
     pub fn set_value(&self, ast: &mut crate::Ast, value: bool) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .bool = value.into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        let field_bytes = [value as u8];
+        let mut u32_bytes = unsafe { node.data.inline_data }.to_ne_bytes();
+        u32_bytes[0usize] = field_bytes[0usize];
+        node.data.inline_data = u32::from_ne_bytes(u32_bytes);
     }
 }
 impl Null {
@@ -9496,15 +9220,9 @@ impl JSXExprContainer {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> JSXExpr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { JSXExpr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { JSXExpr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9514,14 +9232,8 @@ impl JSXExprContainer {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: JSXExpr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl JSXExpr {
@@ -9585,15 +9297,9 @@ impl JSXSpreadChild {
     }
     #[inline]
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { Expr::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9603,14 +9309,8 @@ impl JSXSpreadChild {
     }
     #[inline]
     pub fn set_expr(&self, ast: &mut crate::Ast, expr: Expr) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = expr.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = expr.node_id().index() as u32;
     }
 }
 impl JSXElementName {
@@ -9822,15 +9522,11 @@ impl JSXClosingElement {
     }
     #[inline]
     pub fn name(&self, ast: &crate::Ast) -> JSXElementName {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        let ret = unsafe {
-            ast.extra_data
-                .as_raw_slice()
-                .get_unchecked(offset.index())
-                .node
-        };
-        unsafe { JSXElementName::from_node_id_unchecked(ret, ast) }
+        let node = unsafe { ast.nodes.get_unchecked(self.0) };
+        let raw = unsafe { node.data.inline_data };
+        unsafe {
+            JSXElementName::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
+        }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9840,14 +9536,8 @@ impl JSXClosingElement {
     }
     #[inline]
     pub fn set_name(&self, ast: &mut crate::Ast, name: JSXElementName) {
-        let offset = unsafe { ast.nodes.get_unchecked(self.0).data.extra_data_start } + 0usize;
-        debug_assert!(offset < ast.extra_data.len());
-        unsafe {
-            ast.extra_data
-                .as_raw_slice_mut()
-                .get_unchecked_mut(offset.index())
-                .node = name.node_id().into()
-        };
+        let node = unsafe { ast.nodes.get_unchecked_mut(self.0) };
+        node.data.inline_data = name.node_id().index() as u32;
     }
 }
 impl JSXAttr {

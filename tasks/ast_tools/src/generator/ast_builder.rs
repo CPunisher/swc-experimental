@@ -6,7 +6,7 @@ use crate::{
     AST_CRATE_PATH,
     output::{RawOutput, RustOutput, output_path},
     schema::{AstEnum, AstStruct, AstType, Schema},
-    util::{map_field_type_to_extra_field, safe_ident},
+    util::{InlineStorageMode, calculate_inline_layout, map_field_type_to_extra_field, safe_ident},
 };
 
 pub fn ast_builder(schema: &Schema) -> RawOutput {
@@ -54,6 +54,196 @@ fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> Token
     let ret_ty = format_ident!("{}", ast.name);
     let fn_params = generate_fn_params_decl(ast, schema);
 
+    // Check if this struct can use inline storage
+    if let Some(layout) = calculate_inline_layout(ast, schema) {
+        generate_build_function_inline(ast, schema, fn_name, ret_ty, fn_params, &layout)
+    } else {
+        generate_build_function_extra_data(ast, schema, fn_name, ret_ty, fn_params)
+    }
+}
+
+/// Generate build function using inline storage (for small nodes)
+/// Layout (7 bytes total):
+/// - Bytes 0-3: NodeData.inline_data (u32)
+/// - Bytes 4-6: AstNode.inline_data ([u8; 3])
+fn generate_build_function_inline(
+    ast: &AstStruct,
+    schema: &Schema,
+    fn_name: syn::Ident,
+    ret_ty: syn::Ident,
+    fn_params: TokenStream,
+    layout: &crate::util::InlineLayout,
+) -> TokenStream {
+    // Optimization: zero-field nodes use empty: () for shorter generated code
+    if layout.fields.is_empty() {
+        return quote! {
+            #[inline]
+            pub fn #fn_name(&mut self, span: Span) -> #ret_ty {
+                #ret_ty(self.add_node(AstNode {
+                    span,
+                    kind: NodeKind::#ret_ty,
+                    inline_data: [0, 0, 0],
+                    data: NodeData { empty: () },
+                }))
+            }
+        };
+    }
+
+    // Optimization: if FourBytes mode with a single 4-byte field at offset 0,
+    // we can directly assign the u32 value without byte conversion
+    let is_single_u32_field = layout.mode == InlineStorageMode::FourBytes
+        && layout.fields.len() == 1
+        && layout.fields[0].1 == 0  // byte_offset == 0
+        && layout.fields[0].2 == 4; // byte_size == 4
+
+    if is_single_u32_field {
+        let (field_idx, _, _) = layout.fields[0];
+        let field = &ast.fields[field_idx];
+        let field_name = format_ident!("{}", field.name);
+        let field_ty = &schema.types[field.type_id];
+
+        // Generate direct u32 value
+        let u32_value = generate_field_to_u32(field_ty, &field_name);
+
+        return quote! {
+            #[inline]
+            pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                #ret_ty(
+                    self.add_node(AstNode {
+                        span,
+                        kind: NodeKind::#ret_ty,
+                        inline_data: [0, 0, 0],
+                        data: NodeData {
+                            inline_data: #u32_value,
+                        },
+                    })
+                )
+            }
+        };
+    }
+
+    // General case: pack fields into bytes
+    let mut pack_code = TokenStream::new();
+
+    for &(field_idx, byte_offset, byte_size) in &layout.fields {
+        let field = &ast.fields[field_idx];
+        let field_name = format_ident!("{}", field.name);
+        let field_ty = &schema.types[field.type_id];
+
+        // Generate bytes for this field
+        let bytes_expr = generate_field_to_bytes(field_ty, &field_name, byte_size);
+
+        // Write bytes to inline_bytes array at the correct offset
+        for i in 0..byte_size {
+            let dst_idx = byte_offset + i;
+            pack_code.extend(quote! {
+                inline_bytes[#dst_idx] = #bytes_expr[#i];
+            });
+        }
+    }
+
+    let tokens = match layout.mode {
+        InlineStorageMode::FourBytes => {
+            // Multiple small fields fit in the u32
+            quote! {
+                #[inline]
+                pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                    let mut inline_bytes = [0u8; 4];
+                    #pack_code
+
+                    #ret_ty(
+                        self.add_node(AstNode {
+                            span,
+                            kind: NodeKind::#ret_ty,
+                            inline_data: [0, 0, 0],
+                            data: NodeData {
+                                inline_data: u32::from_ne_bytes(inline_bytes),
+                            },
+                        })
+                    )
+                }
+            }
+        }
+        InlineStorageMode::Full => {
+            // Use all 7 bytes
+            quote! {
+                #[inline]
+                pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                    let mut inline_bytes = [0u8; 7];
+                    #pack_code
+
+                    #ret_ty(
+                        self.add_node(AstNode {
+                            span,
+                            kind: NodeKind::#ret_ty,
+                            inline_data: [inline_bytes[4], inline_bytes[5], inline_bytes[6]],
+                            data: NodeData {
+                                inline_data: u32::from_ne_bytes([inline_bytes[0], inline_bytes[1], inline_bytes[2], inline_bytes[3]]),
+                            },
+                        })
+                    )
+                }
+            }
+        }
+    };
+
+    tokens
+}
+
+/// Generate expression to convert a field value directly to u32 (for single 4-byte field optimization)
+fn generate_field_to_u32(field_ty: &AstType, field_name: &syn::Ident) -> TokenStream {
+    match field_ty {
+        AstType::Struct(_) | AstType::Enum(_) => {
+            quote!(#field_name.node_id().index() as u32)
+        }
+        AstType::Option(_) => {
+            quote!(crate::OptionalNodeId::from(#field_name.map(|n| n.node_id())).into_raw())
+        }
+        AstType::Primitive(prim) => match prim.name {
+            "u32" => quote!(#field_name),
+            "i32" => quote!(#field_name as u32),
+            "BigIntId" => quote!(#field_name.index() as u32),
+            _ => unreachable!("Unexpected 4-byte primitive: {}", prim.name),
+        },
+        _ => unreachable!(),
+    }
+}
+
+/// Generate expression to convert a field value to bytes
+fn generate_field_to_bytes(
+    field_ty: &AstType,
+    field_name: &syn::Ident,
+    _byte_size: usize,
+) -> TokenStream {
+    match field_ty {
+        AstType::Struct(_) | AstType::Enum(_) => {
+            quote!((#field_name.node_id().index() as u32).to_ne_bytes())
+        }
+        AstType::Option(_) => {
+            quote!(crate::OptionalNodeId::from(#field_name.map(|n| n.node_id())).into_raw().to_ne_bytes())
+        }
+        AstType::Primitive(prim) => match prim.name {
+            "bool" => quote!([#field_name as u8]),
+            "u8" => quote!([#field_name]),
+            "i8" => quote!([#field_name as u8]),
+            "u16" | "i16" => quote!(#field_name.to_ne_bytes()),
+            "u32" | "i32" => quote!(#field_name.to_ne_bytes()),
+            "BigIntId" => quote!((#field_name.index() as u32).to_ne_bytes()),
+            // Small enums (1 byte)
+            _ => quote!([(#field_name.to_extra_data() & 0xFF) as u8]),
+        },
+        _ => unreachable!("Unexpected field type for inline storage"),
+    }
+}
+
+/// Generate build function using extra_data storage (for large nodes)
+fn generate_build_function_extra_data(
+    ast: &AstStruct,
+    schema: &Schema,
+    fn_name: syn::Ident,
+    ret_ty: syn::Ident,
+    fn_params: TokenStream,
+) -> TokenStream {
     let mut add_extra_data = TokenStream::new();
     for (index, field) in ast.fields.iter().enumerate() {
         let extra_data_id = format_ident!("_f{}", index);
@@ -96,6 +286,7 @@ fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> Token
                 self.add_node(AstNode {
                     span,
                     kind: NodeKind::#ret_ty,
+                    inline_data: [0, 0, 0],
                     data: NodeData {
                         #node_data
                     },

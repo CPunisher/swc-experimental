@@ -56,6 +56,7 @@ pub struct Ast {
 pub struct AstNode {
     span: Span,
     kind: NodeKind,
+    inline_data: [u8; 3],
     data: NodeData,
 }
 
@@ -88,6 +89,7 @@ impl AstNode {
 pub union NodeData {
     empty: (),
     extra_data_start: ExtraDataId,
+    inline_data: u32,
     next_free: OptionalNodeId,
 }
 

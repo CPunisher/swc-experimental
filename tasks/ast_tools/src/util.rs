@@ -5,7 +5,93 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::Ident;
 
-use crate::schema::{self, AstEnum, AstType, Schema};
+use crate::schema::{self, AstEnum, AstStruct, AstType, Schema};
+
+/// Maximum bytes for inline storage
+pub const INLINE_DATA_U32_SIZE: usize = 4; // NodeData.inline_data (u32)
+pub const INLINE_DATA_BYTES_SIZE: usize = 3; // AstNode.inline_data ([u8; 3])
+pub const INLINE_TOTAL_SIZE: usize = INLINE_DATA_U32_SIZE + INLINE_DATA_BYTES_SIZE; // 7 bytes
+
+/// Inline storage mode for a struct
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InlineStorageMode {
+    /// Total size ≤4 bytes: all fields stored in NodeData.inline_data (u32)
+    FourBytes,
+    /// Total size >4 and ≤7 bytes: use NodeData.inline_data + AstNode.inline_data
+    Full,
+}
+
+/// Get the byte size for a field type, or None if not inlinable
+pub fn field_byte_size(ty: &AstType, schema: &Schema) -> Option<usize> {
+    match ty {
+        // NodeId types are 4 bytes (u32)
+        AstType::Struct(_) | AstType::Enum(_) => Some(4),
+        // Vec requires SubRange (8 bytes) - too big for inline
+        AstType::Vec(_) => None,
+        // Option<NodeId> is 4 bytes (OptionalNodeId)
+        AstType::Option(ast_option) => {
+            let inner_ty = &schema.types[ast_option.inner_type_id];
+            match inner_ty {
+                // Option<Vec<T>> needs OptionalSubRange - too big
+                AstType::Vec(_) => None,
+                // Option<Struct/Enum> is OptionalNodeId (4 bytes)
+                _ => Some(4),
+            }
+        }
+        AstType::Primitive(prim) => match prim.name {
+            "bool" => Some(1),
+            "u8" | "i8" => Some(1),
+            "u16" | "i16" => Some(2),
+            "u32" | "i32" => Some(4),
+            "BigIntId" => Some(4),
+            // Small enums (1 byte)
+            "UnaryOp" | "BinaryOp" | "AssignOp" | "UpdateOp" | "MetaPropKind" | "MethodKind" => {
+                Some(1)
+            }
+            "VarDeclKind" | "ImportPhase" => Some(1),
+            // These are too big for inline storage
+            _ => None,
+        },
+    }
+}
+
+/// Layout information for inline storage
+#[derive(Debug, Clone)]
+pub struct InlineLayout {
+    /// Storage mode: FourBytes or Full
+    pub mode: InlineStorageMode,
+    /// Fields with their byte offsets within the 7-byte inline space
+    /// Offset 0-3: NodeData.inline_data (u32)
+    /// Offset 4-6: AstNode.inline_data ([u8; 3])
+    pub fields: Vec<(usize, usize, usize)>, // (field_index, byte_offset, byte_size)
+}
+
+/// Calculate the inline layout for a struct
+/// Returns None if the struct cannot be inlined
+pub fn calculate_inline_layout(ast: &AstStruct, schema: &Schema) -> Option<InlineLayout> {
+    let mut fields: Vec<(usize, usize, usize)> = Vec::new();
+    let mut current_offset = 0usize;
+
+    for (index, field) in ast.fields.iter().enumerate() {
+        let field_ty = &schema.types[field.type_id];
+        let size = field_byte_size(field_ty, schema)?;
+
+        if current_offset + size > INLINE_TOTAL_SIZE {
+            return None; // Exceeds 7 bytes
+        }
+
+        fields.push((index, current_offset, size));
+        current_offset += size;
+    }
+
+    let mode = if current_offset <= INLINE_DATA_U32_SIZE {
+        InlineStorageMode::FourBytes
+    } else {
+        InlineStorageMode::Full
+    };
+
+    Some(InlineLayout { mode, fields })
+}
 
 /// Reserved word in Rust.
 /// From <https://doc.rust-lang.org/reference/keywords.html>.

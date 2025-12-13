@@ -1008,35 +1008,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Module {
         <V as Visit>::visit_module(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ModuleItem> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<ModuleItem> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.shebang(visitor.ast());
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Script {
@@ -1044,32 +1019,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Script {
         <V as Visit>::visit_script(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.shebang(visitor.ast());
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ModuleItem {
@@ -1107,68 +1060,16 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportDecl {
         <V as Visit>::visit_import_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ImportSpecifier> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Str as VisitWith<V>>::visit_with(
-            unsafe { Str::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 4usize).index())
-                .other
-        };
-        <ImportPhase as VisitWith<V>>::visit_with(ImportPhase::from_extra_data(ret), visitor);
+        let field_value = self.specifiers(visitor.ast());
+        <TypedSubRange<ImportSpecifier> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.src(visitor.ast());
+        <Str as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.phase(visitor.ast());
+        <ImportPhase as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ImportSpecifier {
@@ -1188,47 +1089,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportNamedSpecifier {
         <V as Visit>::visit_import_named_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<ModuleExportName> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { ModuleExportName::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.imported(visitor.ast());
+        <Option<ModuleExportName> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_type_only(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ImportDefaultSpecifier {
@@ -1236,26 +1102,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportDefaultSpecifier {
         <V as Visit>::visit_import_default_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ImportStarAsSpecifier {
@@ -1263,26 +1111,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ImportStarAsSpecifier {
         <V as Visit>::visit_import_star_as_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExportDecl {
@@ -1290,26 +1120,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDecl {
         <V as Visit>::visit_export_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Decl as VisitWith<V>>::visit_with(
-            unsafe { Decl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decl(visitor.ast());
+        <Decl as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for NamedExport {
@@ -1317,59 +1129,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for NamedExport {
         <V as Visit>::visit_named_export(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExportSpecifier> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Str> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Str::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.specifiers(visitor.ast());
+        <TypedSubRange<ExportSpecifier> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.src(visitor.ast());
+        <Option<Str> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExportSpecifier {
@@ -1391,26 +1158,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportNamespaceSpecifier {
         <V as Visit>::visit_export_namespace_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ModuleExportName as VisitWith<V>>::visit_with(
-            unsafe { ModuleExportName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <ModuleExportName as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ModuleExportName {
@@ -1429,26 +1178,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultSpecifier {
         <V as Visit>::visit_export_default_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.exported(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExportNamedSpecifier {
@@ -1456,47 +1187,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportNamedSpecifier {
         <V as Visit>::visit_export_named_specifier(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ModuleExportName as VisitWith<V>>::visit_with(
-            unsafe { ModuleExportName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<ModuleExportName> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { ModuleExportName::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.orig(visitor.ast());
+        <ModuleExportName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.exported(visitor.ast());
+        <Option<ModuleExportName> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_type_only(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultDecl {
@@ -1504,26 +1200,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultDecl {
         <V as Visit>::visit_export_default_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <DefaultDecl as VisitWith<V>>::visit_with(
-            unsafe { DefaultDecl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decl(visitor.ast());
+        <DefaultDecl as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for DefaultDecl {
@@ -1542,26 +1220,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportDefaultExpr {
         <V as Visit>::visit_export_default_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExportAll {
@@ -1569,47 +1229,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExportAll {
         <V as Visit>::visit_export_all(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Str as VisitWith<V>>::visit_with(
-            unsafe { Str::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.src(visitor.ast());
+        <Str as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BlockStmt {
@@ -1617,23 +1242,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for BlockStmt {
         <V as Visit>::visit_block_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
+        let field_value = self.stmts(visitor.ast());
+        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Stmt {
@@ -1669,95 +1279,31 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExprStmt {
         <V as Visit>::visit_expr_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for EmptyStmt {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_empty_stmt(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for DebuggerStmt {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_debugger_stmt(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for WithStmt {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_with_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ReturnStmt {
@@ -1765,26 +1311,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ReturnStmt {
         <V as Visit>::visit_return_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for LabeledStmt {
@@ -1792,38 +1320,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for LabeledStmt {
         <V as Visit>::visit_labeled_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BreakStmt {
@@ -1831,26 +1331,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for BreakStmt {
         <V as Visit>::visit_break_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Option<Ident> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ContinueStmt {
@@ -1858,26 +1340,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ContinueStmt {
         <V as Visit>::visit_continue_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Option<Ident> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for IfStmt {
@@ -1885,50 +1349,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for IfStmt {
         <V as Visit>::visit_if_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Stmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Stmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.alt(visitor.ast());
+        <Option<Stmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SwitchStmt {
@@ -1936,38 +1362,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for SwitchStmt {
         <V as Visit>::visit_switch_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<SwitchCase> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.discriminant(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.cases(visitor.ast());
+        <TypedSubRange<SwitchCase> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ThrowStmt {
@@ -1975,26 +1373,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ThrowStmt {
         <V as Visit>::visit_throw_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for TryStmt {
@@ -2002,50 +1382,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for TryStmt {
         <V as Visit>::visit_try_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BlockStmt as VisitWith<V>>::visit_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<CatchClause> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { CatchClause::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.block(visitor.ast());
+        <BlockStmt as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.handler(visitor.ast());
+        <Option<CatchClause> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.finalizer(visitor.ast());
+        <Option<BlockStmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for WhileStmt {
@@ -2053,38 +1395,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for WhileStmt {
         <V as Visit>::visit_while_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for DoWhileStmt {
@@ -2092,38 +1406,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for DoWhileStmt {
         <V as Visit>::visit_do_while_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ForStmt {
@@ -2131,62 +1417,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForStmt {
         <V as Visit>::visit_for_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<VarDeclOrExpr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { VarDeclOrExpr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.init(visitor.ast());
+        <Option<VarDeclOrExpr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.test(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.update(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ForInStmt {
@@ -2194,50 +1432,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForInStmt {
         <V as Visit>::visit_for_in_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ForHead as VisitWith<V>>::visit_with(
-            unsafe { ForHead::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.left(visitor.ast());
+        <ForHead as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ForOfStmt {
@@ -2245,59 +1445,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for ForOfStmt {
         <V as Visit>::visit_for_of_stmt(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <ForHead as VisitWith<V>>::visit_with(
-            unsafe { ForHead::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .node
-        };
-        <Stmt as VisitWith<V>>::visit_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.is_await(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <ForHead as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SwitchCase {
@@ -2305,35 +1460,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for SwitchCase {
         <V as Visit>::visit_switch_case(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
+        let field_value = self.test(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <TypedSubRange<Stmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for CatchClause {
@@ -2341,38 +1471,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for CatchClause {
         <V as Visit>::visit_catch_clause(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Pat> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Pat::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <BlockStmt as VisitWith<V>>::visit_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.param(visitor.ast());
+        <Option<Pat> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <BlockStmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ForHead {
@@ -2416,47 +1518,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for FnDecl {
         <V as Visit>::visit_fn_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Function as VisitWith<V>>::visit_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ClassDecl {
@@ -2464,47 +1531,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassDecl {
         <V as Visit>::visit_class_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Class as VisitWith<V>>::visit_with(
-            unsafe { Class::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.class(visitor.ast());
+        <Class as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for VarDecl {
@@ -2512,44 +1544,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for VarDecl {
         <V as Visit>::visit_var_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <VarDeclKind as VisitWith<V>>::visit_with(VarDeclKind::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .sub_range
-        };
-        <TypedSubRange<VarDeclarator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.kind(visitor.ast());
+        <VarDeclKind as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decls(visitor.ast());
+        <TypedSubRange<VarDeclarator> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for VarDeclarator {
@@ -2557,38 +1557,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for VarDeclarator {
         <V as Visit>::visit_var_declarator(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.init(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for UsingDecl {
@@ -2596,35 +1568,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for UsingDecl {
         <V as Visit>::visit_using_decl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<VarDeclarator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.is_await(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decls(visitor.ast());
+        <TypedSubRange<VarDeclarator> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Expr {
@@ -2674,42 +1621,15 @@ impl<V: ?Sized + Visit> VisitWith<V> for ThisExpr {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_this_expr(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ArrayLit {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_array_lit(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Option<ExprOrSpread>> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.elems(visitor.ast());
+        <TypedSubRange<Option<ExprOrSpread>> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ObjectLit {
@@ -2717,26 +1637,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ObjectLit {
         <V as Visit>::visit_object_lit(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<PropOrSpread> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.props(visitor.ast());
+        <TypedSubRange<PropOrSpread> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PropOrSpread {
@@ -2755,35 +1657,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for SpreadElement {
         <V as Visit>::visit_spread_element(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .span
-        };
-        <Span as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.dot_3_token(visitor.ast());
+        <Span as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for UnaryExpr {
@@ -2791,35 +1668,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for UnaryExpr {
         <V as Visit>::visit_unary_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <UnaryOp as VisitWith<V>>::visit_with(UnaryOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <UnaryOp as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for UpdateExpr {
@@ -2827,44 +1679,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for UpdateExpr {
         <V as Visit>::visit_update_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <UpdateOp as VisitWith<V>>::visit_with(UpdateOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <UpdateOp as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.prefix(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BinExpr {
@@ -2872,47 +1692,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for BinExpr {
         <V as Visit>::visit_bin_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <BinaryOp as VisitWith<V>>::visit_with(BinaryOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <BinaryOp as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for FnExpr {
@@ -2920,38 +1705,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for FnExpr {
         <V as Visit>::visit_fn_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitWith<V>>::visit_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Option<Ident> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ClassExpr {
@@ -2959,38 +1716,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassExpr {
         <V as Visit>::visit_class_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Class as VisitWith<V>>::visit_with(
-            unsafe { Class::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Option<Ident> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.class(visitor.ast());
+        <Class as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for AssignExpr {
@@ -2998,47 +1727,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignExpr {
         <V as Visit>::visit_assign_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <AssignOp as VisitWith<V>>::visit_with(AssignOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <AssignTarget as VisitWith<V>>::visit_with(
-            unsafe { AssignTarget::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <AssignOp as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <AssignTarget as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for MemberExpr {
@@ -3046,38 +1740,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for MemberExpr {
         <V as Visit>::visit_member_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <MemberProp as VisitWith<V>>::visit_with(
-            unsafe { MemberProp::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <MemberProp as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for MemberProp {
@@ -3097,38 +1763,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for SuperPropExpr {
         <V as Visit>::visit_super_prop_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Super as VisitWith<V>>::visit_with(
-            unsafe { Super::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <SuperProp as VisitWith<V>>::visit_with(
-            unsafe { SuperProp::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Super as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <SuperProp as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SuperProp {
@@ -3147,50 +1785,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for CondExpr {
         <V as Visit>::visit_cond_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.alt(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for CallExpr {
@@ -3198,38 +1798,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for CallExpr {
         <V as Visit>::visit_call_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Callee as VisitWith<V>>::visit_with(
-            unsafe { Callee::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExprOrSpread> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.callee(visitor.ast());
+        <Callee as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
+        <TypedSubRange<ExprOrSpread> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for NewExpr {
@@ -3237,38 +1809,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for NewExpr {
         <V as Visit>::visit_new_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_sub_range
-        };
-        <Option<TypedSubRange<ExprOrSpread>> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed().to_option() },
-            visitor,
-        );
+        let field_value = self.callee(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
+        <Option<TypedSubRange<ExprOrSpread>> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SeqExpr {
@@ -3276,23 +1820,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for SeqExpr {
         <V as Visit>::visit_seq_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Expr> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
+        let field_value = self.exprs(visitor.ast());
+        <TypedSubRange<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ArrowExpr {
@@ -3300,53 +1829,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrowExpr {
         <V as Visit>::visit_arrow_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Pat> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <BlockStmtOrExpr as VisitWith<V>>::visit_with(
-            unsafe { BlockStmtOrExpr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.params(visitor.ast());
+        <TypedSubRange<Pat> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <BlockStmtOrExpr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_async(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_generator(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for YieldExpr {
@@ -3354,35 +1844,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for YieldExpr {
         <V as Visit>::visit_yield_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.arg(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.delegate(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for MetaPropExpr {
@@ -3390,23 +1855,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for MetaPropExpr {
         <V as Visit>::visit_meta_prop_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <MetaPropKind as VisitWith<V>>::visit_with(MetaPropKind::from_extra_data(ret), visitor);
+        let field_value = self.kind(visitor.ast());
+        <MetaPropKind as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for AwaitExpr {
@@ -3414,26 +1864,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for AwaitExpr {
         <V as Visit>::visit_await_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Tpl {
@@ -3441,35 +1873,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Tpl {
         <V as Visit>::visit_tpl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Expr> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<TplElement> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.exprs(visitor.ast());
+        <TypedSubRange<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.quasis(visitor.ast());
+        <TypedSubRange<TplElement> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for TaggedTpl {
@@ -3477,38 +1884,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for TaggedTpl {
         <V as Visit>::visit_tagged_tpl(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Tpl as VisitWith<V>>::visit_with(
-            unsafe { Tpl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.tag(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.tpl(visitor.ast());
+        <Tpl as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for TplElement {
@@ -3516,41 +1895,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for TplElement {
         <V as Visit>::visit_tpl_element(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_wtf8
-        };
-        <OptionalWtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.tail(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.cooked(visitor.ast());
+        <OptionalWtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ParenExpr {
@@ -3558,26 +1908,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ParenExpr {
         <V as Visit>::visit_paren_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Callee {
@@ -3596,39 +1928,15 @@ impl<V: ?Sized + Visit> VisitWith<V> for Super {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_super(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Import {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_import(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <ImportPhase as VisitWith<V>>::visit_with(ImportPhase::from_extra_data(ret), visitor);
+        let field_value = self.phase(visitor.ast());
+        <ImportPhase as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ExprOrSpread {
@@ -3636,54 +1944,17 @@ impl<V: ?Sized + Visit> VisitWith<V> for ExprOrSpread {
         <V as Visit>::visit_expr_or_spread(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<SpreadDot3Token> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { SpreadDot3Token::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.spread(visitor.ast());
+        <Option<SpreadDot3Token> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SpreadDot3Token {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_spread_dot_3_token(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BlockStmtOrExpr {
     fn visit_with(self, visitor: &mut V) {
@@ -3739,35 +2010,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for OptChainExpr {
         <V as Visit>::visit_opt_chain_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <OptChainBase as VisitWith<V>>::visit_with(
-            unsafe { OptChainBase::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.base(visitor.ast());
+        <OptChainBase as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for OptChainBase {
@@ -3786,119 +2032,33 @@ impl<V: ?Sized + Visit> VisitWith<V> for OptCall {
         <V as Visit>::visit_opt_call(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExprOrSpread> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.callee(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
+        <TypedSubRange<ExprOrSpread> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Invalid {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_invalid(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Function {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_function(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Param> as VisitWith<V>>::visit_with(unsafe { ret.cast_to_typed() }, visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 4usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.params(visitor.ast());
+        <TypedSubRange<Param> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_generator(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_async(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Param {
@@ -3906,38 +2066,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Param {
         <V as Visit>::visit_param(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.pat(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ParamOrTsParamProp {
@@ -3955,59 +2087,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for Class {
         <V as Visit>::visit_class(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ClassMember> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<ClassMember> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.super_class(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_abstract(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ClassMember {
@@ -4032,59 +2119,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassProp {
         <V as Visit>::visit_class_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PrivateProp {
@@ -4092,59 +2134,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateProp {
         <V as Visit>::visit_private_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PrivateName as VisitWith<V>>::visit_with(
-            unsafe { PrivateName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PrivateName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ClassMethod {
@@ -4152,56 +2149,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for ClassMethod {
         <V as Visit>::visit_class_method(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitWith<V>>::visit_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .other
-        };
-        <MethodKind as VisitWith<V>>::visit_with(MethodKind::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.kind(visitor.ast());
+        <MethodKind as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PrivateMethod {
@@ -4209,56 +2164,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateMethod {
         <V as Visit>::visit_private_method(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PrivateName as VisitWith<V>>::visit_with(
-            unsafe { PrivateName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitWith<V>>::visit_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .other
-        };
-        <MethodKind as VisitWith<V>>::visit_with(MethodKind::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.key(visitor.ast());
+        <PrivateName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.kind(visitor.ast());
+        <MethodKind as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Constructor {
@@ -4266,50 +2179,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for Constructor {
         <V as Visit>::visit_constructor(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ParamOrTsParamProp> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.params(visitor.ast());
+        <TypedSubRange<ParamOrTsParamProp> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Decorator {
@@ -4317,26 +2192,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for Decorator {
         <V as Visit>::visit_decorator(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for StaticBlock {
@@ -4344,26 +2201,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for StaticBlock {
         <V as Visit>::visit_static_block(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BlockStmt as VisitWith<V>>::visit_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.body(visitor.ast());
+        <BlockStmt as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Key {
@@ -4382,59 +2221,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for AutoAccessor {
         <V as Visit>::visit_auto_accessor(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Key as VisitWith<V>>::visit_with(
-            unsafe { Key::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <Key as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Prop {
@@ -4457,38 +2251,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for KeyValueProp {
         <V as Visit>::visit_key_value_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for AssignProp {
@@ -4496,38 +2262,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignProp {
         <V as Visit>::visit_assign_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for GetterProp {
@@ -4535,38 +2273,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for GetterProp {
         <V as Visit>::visit_getter_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for SetterProp {
@@ -4574,62 +2284,14 @@ impl<V: ?Sized + Visit> VisitWith<V> for SetterProp {
         <V as Visit>::visit_setter_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Pat> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Pat::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.this_param(visitor.ast());
+        <Option<Pat> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.param(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for MethodProp {
@@ -4637,38 +2299,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for MethodProp {
         <V as Visit>::visit_method_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitWith<V>>::visit_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PropName {
@@ -4690,26 +2324,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for ComputedPropName {
         <V as Visit>::visit_computed_prop_name(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Pat {
@@ -4733,35 +2349,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for ArrayPat {
         <V as Visit>::visit_array_pat(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Option<Pat>> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.elems(visitor.ast());
+        <TypedSubRange<Option<Pat>> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ObjectPat {
@@ -4769,35 +2360,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for ObjectPat {
         <V as Visit>::visit_object_pat(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ObjectPatProp> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.props(visitor.ast());
+        <TypedSubRange<ObjectPatProp> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for AssignPat {
@@ -4805,38 +2371,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignPat {
         <V as Visit>::visit_assign_pat(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.left(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for RestPat {
@@ -4844,35 +2382,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for RestPat {
         <V as Visit>::visit_rest_pat(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .span
-        };
-        <Span as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.dot_3_token(visitor.ast());
+        <Span as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for ObjectPatProp {
@@ -4892,38 +2405,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for KeyValuePatProp {
         <V as Visit>::visit_key_value_pat_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitWith<V>>::visit_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitWith<V>>::visit_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Pat as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for AssignPatProp {
@@ -4931,38 +2416,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for AssignPatProp {
         <V as Visit>::visit_assign_pat_prop(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BindingIdent as VisitWith<V>>::visit_with(
-            unsafe { BindingIdent::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <BindingIdent as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Ident {
@@ -4970,32 +2427,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Ident {
         <V as Visit>::visit_ident(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.sym(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for IdentName {
@@ -5003,23 +2438,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for IdentName {
         <V as Visit>::visit_ident_name(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.sym(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for PrivateName {
@@ -5027,23 +2447,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for PrivateName {
         <V as Visit>::visit_private_name(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.name(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BindingIdent {
@@ -5051,26 +2456,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for BindingIdent {
         <V as Visit>::visit_binding_ident(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitWith<V>>::visit_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.id(visitor.ast());
+        <Ident as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Lit {
@@ -5093,32 +2480,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Str {
         <V as Visit>::visit_str(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .wtf8
-        };
-        <Wtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <Wtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Bool {
@@ -5126,71 +2491,25 @@ impl<V: ?Sized + Visit> VisitWith<V> for Bool {
         <V as Visit>::visit_bool(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Null {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_null(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Number {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_number(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .number
-        };
-        <f64 as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <f64 as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for BigInt {
@@ -5198,32 +2517,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for BigInt {
         <V as Visit>::visit_big_int(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bigint
-        };
-        <BigIntId as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <BigIntId as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for Regex {
@@ -5231,32 +2528,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for Regex {
         <V as Visit>::visit_regex(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.exp(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.flags(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXObject {
@@ -5275,38 +2550,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXMemberExpr {
         <V as Visit>::visit_jsx_member_expr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXObject as VisitWith<V>>::visit_with(
-            unsafe { JSXObject::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <IdentName as VisitWith<V>>::visit_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <JSXObject as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <IdentName as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXNamespacedName {
@@ -5314,80 +2561,25 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXNamespacedName {
         <V as Visit>::visit_jsx_namespaced_name(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <IdentName as VisitWith<V>>::visit_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <IdentName as VisitWith<V>>::visit_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ns(visitor.ast());
+        <IdentName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.name(visitor.ast());
+        <IdentName as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXEmptyExpr {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_jsx_empty_expr(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXExprContainer {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_jsx_expr_container(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXExpr as VisitWith<V>>::visit_with(
-            unsafe { JSXExpr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <JSXExpr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXExpr {
@@ -5406,26 +2598,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXSpreadChild {
         <V as Visit>::visit_jsx_spread_child(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitWith<V>>::visit_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXElementName {
@@ -5447,47 +2621,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXOpeningElement {
         <V as Visit>::visit_jsx_opening_element(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXElementName as VisitWith<V>>::visit_with(
-            unsafe { JSXElementName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXAttrOrSpread> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.name(visitor.ast());
+        <JSXElementName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.attrs(visitor.ast());
+        <TypedSubRange<JSXAttrOrSpread> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.self_closing(visitor.ast());
+        <bool as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXAttrOrSpread {
@@ -5506,26 +2645,8 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXClosingElement {
         <V as Visit>::visit_jsx_closing_element(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXElementName as VisitWith<V>>::visit_with(
-            unsafe { JSXElementName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <JSXElementName as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXAttr {
@@ -5533,38 +2654,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXAttr {
         <V as Visit>::visit_jsx_attr(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXAttrName as VisitWith<V>>::visit_with(
-            unsafe { JSXAttrName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<JSXAttrValue> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { JSXAttrValue::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <JSXAttrName as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<JSXAttrValue> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXAttrName {
@@ -5600,32 +2693,10 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXText {
         <V as Visit>::visit_jsx_text(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitWith<V>>::visit_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <Utf8Ref as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXElement {
@@ -5633,50 +2704,12 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXElement {
         <V as Visit>::visit_jsx_element(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXOpeningElement as VisitWith<V>>::visit_with(
-            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<JSXClosingElement> as VisitWith<V>>::visit_with(
-            ret.map(|id| unsafe { JSXClosingElement::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.opening(visitor.ast());
+        <JSXOpeningElement as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.children(visitor.ast());
+        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.closing(visitor.ast());
+        <Option<JSXClosingElement> as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXElementChild {
@@ -5700,81 +2733,25 @@ impl<V: ?Sized + Visit> VisitWith<V> for JSXFragment {
         <V as Visit>::visit_jsx_fragment(visitor, self)
     }
     fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXOpeningFragment as VisitWith<V>>::visit_with(
-            unsafe { JSXOpeningFragment::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <JSXClosingFragment as VisitWith<V>>::visit_with(
-            unsafe { JSXClosingFragment::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.opening(visitor.ast());
+        <JSXOpeningFragment as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.children(visitor.ast());
+        <TypedSubRange<JSXElementChild> as VisitWith<V>>::visit_with(field_value, visitor);
+        let field_value = self.closing(visitor.ast());
+        <JSXClosingFragment as VisitWith<V>>::visit_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXOpeningFragment {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_jsx_opening_fragment(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for JSXClosingFragment {
     fn visit_with(self, visitor: &mut V) {
         <V as Visit>::visit_jsx_closing_fragment(visitor, self)
     }
-    fn visit_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + Visit> VisitWith<V> for TypedSubRange<ModuleItem> {
     fn visit_with(self, visitor: &mut V) {
@@ -7174,35 +4151,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Module {
         <V as VisitMut>::visit_mut_module(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ModuleItem> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<ModuleItem> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.shebang(visitor.ast());
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Script {
@@ -7210,35 +4162,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Script {
         <V as VisitMut>::visit_mut_script(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.shebang(visitor.ast());
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ModuleItem {
@@ -7276,71 +4203,16 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportDecl {
         <V as VisitMut>::visit_mut_import_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ImportSpecifier> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Str as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Str::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 4usize).index())
-                .other
-        };
-        <ImportPhase as VisitMutWith<V>>::visit_mut_with(
-            ImportPhase::from_extra_data(ret),
-            visitor,
-        );
+        let field_value = self.specifiers(visitor.ast());
+        <TypedSubRange<ImportSpecifier> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.src(visitor.ast());
+        <Str as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.phase(visitor.ast());
+        <ImportPhase as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportSpecifier {
@@ -7366,47 +4238,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportNamedSpecifier {
         <V as VisitMut>::visit_mut_import_named_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<ModuleExportName> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { ModuleExportName::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.imported(visitor.ast());
+        <Option<ModuleExportName> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_type_only(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportDefaultSpecifier {
@@ -7414,26 +4251,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportDefaultSpecifier {
         <V as VisitMut>::visit_mut_import_default_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportStarAsSpecifier {
@@ -7441,26 +4260,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ImportStarAsSpecifier {
         <V as VisitMut>::visit_mut_import_star_as_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.local(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDecl {
@@ -7468,26 +4269,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDecl {
         <V as VisitMut>::visit_mut_export_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Decl as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Decl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decl(visitor.ast());
+        <Decl as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for NamedExport {
@@ -7495,59 +4278,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for NamedExport {
         <V as VisitMut>::visit_mut_named_export(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExportSpecifier> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Str> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Str::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.specifiers(visitor.ast());
+        <TypedSubRange<ExportSpecifier> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.src(visitor.ast());
+        <Option<Str> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportSpecifier {
@@ -7573,26 +4311,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportNamespaceSpecifier {
         <V as VisitMut>::visit_mut_export_namespace_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ModuleExportName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ModuleExportName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <ModuleExportName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ModuleExportName {
@@ -7611,26 +4331,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultSpecifier {
         <V as VisitMut>::visit_mut_export_default_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.exported(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportNamedSpecifier {
@@ -7638,47 +4340,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportNamedSpecifier {
         <V as VisitMut>::visit_mut_export_named_specifier(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ModuleExportName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ModuleExportName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<ModuleExportName> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { ModuleExportName::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.orig(visitor.ast());
+        <ModuleExportName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.exported(visitor.ast());
+        <Option<ModuleExportName> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_type_only(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultDecl {
@@ -7686,26 +4353,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultDecl {
         <V as VisitMut>::visit_mut_export_default_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <DefaultDecl as VisitMutWith<V>>::visit_mut_with(
-            unsafe { DefaultDecl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decl(visitor.ast());
+        <DefaultDecl as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for DefaultDecl {
@@ -7724,26 +4373,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportDefaultExpr {
         <V as VisitMut>::visit_mut_export_default_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportAll {
@@ -7751,47 +4382,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExportAll {
         <V as VisitMut>::visit_mut_export_all(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Str as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Str::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { ObjectLit::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.src(visitor.ast());
+        <Str as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.type_only(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.with(visitor.ast());
+        <Option<ObjectLit> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BlockStmt {
@@ -7799,26 +4395,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BlockStmt {
         <V as VisitMut>::visit_mut_block_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.stmts(visitor.ast());
+        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Stmt {
@@ -7854,95 +4432,31 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprStmt {
         <V as VisitMut>::visit_mut_expr_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for EmptyStmt {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_empty_stmt(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for DebuggerStmt {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_debugger_stmt(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for WithStmt {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_with_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ReturnStmt {
@@ -7950,26 +4464,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ReturnStmt {
         <V as VisitMut>::visit_mut_return_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for LabeledStmt {
@@ -7977,38 +4473,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for LabeledStmt {
         <V as VisitMut>::visit_mut_labeled_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BreakStmt {
@@ -8016,26 +4484,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BreakStmt {
         <V as VisitMut>::visit_mut_break_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ContinueStmt {
@@ -8043,26 +4493,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ContinueStmt {
         <V as VisitMut>::visit_mut_continue_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.label(visitor.ast());
+        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for IfStmt {
@@ -8070,50 +4502,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for IfStmt {
         <V as VisitMut>::visit_mut_if_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Stmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Stmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.alt(visitor.ast());
+        <Option<Stmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchStmt {
@@ -8121,38 +4515,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchStmt {
         <V as VisitMut>::visit_mut_switch_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<SwitchCase> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.discriminant(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.cases(visitor.ast());
+        <TypedSubRange<SwitchCase> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ThrowStmt {
@@ -8160,26 +4526,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ThrowStmt {
         <V as VisitMut>::visit_mut_throw_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TryStmt {
@@ -8187,50 +4535,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TryStmt {
         <V as VisitMut>::visit_mut_try_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BlockStmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<CatchClause> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { CatchClause::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.block(visitor.ast());
+        <BlockStmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.handler(visitor.ast());
+        <Option<CatchClause> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.finalizer(visitor.ast());
+        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for WhileStmt {
@@ -8238,38 +4548,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for WhileStmt {
         <V as VisitMut>::visit_mut_while_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for DoWhileStmt {
@@ -8277,38 +4559,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for DoWhileStmt {
         <V as VisitMut>::visit_mut_do_while_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForStmt {
@@ -8316,62 +4570,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForStmt {
         <V as VisitMut>::visit_mut_for_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<VarDeclOrExpr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { VarDeclOrExpr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.init(visitor.ast());
+        <Option<VarDeclOrExpr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.test(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.update(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForInStmt {
@@ -8379,50 +4585,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForInStmt {
         <V as VisitMut>::visit_mut_for_in_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <ForHead as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ForHead::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.left(visitor.ast());
+        <ForHead as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForOfStmt {
@@ -8430,59 +4598,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForOfStmt {
         <V as VisitMut>::visit_mut_for_of_stmt(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <ForHead as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ForHead::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .node
-        };
-        <Stmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Stmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.is_await(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <ForHead as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Stmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchCase {
@@ -8490,38 +4613,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SwitchCase {
         <V as VisitMut>::visit_mut_switch_case(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <TypedSubRange<Stmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for CatchClause {
@@ -8529,38 +4624,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CatchClause {
         <V as VisitMut>::visit_mut_catch_clause(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Pat> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Pat::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <BlockStmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.param(visitor.ast());
+        <Option<Pat> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <BlockStmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ForHead {
@@ -8604,47 +4671,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for FnDecl {
         <V as VisitMut>::visit_mut_fn_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Function as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassDecl {
@@ -8652,47 +4684,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassDecl {
         <V as VisitMut>::visit_mut_class_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Class as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Class::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.class(visitor.ast());
+        <Class as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDecl {
@@ -8700,47 +4697,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDecl {
         <V as VisitMut>::visit_mut_var_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <VarDeclKind as VisitMutWith<V>>::visit_mut_with(
-            VarDeclKind::from_extra_data(ret),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .sub_range
-        };
-        <TypedSubRange<VarDeclarator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.kind(visitor.ast());
+        <VarDeclKind as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.declare(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decls(visitor.ast());
+        <TypedSubRange<VarDeclarator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDeclarator {
@@ -8748,38 +4710,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for VarDeclarator {
         <V as VisitMut>::visit_mut_var_declarator(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.init(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for UsingDecl {
@@ -8787,35 +4721,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UsingDecl {
         <V as VisitMut>::visit_mut_using_decl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<VarDeclarator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.is_await(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decls(visitor.ast());
+        <TypedSubRange<VarDeclarator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Expr {
@@ -8865,40 +4774,16 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ThisExpr {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_this_expr(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayLit {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_array_lit(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
+        let field_value = self.elems(visitor.ast());
         <TypedSubRange<Option<ExprOrSpread>> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
+            field_value,
             visitor,
         );
     }
@@ -8908,26 +4793,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectLit {
         <V as VisitMut>::visit_mut_object_lit(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<PropOrSpread> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.props(visitor.ast());
+        <TypedSubRange<PropOrSpread> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PropOrSpread {
@@ -8948,35 +4815,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SpreadElement {
         <V as VisitMut>::visit_mut_spread_element(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .span
-        };
-        <Span as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.dot_3_token(visitor.ast());
+        <Span as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for UnaryExpr {
@@ -8984,35 +4826,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UnaryExpr {
         <V as VisitMut>::visit_mut_unary_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <UnaryOp as VisitMutWith<V>>::visit_mut_with(UnaryOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <UnaryOp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for UpdateExpr {
@@ -9020,44 +4837,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for UpdateExpr {
         <V as VisitMut>::visit_mut_update_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <UpdateOp as VisitMutWith<V>>::visit_mut_with(UpdateOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <UpdateOp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.prefix(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BinExpr {
@@ -9065,47 +4850,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BinExpr {
         <V as VisitMut>::visit_mut_bin_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <BinaryOp as VisitMutWith<V>>::visit_mut_with(BinaryOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <BinaryOp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for FnExpr {
@@ -9113,38 +4863,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for FnExpr {
         <V as VisitMut>::visit_mut_fn_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassExpr {
@@ -9152,38 +4874,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassExpr {
         <V as VisitMut>::visit_mut_class_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Ident::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Class as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Class::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ident(visitor.ast());
+        <Option<Ident> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.class(visitor.ast());
+        <Class as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignExpr {
@@ -9191,47 +4885,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignExpr {
         <V as VisitMut>::visit_mut_assign_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <AssignOp as VisitMutWith<V>>::visit_mut_with(AssignOp::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <AssignTarget as VisitMutWith<V>>::visit_mut_with(
-            unsafe { AssignTarget::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.op(visitor.ast());
+        <AssignOp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.left(visitor.ast());
+        <AssignTarget as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for MemberExpr {
@@ -9239,38 +4898,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MemberExpr {
         <V as VisitMut>::visit_mut_member_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <MemberProp as VisitMutWith<V>>::visit_mut_with(
-            unsafe { MemberProp::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <MemberProp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for MemberProp {
@@ -9292,38 +4923,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SuperPropExpr {
         <V as VisitMut>::visit_mut_super_prop_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Super as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Super::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <SuperProp as VisitMutWith<V>>::visit_mut_with(
-            unsafe { SuperProp::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <Super as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <SuperProp as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for SuperProp {
@@ -9344,50 +4947,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CondExpr {
         <V as VisitMut>::visit_mut_cond_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.test(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.cons(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.alt(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for CallExpr {
@@ -9395,38 +4960,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for CallExpr {
         <V as VisitMut>::visit_mut_call_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Callee as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Callee::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExprOrSpread> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.callee(visitor.ast());
+        <Callee as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
+        <TypedSubRange<ExprOrSpread> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for NewExpr {
@@ -9434,36 +4971,11 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for NewExpr {
         <V as VisitMut>::visit_mut_new_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_sub_range
-        };
+        let field_value = self.callee(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
         <Option<TypedSubRange<ExprOrSpread>> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed().to_option() },
+            field_value,
             visitor,
         );
     }
@@ -9473,26 +4985,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SeqExpr {
         <V as VisitMut>::visit_mut_seq_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Expr> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.exprs(visitor.ast());
+        <TypedSubRange<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrowExpr {
@@ -9500,56 +4994,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrowExpr {
         <V as VisitMut>::visit_mut_arrow_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Pat> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <BlockStmtOrExpr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { BlockStmtOrExpr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.params(visitor.ast());
+        <TypedSubRange<Pat> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <BlockStmtOrExpr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_async(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_generator(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for YieldExpr {
@@ -9557,35 +5009,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for YieldExpr {
         <V as VisitMut>::visit_mut_yield_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.arg(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.delegate(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for MetaPropExpr {
@@ -9593,26 +5020,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MetaPropExpr {
         <V as VisitMut>::visit_mut_meta_prop_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <MetaPropKind as VisitMutWith<V>>::visit_mut_with(
-            MetaPropKind::from_extra_data(ret),
-            visitor,
-        );
+        let field_value = self.kind(visitor.ast());
+        <MetaPropKind as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for AwaitExpr {
@@ -9620,26 +5029,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AwaitExpr {
         <V as VisitMut>::visit_mut_await_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.arg(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Tpl {
@@ -9647,38 +5038,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Tpl {
         <V as VisitMut>::visit_mut_tpl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Expr> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<TplElement> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.exprs(visitor.ast());
+        <TypedSubRange<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.quasis(visitor.ast());
+        <TypedSubRange<TplElement> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TaggedTpl {
@@ -9686,38 +5049,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TaggedTpl {
         <V as VisitMut>::visit_mut_tagged_tpl(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Tpl as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Tpl::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.tag(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.tpl(visitor.ast());
+        <Tpl as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TplElement {
@@ -9725,41 +5060,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for TplElement {
         <V as VisitMut>::visit_mut_tpl_element(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_wtf8
-        };
-        <OptionalWtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.tail(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.cooked(visitor.ast());
+        <OptionalWtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ParenExpr {
@@ -9767,26 +5073,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ParenExpr {
         <V as VisitMut>::visit_mut_paren_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Callee {
@@ -9805,42 +5093,15 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Super {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_super(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Import {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_import(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .other
-        };
-        <ImportPhase as VisitMutWith<V>>::visit_mut_with(
-            ImportPhase::from_extra_data(ret),
-            visitor,
-        );
+        let field_value = self.phase(visitor.ast());
+        <ImportPhase as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprOrSpread {
@@ -9848,54 +5109,17 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ExprOrSpread {
         <V as VisitMut>::visit_mut_expr_or_spread(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .optional_node
-        };
-        <Option<SpreadDot3Token> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { SpreadDot3Token::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.spread(visitor.ast());
+        <Option<SpreadDot3Token> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for SpreadDot3Token {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_spread_dot_3_token(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BlockStmtOrExpr {
     fn visit_mut_with(self, visitor: &mut V) {
@@ -9953,35 +5177,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for OptChainExpr {
         <V as VisitMut>::visit_mut_opt_chain_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <OptChainBase as VisitMutWith<V>>::visit_mut_with(
-            unsafe { OptChainBase::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.base(visitor.ast());
+        <OptChainBase as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for OptChainBase {
@@ -10000,122 +5199,33 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for OptCall {
         <V as VisitMut>::visit_mut_opt_call(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ExprOrSpread> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.callee(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.args(visitor.ast());
+        <TypedSubRange<ExprOrSpread> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Invalid {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_invalid(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Function {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_function(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Param> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 4usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.params(visitor.ast());
+        <TypedSubRange<Param> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_generator(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_async(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Param {
@@ -10123,38 +5233,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Param {
         <V as VisitMut>::visit_mut_param(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.pat(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ParamOrTsParamProp {
@@ -10172,59 +5254,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Class {
         <V as VisitMut>::visit_mut_class(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ClassMember> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <TypedSubRange<ClassMember> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.super_class(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_abstract(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassMember {
@@ -10253,59 +5290,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassProp {
         <V as VisitMut>::visit_mut_class_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateProp {
@@ -10313,59 +5305,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateProp {
         <V as VisitMut>::visit_mut_private_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PrivateName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PrivateName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PrivateName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassMethod {
@@ -10373,56 +5320,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ClassMethod {
         <V as VisitMut>::visit_mut_class_method(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .other
-        };
-        <MethodKind as VisitMutWith<V>>::visit_mut_with(MethodKind::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.kind(visitor.ast());
+        <MethodKind as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateMethod {
@@ -10430,56 +5335,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateMethod {
         <V as VisitMut>::visit_mut_private_method(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PrivateName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PrivateName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .other
-        };
-        <MethodKind as VisitMutWith<V>>::visit_mut_with(MethodKind::from_extra_data(ret), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.key(visitor.ast());
+        <PrivateName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.kind(visitor.ast());
+        <MethodKind as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Constructor {
@@ -10487,50 +5350,15 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Constructor {
         <V as VisitMut>::visit_mut_constructor(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.params(visitor.ast());
         <TypedSubRange<ParamOrTsParamProp> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
+            field_value,
             visitor,
         );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Decorator {
@@ -10538,26 +5366,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Decorator {
         <V as VisitMut>::visit_mut_decorator(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for StaticBlock {
@@ -10565,26 +5375,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for StaticBlock {
         <V as VisitMut>::visit_mut_static_block(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BlockStmt as VisitMutWith<V>>::visit_mut_with(
-            unsafe { BlockStmt::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.body(visitor.ast());
+        <BlockStmt as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Key {
@@ -10603,59 +5395,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AutoAccessor {
         <V as VisitMut>::visit_mut_auto_accessor(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Key as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Key::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <Key as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.is_static(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.decorators(visitor.ast());
+        <TypedSubRange<Decorator> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Prop {
@@ -10678,38 +5425,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for KeyValueProp {
         <V as VisitMut>::visit_mut_key_value_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignProp {
@@ -10717,38 +5436,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignProp {
         <V as VisitMut>::visit_mut_assign_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for GetterProp {
@@ -10756,38 +5447,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for GetterProp {
         <V as VisitMut>::visit_mut_getter_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for SetterProp {
@@ -10795,62 +5458,14 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for SetterProp {
         <V as VisitMut>::visit_mut_setter_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Pat> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Pat::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 3usize).index())
-                .optional_node
-        };
-        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { BlockStmt::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.this_param(visitor.ast());
+        <Option<Pat> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.param(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.body(visitor.ast());
+        <Option<BlockStmt> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for MethodProp {
@@ -10858,38 +5473,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for MethodProp {
         <V as VisitMut>::visit_mut_method_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Function as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Function::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.function(visitor.ast());
+        <Function as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PropName {
@@ -10913,26 +5500,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ComputedPropName {
         <V as VisitMut>::visit_mut_computed_prop_name(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Pat {
@@ -10956,35 +5525,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ArrayPat {
         <V as VisitMut>::visit_mut_array_pat(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<Option<Pat>> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.elems(visitor.ast());
+        <TypedSubRange<Option<Pat>> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectPat {
@@ -10992,35 +5536,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectPat {
         <V as VisitMut>::visit_mut_object_pat(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .sub_range
-        };
-        <TypedSubRange<ObjectPatProp> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.props(visitor.ast());
+        <TypedSubRange<ObjectPatProp> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPat {
@@ -11028,38 +5547,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPat {
         <V as VisitMut>::visit_mut_assign_pat(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.left(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.right(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for RestPat {
@@ -11067,35 +5558,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for RestPat {
         <V as VisitMut>::visit_mut_rest_pat(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .span
-        };
-        <Span as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.dot_3_token(visitor.ast());
+        <Span as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.arg(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for ObjectPatProp {
@@ -11115,38 +5581,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for KeyValuePatProp {
         <V as VisitMut>::visit_mut_key_value_pat_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <PropName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { PropName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <Pat as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Pat::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <PropName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Pat as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPatProp {
@@ -11154,38 +5592,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for AssignPatProp {
         <V as VisitMut>::visit_mut_assign_pat_prop(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <BindingIdent as VisitMutWith<V>>::visit_mut_with(
-            unsafe { BindingIdent::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { Expr::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.key(visitor.ast());
+        <BindingIdent as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<Expr> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Ident {
@@ -11193,32 +5603,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Ident {
         <V as VisitMut>::visit_mut_ident(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.sym(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.optional(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for IdentName {
@@ -11226,23 +5614,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for IdentName {
         <V as VisitMut>::visit_mut_ident_name(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.sym(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateName {
@@ -11250,23 +5623,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for PrivateName {
         <V as VisitMut>::visit_mut_private_name(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.name(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BindingIdent {
@@ -11274,26 +5632,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BindingIdent {
         <V as VisitMut>::visit_mut_binding_ident(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Ident as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Ident::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.id(visitor.ast());
+        <Ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Lit {
@@ -11316,32 +5656,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Str {
         <V as VisitMut>::visit_mut_str(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .wtf8
-        };
-        <Wtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <Wtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Bool {
@@ -11349,71 +5667,25 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Bool {
         <V as VisitMut>::visit_mut_bool(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Null {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_null(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Number {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_number(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .number
-        };
-        <f64 as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <f64 as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for BigInt {
@@ -11421,32 +5693,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for BigInt {
         <V as VisitMut>::visit_mut_big_int(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .bigint
-        };
-        <BigIntId as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_utf8
-        };
-        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <BigIntId as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <OptionalUtf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
@@ -11454,32 +5704,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for Regex {
         <V as VisitMut>::visit_mut_regex(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.exp(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.flags(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXObject {
@@ -11500,38 +5728,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXMemberExpr {
         <V as VisitMut>::visit_mut_jsx_member_expr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXObject as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXObject::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <IdentName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.obj(visitor.ast());
+        <JSXObject as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.prop(visitor.ast());
+        <IdentName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXNamespacedName {
@@ -11539,80 +5739,25 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXNamespacedName {
         <V as VisitMut>::visit_mut_jsx_namespaced_name(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <IdentName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .node
-        };
-        <IdentName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { IdentName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.ns(visitor.ast());
+        <IdentName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.name(visitor.ast());
+        <IdentName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXEmptyExpr {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_jsx_empty_expr(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXExprContainer {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_jsx_expr_container(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXExpr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXExpr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <JSXExpr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXExpr {
@@ -11633,26 +5778,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXSpreadChild {
         <V as VisitMut>::visit_mut_jsx_spread_child(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <Expr as VisitMutWith<V>>::visit_mut_with(
-            unsafe { Expr::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.expr(visitor.ast());
+        <Expr as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElementName {
@@ -11676,47 +5803,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXOpeningElement {
         <V as VisitMut>::visit_mut_jsx_opening_element(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXElementName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXElementName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXAttrOrSpread> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .bool
-        };
-        <bool as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.name(visitor.ast());
+        <JSXElementName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.attrs(visitor.ast());
+        <TypedSubRange<JSXAttrOrSpread> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.self_closing(visitor.ast());
+        <bool as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttrOrSpread {
@@ -11737,26 +5829,8 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXClosingElement {
         <V as VisitMut>::visit_mut_jsx_closing_element(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXElementName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXElementName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <JSXElementName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttr {
@@ -11764,38 +5838,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttr {
         <V as VisitMut>::visit_mut_jsx_attr(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXAttrName as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXAttrName::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .optional_node
-        };
-        <Option<JSXAttrValue> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { JSXAttrValue::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.name(visitor.ast());
+        <JSXAttrName as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.value(visitor.ast());
+        <Option<JSXAttrValue> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXAttrName {
@@ -11831,32 +5877,10 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXText {
         <V as VisitMut>::visit_mut_jsx_text(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .utf8
-        };
-        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(ret.into(), visitor);
+        let field_value = self.value(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.raw(visitor.ast());
+        <Utf8Ref as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElement {
@@ -11864,50 +5888,12 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElement {
         <V as VisitMut>::visit_mut_jsx_element(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXOpeningElement as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXOpeningElement::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .optional_node
-        };
-        <Option<JSXClosingElement> as VisitMutWith<V>>::visit_mut_with(
-            ret.map(|id| unsafe { JSXClosingElement::from_node_id_unchecked(id, visitor.ast()) }),
-            visitor,
-        );
+        let field_value = self.opening(visitor.ast());
+        <JSXOpeningElement as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.children(visitor.ast());
+        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.closing(visitor.ast());
+        <Option<JSXClosingElement> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXElementChild {
@@ -11933,81 +5919,25 @@ impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXFragment {
         <V as VisitMut>::visit_mut_jsx_fragment(visitor, self)
     }
     fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 0usize).index())
-                .node
-        };
-        <JSXOpeningFragment as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXOpeningFragment::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 1usize).index())
-                .sub_range
-        };
-        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(
-            unsafe { ret.cast_to_typed() },
-            visitor,
-        );
-        let ret = unsafe {
-            visitor
-                .ast()
-                .extra_data
-                .as_raw_slice()
-                .get_unchecked((offset + 2usize).index())
-                .node
-        };
-        <JSXClosingFragment as VisitMutWith<V>>::visit_mut_with(
-            unsafe { JSXClosingFragment::from_node_id_unchecked(ret, visitor.ast()) },
-            visitor,
-        );
+        let field_value = self.opening(visitor.ast());
+        <JSXOpeningFragment as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.children(visitor.ast());
+        <TypedSubRange<JSXElementChild> as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
+        let field_value = self.closing(visitor.ast());
+        <JSXClosingFragment as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
     }
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXOpeningFragment {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_jsx_opening_fragment(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for JSXClosingFragment {
     fn visit_mut_with(self, visitor: &mut V) {
         <V as VisitMut>::visit_mut_jsx_closing_fragment(visitor, self)
     }
-    fn visit_mut_children_with(self, visitor: &mut V) {
-        let offset = unsafe {
-            visitor
-                .ast()
-                .nodes
-                .get_unchecked(self.0)
-                .data
-                .extra_data_start
-        };
-    }
+    fn visit_mut_children_with(self, visitor: &mut V) {}
 }
 impl<V: ?Sized + VisitMut> VisitMutWith<V> for TypedSubRange<ModuleItem> {
     fn visit_mut_with(self, visitor: &mut V) {
