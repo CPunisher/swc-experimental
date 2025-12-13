@@ -96,7 +96,7 @@ pub struct Decorator {
     expr: Expr,
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MethodKind {
     Method,
@@ -106,11 +106,11 @@ pub enum MethodKind {
 
 impl ExtraDataCompact for MethodKind {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 

@@ -2,7 +2,7 @@ use std::mem;
 
 use crate::node_id::ExtraDataCompact;
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Default)]
 pub enum BinaryOp {
     /// `==`
@@ -67,11 +67,11 @@ pub enum BinaryOp {
 
 impl ExtraDataCompact for BinaryOp {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 
@@ -114,7 +114,7 @@ impl BinaryOp {
     }
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Default)]
 pub enum AssignOp {
     /// `=`
@@ -158,15 +158,15 @@ pub enum AssignOp {
 
 impl ExtraDataCompact for AssignOp {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Default)]
 pub enum UpdateOp {
     /// `++`
@@ -178,15 +178,15 @@ pub enum UpdateOp {
 
 impl ExtraDataCompact for UpdateOp {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Default)]
 pub enum UnaryOp {
     /// `-`
@@ -208,10 +208,10 @@ pub enum UnaryOp {
 
 impl ExtraDataCompact for UnaryOp {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }

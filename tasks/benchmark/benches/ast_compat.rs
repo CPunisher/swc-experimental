@@ -2,23 +2,25 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use criterion::{Bencher, Criterion, criterion_group, criterion_main};
-use swc_core::common::{BytePos, Mark};
+use swc_core::common::{BytePos, GLOBALS, Globals, Mark};
 
 fn bench_legacy(b: &mut Bencher, src: &'static str) {
     use swc_core::ecma::parser::{Parser, StringInput, Syntax, lexer::Lexer};
     use swc_core::ecma::transforms::base::resolver;
     use swc_core::ecma::visit::VisitMut;
-    b.iter(|| {
-        let input = StringInput::new(src, BytePos(0), BytePos(src.len() as u32));
-        let lexer = Lexer::new(
-            Syntax::Es(Default::default()),
-            Default::default(),
-            input,
-            None,
-        );
-        let mut parser = Parser::new_from(lexer);
-        let mut module = parser.parse_module().unwrap();
-        resolver(Mark::new(), Mark::new(), false).visit_mut_module(&mut module);
+    GLOBALS.set(&Globals::new(), || {
+        b.iter(|| {
+            let input = StringInput::new(src, BytePos(0), BytePos(src.len() as u32));
+            let lexer = Lexer::new(
+                Syntax::Es(Default::default()),
+                Default::default(),
+                input,
+                None,
+            );
+            let mut parser = Parser::new_from(lexer);
+            let mut module = parser.parse_module().unwrap();
+            resolver(Mark::new(), Mark::new(), false).visit_mut_module(&mut module);
+        });
     });
 }
 

@@ -37,7 +37,7 @@ pub struct VarDecl {
     decls: Vec<VarDeclarator>,
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub enum VarDeclKind {
     Var,
@@ -47,11 +47,11 @@ pub enum VarDeclKind {
 
 impl ExtraDataCompact for VarDeclKind {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 

@@ -6,7 +6,7 @@ use crate::{
     AST_CRATE_PATH,
     output::{RawOutput, RustOutput, output_path},
     schema::{AstType, Schema},
-    util::map_field_type_to_extra_field,
+    util::safe_ident,
 };
 
 pub fn ast_visitor(schema: &Schema) -> RawOutput {
@@ -59,44 +59,23 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                 });
 
                 // VisitWith/VisitMutWith
+                // Use typed getter methods instead of directly accessing extra_data.
+                // This handles both inline and extra_data storage transparently.
                 let mut visit_children = TokenStream::new();
                 let mut visit_mut_children = TokenStream::new();
 
-                for (offset, field) in ast.fields.iter().enumerate() {
+                for field in ast.fields.iter() {
                     let field_ty = &schema.types[field.type_id];
                     let field_ty_ident = field_ty.repr_ident(schema);
+                    let getter_name = safe_ident(&field.name.to_case(Case::Snake));
 
-                    let extra_data_name = map_field_type_to_extra_field(field_ty, schema);
-                    let extra_data_name = format_ident!("{extra_data_name}");
-                    let cast_expr = match &field_ty {
-                        AstType::Vec(_) => quote!(unsafe { ret.cast_to_typed() }),
-                        AstType::Option(ast) => match &schema.types[ast.inner_type_id] {
-                            AstType::Vec(_) => {
-                                quote!(unsafe { ret.cast_to_typed().to_option() })
-                            }
-                            _ => {
-                                let field_inner_ident =
-                                    schema.types[ast.inner_type_id].repr_ident(schema);
-                                quote!( ret.map(|id| unsafe { #field_inner_ident::from_node_id_unchecked(id, visitor.ast()) }) )
-                            }
-                        },
-                        AstType::Struct(_) | AstType::Enum(_) => {
-                            let field_inner_ty = field_ty.repr_ident(schema);
-                            quote!( unsafe { #field_inner_ty::from_node_id_unchecked(ret, visitor.ast()) })
-                        }
-                        _ if extra_data_name == "other" => {
-                            let field_ty = field_ty.repr_ident(schema);
-                            quote!(#field_ty::from_extra_data(ret))
-                        }
-                        _ => quote!(ret.into()),
-                    };
                     visit_children.extend(quote! {
-                        let ret = unsafe { visitor.ast().extra_data.as_raw_slice().get_unchecked((offset + #offset).index()).#extra_data_name };
-                        <#field_ty_ident as VisitWith<V>>::visit_with(#cast_expr, visitor);
+                        let field_value = self.#getter_name(visitor.ast());
+                        <#field_ty_ident as VisitWith<V>>::visit_with(field_value, visitor);
                     });
                     visit_mut_children.extend(quote! {
-                        let ret = unsafe { visitor.ast().extra_data.as_raw_slice().get_unchecked((offset + #offset).index()).#extra_data_name };
-                        <#field_ty_ident as VisitMutWith<V>>::visit_mut_with(#cast_expr, visitor);
+                        let field_value = self.#getter_name(visitor.ast());
+                        <#field_ty_ident as VisitMutWith<V>>::visit_mut_with(field_value, visitor);
                     });
                 }
 
@@ -107,7 +86,6 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                         }
 
                         fn visit_children_with(self, visitor: &mut V) {
-                            let offset = unsafe { visitor.ast().nodes.get_unchecked(self.0).data.extra_data_start };
                             #visit_children
                         }
                     }
@@ -119,7 +97,6 @@ pub fn ast_visitor(schema: &Schema) -> RawOutput {
                         }
 
                         fn visit_mut_children_with(self, visitor: &mut V) {
-                            let offset = unsafe { visitor.ast().nodes.get_unchecked(self.0).data.extra_data_start };
                             #visit_mut_children
                         }
                     }

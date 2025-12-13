@@ -183,7 +183,7 @@ pub struct MetaPropExpr {
     kind: MetaPropKind,
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MetaPropKind {
     /// `new.target`
@@ -194,11 +194,11 @@ pub enum MetaPropKind {
 
 impl ExtraDataCompact for MetaPropKind {
     fn to_extra_data(self) -> u64 {
-        unsafe { mem::transmute(self) }
+        self as u64
     }
 
     fn from_extra_data(raw: u64) -> Self {
-        unsafe { mem::transmute(raw) }
+        unsafe { mem::transmute(raw as u8) }
     }
 }
 

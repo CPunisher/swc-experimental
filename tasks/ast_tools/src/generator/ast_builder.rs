@@ -6,7 +6,10 @@ use crate::{
     AST_CRATE_PATH,
     output::{RawOutput, RustOutput, output_path},
     schema::{AstEnum, AstStruct, AstType, Schema},
-    util::{map_field_type_to_extra_field, safe_ident},
+    util::{
+        INLINE_DATA_U32_SIZE, InlineStorageMode, calculate_inline_layout, generate_field_to_u32,
+        map_field_type_to_extra_field, safe_ident,
+    },
 };
 
 pub fn ast_builder(schema: &Schema) -> RawOutput {
@@ -54,6 +57,168 @@ fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> Token
     let ret_ty = format_ident!("{}", ast.name);
     let fn_params = generate_fn_params_decl(ast, schema);
 
+    // Check if this struct can use inline storage
+    if let Some(layout) = calculate_inline_layout(ast, schema) {
+        generate_build_function_inline(ast, schema, fn_name, ret_ty, fn_params, &layout)
+    } else {
+        generate_build_function_extra_data(ast, schema, fn_name, ret_ty, fn_params)
+    }
+}
+
+/// Generate build function using inline storage (for small nodes)
+/// Layout (7 bytes total):
+/// - Bytes 0-3: NodeData.inline_data (u32)
+/// - Bytes 4-6: AstNode.inline_data ([u8; 3])
+fn generate_build_function_inline(
+    ast: &AstStruct,
+    schema: &Schema,
+    fn_name: syn::Ident,
+    ret_ty: syn::Ident,
+    fn_params: TokenStream,
+    layout: &crate::util::InlineLayout,
+) -> TokenStream {
+    // Optimization: zero-field nodes use empty: () for shorter generated code
+    if layout.fields.is_empty() {
+        return quote! {
+            #[inline]
+            pub fn #fn_name(&mut self, span: Span) -> #ret_ty {
+                #ret_ty(self.add_node(AstNode {
+                    span,
+                    kind: NodeKind::#ret_ty,
+                    inline_data: 0u32.into(),
+                    data: NodeData { empty: () },
+                }))
+            }
+        };
+    }
+
+    // Optimization: if FourBytes mode with a single field at offset 0 (1-4 bytes),
+    // we can directly assign the u32 value without byte conversion
+    let is_single_u32_field = layout.mode == InlineStorageMode::FourBytes
+        && layout.fields.len() == 1
+        && layout.fields[0].1 == 0   // byte_offset == 0
+        && layout.fields[0].2 <= INLINE_DATA_U32_SIZE;  // byte_size <= 4
+
+    if is_single_u32_field {
+        let (field_idx, _, _) = layout.fields[0];
+        let field = &ast.fields[field_idx];
+        let field_name = format_ident!("{}", field.name);
+        let field_ty = &schema.types[field.type_id];
+
+        // Generate direct u32 value
+        let u32_value = generate_field_to_u32(field_ty, &field_name, schema);
+
+        return quote! {
+            #[inline]
+            pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                #ret_ty(
+                    self.add_node(AstNode {
+                        span,
+                        kind: NodeKind::#ret_ty,
+                        inline_data: 0u32.into(),
+                        data: NodeData {
+                            inline_data: #u32_value,
+                        },
+                    })
+                )
+            }
+        };
+    }
+
+    // General case: pack fields using bit operations
+    // inline_u32: bytes 0-3 (node.data.inline_data)
+    // inline_u24: bytes 4-6 (node.inline_data as U24)
+    let mut pack_u32 = TokenStream::new();
+    let mut pack_u24 = TokenStream::new();
+
+    for &(field_idx, byte_offset, byte_size) in &layout.fields {
+        let field = &ast.fields[field_idx];
+        let field_name = format_ident!("{}", field.name);
+        let field_ty = &schema.types[field.type_id];
+
+        // Generate u32 value for this field
+        let field_u32 = generate_field_to_u32(field_ty, &field_name, schema);
+        let bit_offset = byte_offset * 8;
+        let field_end = byte_offset + byte_size;
+
+        if field_end <= INLINE_DATA_U32_SIZE {
+            // Field entirely in bytes 0-3 (inline_u32)
+            if byte_offset == 0 {
+                pack_u32.extend(quote! { | #field_u32 });
+            } else {
+                pack_u32.extend(quote! { | ((#field_u32) << #bit_offset) });
+            }
+        } else if byte_offset >= INLINE_DATA_U32_SIZE {
+            // Field entirely in bytes 4-6 (inline_u24)
+            let u24_bit_offset = (byte_offset - INLINE_DATA_U32_SIZE) * 8;
+            if u24_bit_offset == 0 {
+                pack_u24.extend(quote! { | #field_u32 });
+            } else {
+                pack_u24.extend(quote! { | ((#field_u32) << #u24_bit_offset) });
+            }
+        } else {
+            // Field spans the boundary (bytes in both u32 and u24)
+            // Split: lower bits go to u32, upper bits go to u24
+            let bits_in_u32 = (INLINE_DATA_U32_SIZE - byte_offset) * 8;
+            let mask_u32 = (1u32 << bits_in_u32) - 1;
+
+            if byte_offset == 0 {
+                pack_u32.extend(quote! { | ((#field_u32) & #mask_u32) });
+            } else {
+                pack_u32.extend(quote! { | (((#field_u32) & #mask_u32) << #bit_offset) });
+            }
+            pack_u24.extend(quote! { | ((#field_u32) >> #bits_in_u32) });
+        }
+    }
+
+    let tokens = match layout.mode {
+        InlineStorageMode::FourBytes => {
+            quote! {
+                #[inline]
+                pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                    #ret_ty(
+                        self.add_node(AstNode {
+                            span,
+                            kind: NodeKind::#ret_ty,
+                            inline_data: 0u32.into(),
+                            data: NodeData {
+                                inline_data: 0u32 #pack_u32,
+                            },
+                        })
+                    )
+                }
+            }
+        }
+        InlineStorageMode::Full => {
+            quote! {
+                #[inline]
+                pub fn #fn_name(&mut self, span: Span, #fn_params) -> #ret_ty {
+                    #ret_ty(
+                        self.add_node(AstNode {
+                            span,
+                            kind: NodeKind::#ret_ty,
+                            inline_data: (0u32 #pack_u24).into(),
+                            data: NodeData {
+                                inline_data: 0u32 #pack_u32,
+                            },
+                        })
+                    )
+                }
+            }
+        }
+    };
+
+    tokens
+}
+
+/// Generate build function using extra_data storage (for large nodes)
+fn generate_build_function_extra_data(
+    ast: &AstStruct,
+    schema: &Schema,
+    fn_name: syn::Ident,
+    ret_ty: syn::Ident,
+    fn_params: TokenStream,
+) -> TokenStream {
     let mut add_extra_data = TokenStream::new();
     for (index, field) in ast.fields.iter().enumerate() {
         let extra_data_id = format_ident!("_f{}", index);
@@ -96,6 +261,7 @@ fn generate_build_function_for_struct(ast: &AstStruct, schema: &Schema) -> Token
                 self.add_node(AstNode {
                     span,
                     kind: NodeKind::#ret_ty,
+                    inline_data: 0u32.into(),
                     data: NodeData {
                         #node_data
                     },

@@ -63,4 +63,16 @@ impl OptionalNodeId {
 
         Some(f(NodeId(self.0)))
     }
+
+    /// Get the raw u32 value for inline storage
+    #[inline]
+    pub fn into_raw(self) -> u32 {
+        self.0
+    }
+
+    /// Create from raw u32 value (for inline storage deserialization)
+    #[inline]
+    pub fn from_raw(raw: u32) -> Self {
+        Self(raw)
+    }
 }

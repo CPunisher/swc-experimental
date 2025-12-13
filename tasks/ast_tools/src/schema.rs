@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use oxc_index::IndexVec;
 use proc_macro2::TokenStream;
@@ -14,6 +14,9 @@ impl TypeId {
 
 pub struct Schema {
     pub types: IndexVec<TypeId, AstType>,
+    /// Mapping of enum names to their #[repr(uN)] sizes in bytes
+    /// e.g., "UnaryOp" -> 1 for #[repr(u8)]
+    pub repr_sizes: HashMap<String, usize>,
 }
 
 #[derive(Debug)]

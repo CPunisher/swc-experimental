@@ -51,11 +51,38 @@ pub struct Ast {
     string_allocator: StringAllocator,
 }
 
+/// A 24-bit unsigned integer stored as 3 bytes.
+/// Used for inline storage in AstNode.
+#[repr(transparent)]
+#[derive(Clone, Copy, Default)]
+pub struct U24([u8; 3]);
+
+impl From<u32> for U24 {
+    /// Create a U24 from the lower 24 bits of a u32.
+    #[inline]
+    fn from(val: u32) -> Self {
+        Self([
+            (val & 0xFF) as u8,
+            ((val >> 8) & 0xFF) as u8,
+            ((val >> 16) & 0xFF) as u8,
+        ])
+    }
+}
+
+impl From<U24> for u32 {
+    /// Zero-extend U24 to u32.
+    #[inline]
+    fn from(val: U24) -> u32 {
+        (val.0[0] as u32) | ((val.0[1] as u32) << 8) | ((val.0[2] as u32) << 16)
+    }
+}
+
 /// Untyped AST node
 #[derive(Clone)]
 pub struct AstNode {
     span: Span,
     kind: NodeKind,
+    inline_data: U24,
     data: NodeData,
 }
 
@@ -88,6 +115,7 @@ impl AstNode {
 pub union NodeData {
     empty: (),
     extra_data_start: ExtraDataId,
+    inline_data: u32,
     next_free: OptionalNodeId,
 }
 
