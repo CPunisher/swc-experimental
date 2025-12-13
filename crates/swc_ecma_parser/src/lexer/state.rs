@@ -76,25 +76,25 @@ impl crate::input::Tokens for Lexer<'_> {
 
     #[inline]
     fn get_maybe_sub_utf8(&self, maybe: MaybeSubUtf8) -> &str {
-        match maybe.is_allocated() {
-            true => self.string_allocator.get_utf8(maybe),
-            false => unsafe {
-                self.input
-                    .slice(BytePos(maybe.start()), BytePos(maybe.end()))
-            },
+        match maybe {
+            MaybeSubUtf8::Empty => "",
+            MaybeSubUtf8::Inline((start, end)) => unsafe { self.input.slice(start, end) },
+            MaybeSubUtf8::Alloc((start, end)) => {
+                self.string_allocator.get_allocated_utf8(start, end)
+            }
         }
     }
 
     #[inline]
     fn get_maybe_sub_wtf8(&self, maybe: MaybeSubWtf8) -> &Wtf8 {
-        match maybe.is_allocated() {
-            true => self.string_allocator.get_wtf8(maybe),
-            false => unsafe {
-                Wtf8::from_str(
-                    self.input
-                        .slice(BytePos(maybe.start()), BytePos(maybe.end())),
-                )
-            },
+        match maybe {
+            MaybeSubWtf8::Empty => Wtf8::from_str(""),
+            MaybeSubWtf8::Inline((start, end)) => {
+                Wtf8::from_str(unsafe { self.input.slice(start, end) })
+            }
+            MaybeSubWtf8::Alloc((start, end)) => {
+                self.string_allocator.get_allocated_wtf8(start, end)
+            }
         }
     }
 

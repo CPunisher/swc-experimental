@@ -1,98 +1,51 @@
 use swc_core::atoms::wtf8::{CodePoint, Wtf8, Wtf8Buf};
 use swc_core::common::{BytePos, Span};
 
-/// If `start` <= `end`, it means that the string is from source.
-/// If `start` > `end`, it means that the string is allocated.
 #[derive(Debug, Clone, Copy)]
-pub struct MaybeSubUtf8 {
-    start: u32,
-    end: u32,
+pub enum MaybeSubUtf8 {
+    Empty,
+    Inline((BytePos, BytePos)),
+    Alloc((u32, u32)),
 }
 
 impl MaybeSubUtf8 {
     #[inline]
     pub(crate) fn new_from_source(start: BytePos, end: BytePos) -> Self {
-        Self {
-            start: start.0,
-            end: end.0,
-        }
+        Self::Inline((start, end))
     }
 
     #[inline]
     pub(crate) fn new_from_span(span: Span) -> Self {
-        Self {
-            start: span.lo.0,
-            end: span.hi.0,
-        }
-    }
-
-    #[inline]
-    pub(crate) fn new_empty() -> Self {
-        Self { start: 0, end: 0 }
-    }
-
-    #[inline]
-    pub(crate) fn is_allocated(&self) -> bool {
-        self.start > self.end
-    }
-
-    #[inline]
-    pub(crate) fn start(&self) -> u32 {
-        self.start
-    }
-
-    #[inline]
-    pub(crate) fn end(&self) -> u32 {
-        self.end
+        Self::Inline((span.lo, span.hi))
     }
 
     #[inline]
     fn new_from_allocated(start: u32, end: u32) -> Self {
-        Self {
-            start: end,
-            end: start,
-        }
+        Self::Alloc((start, end))
+    }
+
+    #[inline]
+    pub(crate) fn new_empty() -> Self {
+        Self::Empty
     }
 }
 
-/// If `start` <= `end`, it means that the string is from source.
-/// If `start` > `end`, it means that the string is allocated.
 #[derive(Debug, Clone, Copy)]
-pub struct MaybeSubWtf8 {
-    pub start: u32,
-    pub end: u32,
+pub enum MaybeSubWtf8 {
+    Empty,
+    Inline((BytePos, BytePos)),
+    Alloc((u32, u32)),
 }
 
 impl MaybeSubWtf8 {
     #[inline]
     pub(crate) fn new_from_source(start: BytePos, end: BytePos) -> Self {
-        Self {
-            start: start.0,
-            end: end.0,
-        }
-    }
-
-    #[inline]
-    pub(crate) fn is_allocated(&self) -> bool {
-        self.start > self.end
-    }
-
-    #[inline]
-    pub(crate) fn start(&self) -> u32 {
-        self.start
-    }
-
-    #[inline]
-    pub(crate) fn end(&self) -> u32 {
-        self.end
+        Self::Inline((start, end))
     }
 
     #[inline]
     fn new_from_allocated(start: u32, end: u32) -> Self {
-        Self {
-            start: end,
-            end: start,
-        }
+        Self::Alloc((start, end))
     }
 }
 
@@ -126,14 +79,13 @@ impl StringAllocator {
     }
 
     #[inline]
-    pub fn get_utf8(&self, maybe: MaybeSubUtf8) -> &str {
-        &self.allocated_utf8[maybe.end as usize..maybe.start as usize]
+    pub fn get_allocated_utf8(&self, start: u32, end: u32) -> &str {
+        &self.allocated_utf8[start as usize..end as usize]
     }
 
     #[inline]
-    pub fn get_wtf8(&self, maybe: MaybeSubWtf8) -> &Wtf8 {
-        self.allocated_wtf8
-            .slice(maybe.end as usize, maybe.start as usize)
+    pub fn get_allocated_wtf8(&self, start: u32, end: u32) -> &Wtf8 {
+        self.allocated_wtf8.slice(start as usize, end as usize)
     }
 }
 
