@@ -622,7 +622,7 @@ impl ImportDefaultSpecifier {
     pub fn local(&self, ast: &crate::Ast) -> Ident {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -653,7 +653,7 @@ impl ImportStarAsSpecifier {
     pub fn local(&self, ast: &crate::Ast) -> Ident {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -684,7 +684,7 @@ impl ExportDecl {
     pub fn decl(&self, ast: &crate::Ast) -> Decl {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Decl::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Decl::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -886,9 +886,7 @@ impl ExportNamespaceSpecifier {
     pub fn name(&self, ast: &crate::Ast) -> ModuleExportName {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe {
-            ModuleExportName::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
-        }
+        unsafe { ModuleExportName::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -965,7 +963,7 @@ impl ExportDefaultSpecifier {
     pub fn exported(&self, ast: &crate::Ast) -> Ident {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1085,7 +1083,7 @@ impl ExportDefaultDecl {
     pub fn decl(&self, ast: &crate::Ast) -> DefaultDecl {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { DefaultDecl::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { DefaultDecl::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1162,7 +1160,7 @@ impl ExportDefaultExpr {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -1592,7 +1590,7 @@ impl ExprStmt {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -2046,7 +2044,7 @@ impl ThrowStmt {
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -3981,7 +3979,7 @@ impl UnaryExpr {
         let low_bits = ((unsafe { node.data.inline_data }) >> 8usize) & 16777215u32;
         let high_bits = u32::from(node.inline_data) << 24usize;
         let raw = (low_bits | high_bits) & 4294967295u32;
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -4037,7 +4035,7 @@ impl UpdateExpr {
         let low_bits = ((unsafe { node.data.inline_data }) >> 16usize) & 65535u32;
         let high_bits = u32::from(node.inline_data) << 16usize;
         let raw = (low_bits | high_bits) & 4294967295u32;
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5087,7 +5085,7 @@ impl AwaitExpr {
     pub fn arg(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5339,7 +5337,7 @@ impl ParenExpr {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -5823,9 +5821,7 @@ impl OptChainExpr {
         let low_bits = ((unsafe { node.data.inline_data }) >> 8usize) & 16777215u32;
         let high_bits = u32::from(node.inline_data) << 24usize;
         let raw = (low_bits | high_bits) & 4294967295u32;
-        unsafe {
-            OptChainBase::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
-        }
+        unsafe { OptChainBase::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -7006,7 +7002,7 @@ impl Decorator {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -7037,7 +7033,7 @@ impl StaticBlock {
     pub fn body(&self, ast: &crate::Ast) -> BlockStmt {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { BlockStmt::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { BlockStmt::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -7785,7 +7781,7 @@ impl ComputedPropName {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -8534,7 +8530,7 @@ impl BindingIdent {
     pub fn id(&self, ast: &crate::Ast) -> Ident {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Ident::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9176,7 +9172,7 @@ impl JSXExprContainer {
     pub fn expr(&self, ast: &crate::Ast) -> JSXExpr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { JSXExpr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { JSXExpr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9253,7 +9249,7 @@ impl JSXSpreadChild {
     pub fn expr(&self, ast: &crate::Ast) -> Expr {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+        unsafe { Expr::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {
@@ -9478,9 +9474,7 @@ impl JSXClosingElement {
     pub fn name(&self, ast: &crate::Ast) -> JSXElementName {
         let node = unsafe { ast.nodes.get_unchecked(self.0) };
         let raw = unsafe { node.data.inline_data };
-        unsafe {
-            JSXElementName::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast)
-        }
+        unsafe { JSXElementName::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
     }
     #[inline]
     pub fn set_span(&self, ast: &mut crate::Ast, span: crate::Span) {

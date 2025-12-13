@@ -184,7 +184,7 @@ pub fn generate_u32_to_field(field_ty: &AstType, schema: &Schema) -> TokenStream
         AstType::Struct(_) | AstType::Enum(_) => {
             let field_inner_ty = field_ty.repr_ident(schema);
             quote! {
-                unsafe { #field_inner_ty::from_node_id_unchecked(crate::NodeId::from_usize(raw as usize), ast) }
+                unsafe { #field_inner_ty::from_node_id_unchecked(crate::NodeId::from_raw(raw), ast) }
             }
         }
         AstType::Option(ast_option) => {
@@ -203,7 +203,7 @@ pub fn generate_u32_to_field(field_ty: &AstType, schema: &Schema) -> TokenStream
             "i16" => quote! { raw as i16 },
             "u32" => quote! { raw },
             "i32" => quote! { raw as i32 },
-            "BigIntId" => quote! { crate::BigIntId::from_usize(raw as usize) },
+            "BigIntId" => quote! { crate::BigIntId::from_raw(raw) },
             // Enums with #[repr(uN)]
             name => {
                 let prim_ty = format_ident!("{}", name);
