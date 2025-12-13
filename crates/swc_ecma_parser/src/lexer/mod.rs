@@ -1537,11 +1537,11 @@ impl<'a> Lexer<'a> {
         self.bump(2); // `#!`
 
         let start_pos = self.cur_pos();
-        while let Some(c) = self.peek_2() {
+        while let Some(c) = self.input.peek_char() {
             if c.is_line_terminator() {
                 break;
             }
-            self.bump(1);
+            self.bump(c.len_utf8());
         }
 
         Ok(Some(MaybeSubUtf8::new_from_source(
