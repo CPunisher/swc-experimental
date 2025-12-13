@@ -75,15 +75,15 @@ impl<I: Tokens> Parser<I> {
         }
         trace_cur!(self, parse_decorators);
 
-        let mut decorators = self.scratch_start();
         let start = self.cur_pos();
+        let decorators = self.scratch_start(|p, decorators| {
+            while p.input().is(Token::At) {
+                let decorator = p.parse_decorator()?;
+                decorators.push(p, decorator);
+            }
+            Ok(())
+        })?;
 
-        while self.input().is(Token::At) {
-            let decorator = self.parse_decorator()?;
-            decorators.push(self, decorator);
-        }
-
-        let decorators = decorators.end(self);
         if decorators.is_empty() {
             return Ok(decorators);
         }
@@ -1420,33 +1420,31 @@ impl<I: Tokens> Parser<I> {
     }
 
     fn parse_class_body(&mut self) -> PResult<TypedSubRange<ClassMember>> {
-        let mut elems = self.scratch_start();
-        let mut has_constructor_with_body = false;
-        while !self.input().is(Token::RBrace) {
-            if self.input_mut().eat(Token::Semi) {
-                let span = self.input().prev_span();
-                debug_assert!(span.lo <= span.hi);
-                let member = self.ast.class_member_empty_stmt(span);
-                elems.push(self, member);
-                continue;
-            }
-            let elem =
-                self.do_inside_of_context(Context::AllowDirectSuper, Self::parse_class_member)?;
-
-            if !self.ctx().contains(Context::InDeclare)
-                && let ClassMember::Constructor(constructor) = elem
-            {
-                if constructor.body(&self.ast).is_some() && has_constructor_with_body {
-                    self.emit_err(
-                        constructor.span(&self.ast),
-                        SyntaxError::DuplicateConstructor,
-                    );
+        self.scratch_start(|p, elems| {
+            let mut has_constructor_with_body = false;
+            while !p.input().is(Token::RBrace) {
+                if p.input_mut().eat(Token::Semi) {
+                    let span = p.input().prev_span();
+                    debug_assert!(span.lo <= span.hi);
+                    let member = p.ast.class_member_empty_stmt(span);
+                    elems.push(p, member);
+                    continue;
                 }
-                has_constructor_with_body = true;
+                let elem =
+                    p.do_inside_of_context(Context::AllowDirectSuper, Self::parse_class_member)?;
+
+                if !p.ctx().contains(Context::InDeclare)
+                    && let ClassMember::Constructor(constructor) = elem
+                {
+                    if constructor.body(&p.ast).is_some() && has_constructor_with_body {
+                        p.emit_err(constructor.span(&p.ast), SyntaxError::DuplicateConstructor);
+                    }
+                    has_constructor_with_body = true;
+                }
+                elems.push(p, elem);
             }
-            elems.push(self, elem);
-        }
-        Ok(elems.end(self))
+            Ok(())
+        })
     }
 
     fn parse_class<T>(

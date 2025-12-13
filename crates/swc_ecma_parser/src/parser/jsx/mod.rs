@@ -209,15 +209,16 @@ impl<I: Tokens> Parser<I> {
     }
 
     fn parse_jsx_children(&mut self) -> TypedSubRange<JSXElementChild> {
-        let mut list = self.scratch_start();
-        loop {
-            self.input_mut().rescan_jsx_token(true);
-            let Ok(Some(child)) = self.parse_jsx_child(self.input().get_cur().token) else {
-                break;
-            };
-            list.push(self, child);
-        }
-        list.end(self)
+        self.scratch_start(|p, list| {
+            loop {
+                p.input_mut().rescan_jsx_token(true);
+                let Ok(Some(child)) = p.parse_jsx_child(p.input().get_cur().token) else {
+                    return Ok(());
+                };
+                list.push(p, child);
+            }
+        })
+        .unwrap()
     }
 
     fn parse_jsx_child(&mut self, t: Token) -> PResult<Option<JSXElementChild>> {
@@ -354,20 +355,18 @@ impl<I: Tokens> Parser<I> {
     }
 
     fn parse_jsx_attrs(&mut self) -> PResult<TypedSubRange<JSXAttrOrSpread>> {
-        let mut attrs = self.scratch_start();
-
-        loop {
-            trace_cur!(self, parse_jsx_opening__attrs_loop);
-            self.input_mut().rescan_jsx_open_el_terminal_token();
-            let cur = self.input().get_cur();
-            if matches!(cur.token, Token::Gt | Token::Slash) {
-                break;
+        self.scratch_start(|p, attrs| {
+            loop {
+                trace_cur!(p, parse_jsx_opening__attrs_loop);
+                p.input_mut().rescan_jsx_open_el_terminal_token();
+                let cur = p.input().get_cur();
+                if matches!(cur.token, Token::Gt | Token::Slash) {
+                    return Ok(());
+                }
+                let attr = p.parse_jsx_attr()?;
+                attrs.push(p, attr);
             }
-            let attr = self.parse_jsx_attr()?;
-            attrs.push(self, attr);
-        }
-
-        Ok(attrs.end(self))
+        })
     }
 
     pub(crate) fn parse_jsx_element(

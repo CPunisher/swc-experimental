@@ -95,8 +95,18 @@ impl<I: Tokens> Parser<I> {
     }
 
     #[inline]
-    fn scratch_start<N: NodeIdTrait>(&self) -> ScratchIndex<N> {
-        ScratchIndex::new(self.scratch.len())
+    fn scratch_start<
+        N: NodeIdTrait,
+        F: FnOnce(&mut Self, &mut ScratchIndex<N>) -> PResult<R>,
+        R,
+    >(
+        &mut self,
+        f: F,
+    ) -> PResult<TypedSubRange<N>> {
+        let mut scratch = ScratchIndex::new(self.scratch.len());
+        let ret = f(self, &mut scratch);
+        let range = scratch.end(self);
+        ret.map(|_| range)
     }
 
     #[inline]
@@ -256,20 +266,20 @@ impl<I: Tokens> Parser<I> {
         let ret = if has_module_item {
             self.ast.program_module(self.span(start), body, shebang)
         } else {
-            let mut stmts = self.scratch_start();
-            for item in body.iter() {
-                let item = self.ast.get_node_in_sub_range(item);
-                match item {
-                    ModuleItem::Stmt(stmt) => stmts.push(&mut self, stmt),
-                    ModuleItem::ModuleDecl(_) => {
-                        unreachable!("module is handled above")
+            let body = self.scratch_start(|p, stmts| {
+                for item in body.iter() {
+                    let item = p.ast.get_node_in_sub_range(item);
+                    match item {
+                        ModuleItem::Stmt(stmt) => stmts.push(p, stmt),
+                        ModuleItem::ModuleDecl(_) => {
+                            unreachable!("module is handled above")
+                        }
+                        #[cfg(swc_ast_unknown)]
+                        _ => unreachable!(),
                     }
-                    #[cfg(swc_ast_unknown)]
-                    _ => unreachable!(),
                 }
-            }
-
-            let body = stmts.end(&mut self);
+                Ok(())
+            })?;
             self.ast.program_script(self.span(start), body, shebang)
         };
 

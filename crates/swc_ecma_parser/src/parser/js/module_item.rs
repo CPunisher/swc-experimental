@@ -587,82 +587,85 @@ impl<I: Tokens> Parser<I> {
                     .module_decl_export_all(self.span(start), src, type_only, with));
             }
 
-            let mut specifiers = self.scratch_start();
-
             let mut has_default = false;
             let mut has_ns = false;
 
-            if let Some(default) = default {
-                has_default = true;
+            let specifiers = self.scratch_start(|p, specifiers| {
+                if let Some(default) = default {
+                    has_default = true;
 
-                let specifier = self
-                    .ast
-                    .export_specifier_export_default_specifier(default.span(&self.ast), default);
-                specifiers.push(self, specifier);
-            }
+                    let specifier = p
+                        .ast
+                        .export_specifier_export_default_specifier(default.span(&p.ast), default);
+                    specifiers.push(p, specifier);
+                }
 
-            // export foo, * as bar
-            //           ^
-            if has_default
-                && self.input().is(Token::Comma)
-                && peek!(self).is_some_and(|cur| cur == Token::Asterisk)
-            {
-                self.assert_and_bump(Token::Comma);
+                // export foo, * as bar
+                //           ^
+                if has_default
+                    && p.input().is(Token::Comma)
+                    && peek!(p).is_some_and(|cur| cur == Token::Asterisk)
+                {
+                    p.assert_and_bump(Token::Comma);
 
-                has_ns = true;
-            }
-            // export     * as bar
-            //            ^
-            else if !has_default && self.input().is(Token::Asterisk) {
-                has_ns = true;
-            }
+                    has_ns = true;
+                }
+                // export     * as bar
+                //            ^
+                else if !has_default && p.input().is(Token::Asterisk) {
+                    has_ns = true;
+                }
 
-            if has_ns {
-                self.assert_and_bump(Token::Asterisk);
-                expect!(self, Token::As);
-                let name = self.parse_module_export_name()?;
-                let specifier = self.ast.export_specifier_export_namespace_specifier(
-                    self.span(ns_export_specifier_start),
-                    name,
-                );
-                specifiers.push(self, specifier);
-            }
+                if has_ns {
+                    p.assert_and_bump(Token::Asterisk);
+                    expect!(p, Token::As);
+                    let name = p.parse_module_export_name()?;
+                    let specifier = p.ast.export_specifier_export_namespace_specifier(
+                        p.span(ns_export_specifier_start),
+                        name,
+                    );
+                    specifiers.push(p, specifier);
+                }
+
+                if has_default || has_ns {
+                    if p.input().is(Token::From) {
+                        return Ok(());
+                    } else if !p.input().syntax().export_default_from() {
+                        // emit error
+                        expect!(p, Token::From);
+                    }
+
+                    expect!(p, Token::Comma);
+                }
+
+                expect!(p, Token::LBrace);
+
+                while !p.input().is(Token::RBrace) {
+                    let specifier = p.parse_named_export_specifier(type_only)?;
+                    specifiers.push(p, ExportSpecifier::Named(specifier));
+
+                    if p.input().is(Token::RBrace) {
+                        break;
+                    } else {
+                        expect!(p, Token::Comma);
+                    }
+                }
+                expect!(p, Token::RBrace);
+
+                Ok(())
+            })?;
 
             if has_default || has_ns {
-                if self.input().is(Token::From) {
-                    let (src, with) = self.parse_from_clause_and_semi()?;
-
-                    let specifiers = specifiers.end(self);
-                    return Ok(self.ast.module_decl_named_export(
-                        self.span(start),
-                        specifiers,
-                        Some(src),
-                        type_only,
-                        with,
-                    ));
-                } else if !self.input().syntax().export_default_from() {
-                    // emit error
-                    expect!(self, Token::From);
-                }
-
-                expect!(self, Token::Comma);
+                let (src, with) = self.parse_from_clause_and_semi()?;
+                return Ok(self.ast.module_decl_named_export(
+                    self.span(start),
+                    specifiers,
+                    Some(src),
+                    type_only,
+                    with,
+                ));
             }
 
-            expect!(self, Token::LBrace);
-
-            while !self.input().is(Token::RBrace) {
-                let specifier = self.parse_named_export_specifier(type_only)?;
-                specifiers.push(self, ExportSpecifier::Named(specifier));
-
-                if self.input().is(Token::RBrace) {
-                    break;
-                } else {
-                    expect!(self, Token::Comma);
-                }
-            }
-            expect!(self, Token::RBrace);
-
-            let specifiers = specifiers.end(self);
             let opt = if self.input().is(Token::From) {
                 Some(self.parse_from_clause_and_semi()?)
             } else {
@@ -794,112 +797,115 @@ impl<I: Tokens> Parser<I> {
 
         let mut type_only = false;
         let mut phase = ImportPhase::Evaluation;
-        let mut specifiers = self.scratch_start();
+        let specifiers = self.scratch_start(|p, specifiers| {
+            'import_maybe_ident: {
+                if p.is_ident_ref() {
+                    let mut local = p.parse_imported_default_binding()?;
+                    let local_sym = p.ast.get_utf8(local.sym(&p.ast));
+                    let is_source = local_sym == "source";
+                    let is_defer = local_sym == "defer";
 
-        'import_maybe_ident: {
-            if self.is_ident_ref() {
-                let mut local = self.parse_imported_default_binding()?;
-                let local_sym = self.ast.get_utf8(local.sym(&self.ast));
-                let is_source = local_sym == "source";
-                let is_defer = local_sym == "defer";
+                    if p.input().syntax().typescript() && local_sym == "type" {
+                        p.ast.free_node(local.node_id());
 
-                if self.input().syntax().typescript() && local_sym == "type" {
-                    self.ast.free_node(local.node_id());
-
-                    let cur = self.input().cur();
-                    if cur == Token::LBrace || cur == Token::Asterisk {
-                        type_only = true;
-                        break 'import_maybe_ident;
-                    }
-
-                    if self.is_ident_ref() {
-                        if !self.input().is(Token::From)
-                            || peek!(self).is_some_and(|cur| cur == Token::From)
-                        {
+                        let cur = p.input().cur();
+                        if cur == Token::LBrace || cur == Token::Asterisk {
                             type_only = true;
-                            local = self.parse_imported_default_binding()?;
-                        } else if peek!(self).is_some_and(|cur| cur == Token::Eq) {
-                            type_only = true;
-                            local = self.parse_ident_name().map(|(span, sym)| {
-                                let sym = self.to_utf8_ref(sym);
-                                self.ast.ident(span, sym, false)
-                            })?;
-                        }
-                    }
-                }
-
-                // if self.input().syntax().typescript() && self.input().is(Token::Eq) {
-                //     return self
-                //         .parse_ts_import_equals_decl(start, local, false, type_only)
-                //         .map(ModuleDecl::from)
-                //         .map(ModuleItem::from);
-                // }
-
-                if is_source || is_defer {
-                    self.ast.free_node(local.node_id());
-
-                    let new_phase = if is_source {
-                        ImportPhase::Source
-                    } else {
-                        ImportPhase::Defer
-                    };
-
-                    let cur = self.input().cur();
-                    if cur == Token::LBrace || cur == Token::Asterisk {
-                        phase = new_phase;
-                        break 'import_maybe_ident;
-                    }
-
-                    if self.is_ident_ref() && !self.input().is(Token::From)
-                        || peek!(self).is_some_and(|cur| cur == Token::From)
-                    {
-                        // For defer phase, we expect only namespace imports, so break here
-                        // and let the subsequent code handle validation
-                        if new_phase == ImportPhase::Defer {
                             break 'import_maybe_ident;
                         }
-                        phase = new_phase;
-                        local = self.parse_imported_default_binding()?;
+
+                        if p.is_ident_ref() {
+                            if !p.input().is(Token::From)
+                                || peek!(p).is_some_and(|cur| cur == Token::From)
+                            {
+                                type_only = true;
+                                local = p.parse_imported_default_binding()?;
+                            } else if peek!(p).is_some_and(|cur| cur == Token::Eq) {
+                                type_only = true;
+                                local = p.parse_ident_name().map(|(span, sym)| {
+                                    let sym = p.to_utf8_ref(sym);
+                                    p.ast.ident(span, sym, false)
+                                })?;
+                            }
+                        }
                     }
-                }
 
-                //TODO: Better error reporting
-                if !self.input().is(Token::From) {
-                    expect!(self, Token::Comma);
-                }
+                    // if p.input().syntax().typescript() && p.input().is(Token::Eq) {
+                    //     return p
+                    //         .parse_ts_import_equals_decl(start, local, false, type_only)
+                    //         .map(ModuleDecl::from)
+                    //         .map(ModuleItem::from);
+                    // }
 
-                let specifier = self
-                    .ast
-                    .import_specifier_import_default_specifier(local.span(&self.ast), local);
-                specifiers.push(self, specifier);
-            }
-        }
+                    if is_source || is_defer {
+                        p.ast.free_node(local.node_id());
 
-        {
-            let import_spec_start = self.cur_pos();
-            // Namespace imports are not allowed in source phase.
-            if phase != ImportPhase::Source && self.input_mut().eat(Token::Asterisk) {
-                expect!(self, Token::As);
-                let local = self.parse_imported_binding()?;
-                let specifier = self
-                    .ast
-                    .import_specifier_import_star_as_specifier(self.span(import_spec_start), local);
-                specifiers.push(self, specifier);
-                // Named imports are only allowed in evaluation phase.
-            } else if phase == ImportPhase::Evaluation && self.input_mut().eat(Token::LBrace) {
-                while !self.input().is(Token::RBrace) {
-                    let specifier = self.parse_import_specifier(type_only)?;
-                    specifiers.push(self, specifier);
+                        let new_phase = if is_source {
+                            ImportPhase::Source
+                        } else {
+                            ImportPhase::Defer
+                        };
 
-                    if self.input().is(Token::RBrace) {
-                        break;
-                    } else {
-                        expect!(self, Token::Comma);
+                        let cur = p.input().cur();
+                        if cur == Token::LBrace || cur == Token::Asterisk {
+                            phase = new_phase;
+                            break 'import_maybe_ident;
+                        }
+
+                        if p.is_ident_ref() && !p.input().is(Token::From)
+                            || peek!(p).is_some_and(|cur| cur == Token::From)
+                        {
+                            // For defer phase, we expect only namespace imports, so break here
+                            // and let the subsequent code handle validation
+                            if new_phase == ImportPhase::Defer {
+                                break 'import_maybe_ident;
+                            }
+                            phase = new_phase;
+                            local = p.parse_imported_default_binding()?;
+                        }
                     }
+
+                    //TODO: Better error reporting
+                    if !p.input().is(Token::From) {
+                        expect!(p, Token::Comma);
+                    }
+
+                    let specifier = p
+                        .ast
+                        .import_specifier_import_default_specifier(local.span(&p.ast), local);
+                    specifiers.push(p, specifier);
                 }
-                expect!(self, Token::RBrace);
             }
-        }
+
+            {
+                let import_spec_start = p.cur_pos();
+                // Namespace imports are not allowed in source phase.
+                if phase != ImportPhase::Source && p.input_mut().eat(Token::Asterisk) {
+                    expect!(p, Token::As);
+                    let local = p.parse_imported_binding()?;
+                    let specifier = p.ast.import_specifier_import_star_as_specifier(
+                        p.span(import_spec_start),
+                        local,
+                    );
+                    specifiers.push(p, specifier);
+                    // Named imports are only allowed in evaluation phase.
+                } else if phase == ImportPhase::Evaluation && p.input_mut().eat(Token::LBrace) {
+                    while !p.input().is(Token::RBrace) {
+                        let specifier = p.parse_import_specifier(type_only)?;
+                        specifiers.push(p, specifier);
+
+                        if p.input().is(Token::RBrace) {
+                            break;
+                        } else {
+                            expect!(p, Token::Comma);
+                        }
+                    }
+                    expect!(p, Token::RBrace);
+                }
+            }
+
+            Ok(())
+        })?;
 
         let src = {
             expect!(self, Token::From);
@@ -924,7 +930,6 @@ impl<I: Tokens> Parser<I> {
 
         self.expect_general_semi()?;
 
-        let specifiers = specifiers.end(self);
         Ok(self.ast.module_item_module_decl_import_decl(
             self.span(start),
             specifiers,

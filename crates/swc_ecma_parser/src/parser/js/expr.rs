@@ -48,15 +48,15 @@ impl<I: Tokens> Parser<I> {
         let start = expr.span(&self.ast).lo;
 
         if self.input_mut().is(Token::Comma) {
-            let mut exprs = self.scratch_start();
-            exprs.push(self, expr);
+            let exprs = self.scratch_start(|p, exprs| {
+                exprs.push(p, expr);
 
-            while self.input_mut().eat(Token::Comma) {
-                let expr = self.parse_assignment_expr()?;
-                exprs.push(self, expr);
-            }
-
-            let exprs = exprs.end(self);
+                while p.input_mut().eat(Token::Comma) {
+                    let expr = p.parse_assignment_expr()?;
+                    exprs.push(p, expr);
+                }
+                Ok(())
+            })?;
             return Ok(self.ast.expr_seq_expr(self.span(start), exprs));
         }
 
@@ -644,9 +644,10 @@ impl<I: Tokens> Parser<I> {
             raw,
         );
 
-        let mut quasis = self.scratch_start();
-        quasis.push(self, tpl_element);
-        let quasis = quasis.end(self);
+        let quasis = self.scratch_start(|p, quasis| {
+            quasis.push(p, tpl_element);
+            Ok(())
+        })?;
         let exprs = self.ast.add_typed_sub_range(&[]);
         Ok(self.ast.tpl(span, exprs, quasis))
     }
@@ -897,29 +898,33 @@ impl<I: Tokens> Parser<I> {
             expect!(p, Token::LParen);
 
             let mut first = true;
-            let mut expr_or_spreads = p.scratch_start();
+            p.scratch_start(|p, expr_or_spreads| {
+                while !p.input().is(Token::RParen) {
+                    if first {
+                        first = false;
+                    } else {
+                        expect!(p, Token::Comma);
+                        // Handle trailing comma.
+                        if p.input().is(Token::RParen) {
+                            if is_dynamic_import && !p.input().syntax().import_attributes() {
+                                syntax_error!(
+                                    p,
+                                    p.span(start),
+                                    SyntaxError::TrailingCommaInsideImport
+                                )
+                            }
 
-            while !p.input().is(Token::RParen) {
-                if first {
-                    first = false;
-                } else {
-                    expect!(p, Token::Comma);
-                    // Handle trailing comma.
-                    if p.input().is(Token::RParen) {
-                        if is_dynamic_import && !p.input().syntax().import_attributes() {
-                            syntax_error!(p, p.span(start), SyntaxError::TrailingCommaInsideImport)
+                            break;
                         }
-
-                        break;
                     }
+
+                    let expr_or_spread = p.allow_in_expr(|p| p.parse_expr_or_spread())?;
+                    expr_or_spreads.push(p, expr_or_spread);
                 }
 
-                let expr_or_spread = p.allow_in_expr(|p| p.parse_expr_or_spread())?;
-                expr_or_spreads.push(p, expr_or_spread);
-            }
-
-            expect!(p, Token::RParen);
-            Ok(expr_or_spreads.end(p))
+                expect!(p, Token::RParen);
+                Ok(())
+            })
         })
     }
 
@@ -2260,20 +2265,22 @@ impl<I: Tokens> Parser<I> {
             }
         }
 
-        let mut expr_or_spreads = self.scratch_start();
-        for item in paren_items {
-            match item {
-                AssignTargetOrSpread::ExprOrSpread(e) => expr_or_spreads.push(self, e),
-                AssignTargetOrSpread::Pat(p) => {
-                    syntax_error!(self, p.span(&self.ast), SyntaxError::InvalidExpr)
+        let expr_or_spreads = self.scratch_start(|p, expr_or_spreads| {
+            for item in paren_items {
+                match item {
+                    AssignTargetOrSpread::ExprOrSpread(e) => expr_or_spreads.push(p, e),
+                    AssignTargetOrSpread::Pat(pat) => {
+                        syntax_error!(p, pat.span(&p.ast), SyntaxError::InvalidExpr)
+                    }
                 }
             }
-        }
+            Ok(())
+        })?;
+
         if let Some(async_span) = async_span {
             // It's a call expression
             let sym = self.ast.add_utf8("async");
             let callee = self.ast.callee_expr_ident(async_span, sym, false);
-            let expr_or_spreads = expr_or_spreads.end(self);
             return Ok(self.ast.expr_call_expr(
                 self.span(async_span.lo()),
                 callee,
@@ -2282,7 +2289,6 @@ impl<I: Tokens> Parser<I> {
         }
 
         // It was not head of arrow function.
-        let expr_or_spreads = expr_or_spreads.end(self);
         if expr_or_spreads.is_empty() {
             syntax_error!(
                 self,
@@ -2317,22 +2323,24 @@ impl<I: Tokens> Parser<I> {
         } else {
             debug_assert!(expr_or_spreads.len() >= 2);
 
-            let mut exprs = self.scratch_start();
-            for expr in expr_or_spreads.iter() {
-                let expr_or_spread = self.ast.get_node_in_sub_range(expr);
-                match expr_or_spread.spread(&self.ast) {
-                    Some(_) => {
-                        syntax_error!(
-                            self,
-                            expr_or_spread.span(&self.ast),
-                            SyntaxError::SpreadInParenExpr
-                        )
+            let exprs = self.scratch_start(|p, exprs| {
+                for expr in expr_or_spreads.iter() {
+                    let expr_or_spread = p.ast.get_node_in_sub_range(expr);
+                    match expr_or_spread.spread(&p.ast) {
+                        Some(_) => {
+                            syntax_error!(
+                                p,
+                                expr_or_spread.span(&p.ast),
+                                SyntaxError::SpreadInParenExpr
+                            )
+                        }
+                        None => exprs.push(p, expr_or_spread.expr(&p.ast)),
                     }
-                    None => exprs.push(self, expr_or_spread.expr(&self.ast)),
+                    p.ast.free_node(expr_or_spread.node_id());
                 }
-                self.ast.free_node(expr_or_spread.node_id());
-            }
-            let exprs = exprs.end(self);
+                Ok(())
+            })?;
+
             debug_assert!(exprs.len() >= 2);
 
             // span of sequence expression should not include '(', ')'
@@ -2416,10 +2424,11 @@ impl<I: Tokens> Parser<I> {
 
                     // async a => body
                     let arg = Pat::Ident(p.ast.binding_ident(id.span(&p.ast), ident));
-                    let mut params = p.scratch_start();
-                    params.push(p, arg);
+                    let params = p.scratch_start(|p, params| {
+                        params.push(p, arg);
+                        Ok(())
+                    })?;
 
-                    let params = params.end(p);
                     expect!(p, Token::Arrow);
                     let body = p.parse_fn_block_or_expr_body(
                         true,
@@ -2440,10 +2449,11 @@ impl<I: Tokens> Parser<I> {
                         )
                     }
 
-                    let mut params = p.scratch_start();
-                    let pat = Pat::Ident(p.ast.binding_ident(id.span(&p.ast), id));
-                    params.push(p, pat);
-                    let params = params.end(p);
+                    let params = p.scratch_start(|p, params| {
+                        let pat = Pat::Ident(p.ast.binding_ident(id.span(&p.ast), id));
+                        params.push(p, pat);
+                        Ok(())
+                    })?;
 
                     let body = p.parse_fn_block_or_expr_body(
                         false,
