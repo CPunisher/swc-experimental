@@ -22,22 +22,22 @@ impl<I: Tokens> Parser<I> {
             let mut trailing_comma = None;
             p.assert_and_bump(Token::LBrace);
 
-            let mut props = p.scratch_start();
+            let props = p.scratch_start(|p, props| {
+                while !p.input_mut().eat(Token::RBrace) {
+                    let prop = parse_prop(p)?;
+                    props.push(p, prop);
 
-            while !p.input_mut().eat(Token::RBrace) {
-                let prop = parse_prop(p)?;
-                props.push(p, prop);
-
-                if !p.input().is(Token::RBrace) {
-                    expect!(p, Token::Comma);
-                    if p.input().is(Token::RBrace) {
-                        trailing_comma = Some(p.input().prev_span());
+                    if !p.input().is(Token::RBrace) {
+                        expect!(p, Token::Comma);
+                        if p.input().is(Token::RBrace) {
+                            trailing_comma = Some(p.input().prev_span());
+                        }
                     }
                 }
-            }
+                Ok(())
+            })?;
 
             let span = p.span(start);
-            let props = props.end(p);
             make_object(p, span, props, trailing_comma)
         })
     }
@@ -494,15 +494,15 @@ impl<I: Tokens> Parser<I> {
                 let inner_start = p.input().cur_pos();
                 let mut expr = p.allow_in_expr(Self::parse_assignment_expr)?;
                 if p.syntax().typescript() && p.input().is(Token::Comma) {
-                    let mut exprs = p.scratch_start();
-                    exprs.push(p, expr);
-                    while p.input_mut().eat(Token::Comma) {
-                        let expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                    let exprs = p.scratch_start(|p, exprs| {
                         exprs.push(p, expr);
-                    }
-                    p.emit_err(p.span(inner_start), SyntaxError::TS1171);
-
-                    let exprs = exprs.end(p);
+                        while p.input_mut().eat(Token::Comma) {
+                            let expr = p.allow_in_expr(Self::parse_assignment_expr)?;
+                            exprs.push(p, expr);
+                        }
+                        p.emit_err(p.span(inner_start), SyntaxError::TS1171);
+                        Ok(())
+                    })?;
                     expr = p.ast.expr_seq_expr(p.span(inner_start), exprs);
                 }
                 expect!(p, Token::RBracket);

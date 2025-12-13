@@ -226,53 +226,54 @@ impl<I: Tokens> Parser<I> {
         //     }
         // }
 
-        let mut decls = self.scratch_start();
-        loop {
-            // Handle
-            //      var a,;
-            //
-            // NewLine is ok
-            if self.input().is(Token::Semi) {
-                let prev_span = self.input().prev_span();
-                let span = if prev_span == var_span {
-                    Span::new_with_checked(prev_span.hi, prev_span.hi)
+        let decls = self.scratch_start(|p, decls| {
+            loop {
+                // Handle
+                //      var a,;
+                //
+                // NewLine is ok
+                if p.input().is(Token::Semi) {
+                    let prev_span = p.input().prev_span();
+                    let span = if prev_span == var_span {
+                        Span::new_with_checked(prev_span.hi, prev_span.hi)
+                    } else {
+                        prev_span
+                    };
+                    p.emit_err(span, SyntaxError::TS1009);
+                    break;
+                }
+
+                let decl = if should_include_in {
+                    p.do_inside_of_context(Context::IncludeInExpr, |p| {
+                        p.parse_var_declarator(for_loop, kind)
+                    })
                 } else {
-                    prev_span
-                };
-                self.emit_err(span, SyntaxError::TS1009);
-                break;
-            }
-
-            let decl = if should_include_in {
-                self.do_inside_of_context(Context::IncludeInExpr, |p| {
                     p.parse_var_declarator(for_loop, kind)
-                })
-            } else {
-                self.parse_var_declarator(for_loop, kind)
-            }?;
+                }?;
 
-            decls.push(self, decl);
+                decls.push(p, decl);
 
-            if !self.input_mut().eat(Token::Comma) {
-                break;
-            }
-        }
-
-        if !for_loop && !self.eat_general_semi() {
-            self.emit_err(self.input().cur_span(), SyntaxError::TS1005);
-
-            let _ = self.parse_expr_inner();
-
-            while !self.eat_general_semi() {
-                self.bump();
-
-                if self.input().cur() == Token::Error {
+                if !p.input_mut().eat(Token::Comma) {
                     break;
                 }
             }
-        }
 
-        let decls = decls.end(self);
+            if !for_loop && !p.eat_general_semi() {
+                p.emit_err(p.input().cur_span(), SyntaxError::TS1005);
+
+                let _ = p.parse_expr_inner();
+
+                while !p.eat_general_semi() {
+                    p.bump();
+
+                    if p.input().cur() == Token::Error {
+                        break;
+                    }
+                }
+            }
+
+            Ok(())
+        })?;
         Ok(self.ast.var_decl(self.span(start), kind, false, decls))
     }
 
@@ -291,34 +292,35 @@ impl<I: Tokens> Parser<I> {
 
         self.assert_and_bump(Token::Using);
 
-        let mut decls = self.scratch_start();
-        loop {
-            // Handle
-            //      var a,;
-            //
-            // NewLine is ok
-            if self.input().is(Token::Semi) {
-                let span = self.input().prev_span();
-                self.emit_err(span, SyntaxError::TS1009);
-                break;
+        let decls = self.scratch_start(|p, decls| {
+            loop {
+                // Handle
+                //      var a,;
+                //
+                // NewLine is ok
+                if p.input().is(Token::Semi) {
+                    let span = p.input().prev_span();
+                    p.emit_err(span, SyntaxError::TS1009);
+                    break;
+                }
+
+                let decl = p.parse_var_declarator(false, VarDeclKind::Var)?;
+                decls.push(p, decl);
+                if !p.input_mut().eat(Token::Comma) {
+                    break;
+                }
             }
 
-            let decl = self.parse_var_declarator(false, VarDeclKind::Var)?;
-            decls.push(self, decl);
-            if !self.input_mut().eat(Token::Comma) {
-                break;
+            if !p.syntax().explicit_resource_management() {
+                p.emit_err(p.span(start), SyntaxError::UsingDeclNotEnabled);
             }
-        }
 
-        if !self.syntax().explicit_resource_management() {
-            self.emit_err(self.span(start), SyntaxError::UsingDeclNotEnabled);
-        }
+            if !p.ctx().contains(Context::AllowUsingDecl) {
+                p.emit_err(p.span(start), SyntaxError::UsingDeclNotAllowed);
+            }
 
-        if !self.ctx().contains(Context::AllowUsingDecl) {
-            self.emit_err(self.span(start), SyntaxError::UsingDeclNotAllowed);
-        }
-
-        let decls = decls.end(self);
+            Ok(())
+        })?;
         for decl in decls.iter() {
             let decl = self.ast.get_node_in_sub_range(decl);
             match decl.name(&self.ast) {
@@ -437,9 +439,10 @@ impl<I: Tokens> Parser<I> {
                 .ast
                 .var_declarator(self.span(start), Pat::Ident(name), Some(init));
 
-            let mut decls = self.scratch_start();
-            decls.push(self, decl);
-            let decls = decls.end(self);
+            let decls = self.scratch_start(|p, decls| {
+                decls.push(p, decl);
+                Ok(())
+            })?;
 
             let pat = self
                 .ast
@@ -809,57 +812,59 @@ impl<I: Tokens> Parser<I> {
         let discriminant = self.allow_in_expr(|p| p.parse_expr_inner())?;
         expect!(self, Token::RParen);
 
-        let mut cases = self.scratch_start();
-        let mut span_of_previous_default = None;
-
         expect!(self, Token::LBrace);
 
-        self.do_inside_of_context(Context::IsBreakAllowed, |p| {
-            while {
-                let cur = p.input().cur();
-                cur == Token::Case || cur == Token::Default
-            } {
-                let mut cons = p.scratch_start();
-                let is_case = p.input().is(Token::Case);
-                let case_start = p.cur_pos();
-                p.bump();
-                let test = if is_case {
-                    p.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
-                } else {
-                    if let Some(previous) = span_of_previous_default {
-                        syntax_error!(p, SyntaxError::MultipleDefault { previous });
-                    }
-                    span_of_previous_default = Some(p.span(case_start));
-
-                    None
-                };
-                expect!(p, Token::Colon);
-
+        let mut span_of_previous_default = None;
+        let cases = self.scratch_start(|p, cases| {
+            p.do_inside_of_context(Context::IsBreakAllowed, |p| {
                 while {
                     let cur = p.input().cur();
-                    !(cur == Token::Case || cur == Token::Default || cur == Token::RBrace)
+                    cur == Token::Case || cur == Token::Default
                 } {
-                    let con =
-                        p.do_outside_of_context(Context::TopLevel, Self::parse_stmt_list_item)?;
-                    cons.push(p, con);
+                    let is_case = p.input().is(Token::Case);
+                    let case_start = p.cur_pos();
+                    p.bump();
+                    let test = if is_case {
+                        p.allow_in_expr(|p| p.parse_expr_inner()).map(Some)?
+                    } else {
+                        if let Some(previous) = span_of_previous_default {
+                            syntax_error!(p, SyntaxError::MultipleDefault { previous });
+                        }
+                        span_of_previous_default = Some(p.span(case_start));
+
+                        None
+                    };
+                    expect!(p, Token::Colon);
+
+                    let cons = p.scratch_start(|p, cons| {
+                        while {
+                            let cur = p.input().cur();
+                            !(cur == Token::Case || cur == Token::Default || cur == Token::RBrace)
+                        } {
+                            let con = p.do_outside_of_context(
+                                Context::TopLevel,
+                                Self::parse_stmt_list_item,
+                            )?;
+                            cons.push(p, con);
+                        }
+                        Ok(())
+                    })?;
+
+                    let case = p.ast.switch_case(
+                        Span::new_with_checked(case_start, p.input().prev_span().hi),
+                        test,
+                        cons,
+                    );
+                    cases.push(p, case);
                 }
-
-                let cons = cons.end(p);
-                let case = p.ast.switch_case(
-                    Span::new_with_checked(case_start, p.input().prev_span().hi),
-                    test,
-                    cons,
-                );
-                cases.push(p, case);
-            }
-
+                Ok(())
+            })?;
             Ok(())
         })?;
 
         // eof or rbrace
         expect!(self, Token::RBrace);
 
-        let cases = cases.end(self);
         Ok(self
             .ast
             .stmt_switch_stmt(self.span(switch_start), discriminant, cases))
@@ -1190,8 +1195,6 @@ impl<I: Tokens> Parser<I> {
     ) -> PResult<TypedSubRange<Type>> {
         trace_cur!(self, parse_block_body);
 
-        let mut stmts = self.scratch_start();
-
         let cur_str = self
             .input
             .iter
@@ -1199,43 +1202,46 @@ impl<I: Tokens> Parser<I> {
         let has_strict_directive =
             allow_directives && (cur_str == "\"use strict\"" || cur_str == "'use strict'");
 
-        let parse_stmts = |p: &mut Self, stmts: &mut ScratchIndex<Type>| -> PResult<()> {
-            let is_stmt_start = |p: &mut Self| {
-                let cur = p.input().cur();
-                match end {
-                    Some(end) => {
-                        if cur == Token::Eof {
-                            let eof_text = p.input_mut().dump_cur();
-                            p.emit_err(
-                                p.input().cur_span(),
-                                SyntaxError::Expected(format!("{end:?}"), eof_text),
-                            );
-                            false
-                        } else {
-                            cur != end
+        let stmts = self.scratch_start(|p, stmts| {
+            let parse_stmts = |p: &mut Self, stmts: &mut ScratchIndex<Type>| -> PResult<()> {
+                let is_stmt_start = |p: &mut Self| {
+                    let cur = p.input().cur();
+                    match end {
+                        Some(end) => {
+                            if cur == Token::Eof {
+                                let eof_text = p.input_mut().dump_cur();
+                                p.emit_err(
+                                    p.input().cur_span(),
+                                    SyntaxError::Expected(format!("{end:?}"), eof_text),
+                                );
+                                false
+                            } else {
+                                cur != end
+                            }
                         }
+                        None => cur != Token::Eof,
                     }
-                    None => cur != Token::Eof,
+                };
+                while is_stmt_start(p) {
+                    let stmt = p.parse_stmt_like(true, &handle_import_export)?;
+                    stmts.push(p, stmt);
                 }
+                Ok(())
             };
-            while is_stmt_start(p) {
-                let stmt = p.parse_stmt_like(true, &handle_import_export)?;
-                stmts.push(p, stmt);
-            }
-            Ok(())
-        };
 
-        if has_strict_directive {
-            self.do_inside_of_context(Context::Strict, |p| parse_stmts(p, &mut stmts))?;
-        } else {
-            parse_stmts(self, &mut stmts)?;
-        };
+            if has_strict_directive {
+                p.do_inside_of_context(Context::Strict, |p| parse_stmts(p, stmts))?;
+            } else {
+                parse_stmts(p, stmts)?;
+            };
+
+            Ok(())
+        })?;
 
         if self.input().cur() != Token::Eof && end.is_some() {
             self.bump();
         }
 
-        let stmts = stmts.end(self);
         Ok(stmts)
     }
 
