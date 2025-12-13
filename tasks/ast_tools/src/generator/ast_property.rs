@@ -319,7 +319,7 @@ fn generate_bytes_to_type(field_ty: &AstType, schema: &Schema, _byte_size: usize
             "u16" => quote! { u16::from_le_bytes([_b0, _b1]) },
             "i16" => quote! { i16::from_le_bytes([_b0, _b1]) },
             "u32" => quote! { u32::from_le_bytes([_b0, _b1, _b2, _b3]) },
-            "i32" => quote! { i32::from_le_bytes([_b0, _b1, _b2, _b3]) as i32 },
+            "i32" => quote! { i32::from_le_bytes([_b0, _b1, _b2, _b3]) },
             "BigIntId" => quote! {
                 crate::BigIntId::from_usize(u32::from_le_bytes([_b0, _b1, _b2, _b3]) as usize)
             },

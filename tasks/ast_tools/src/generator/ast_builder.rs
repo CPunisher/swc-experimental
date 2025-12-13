@@ -133,11 +133,17 @@ fn generate_build_function_inline(
         // Generate bytes for this field
         let bytes_expr = generate_field_to_bytes(field_ty, &field_name, byte_size);
 
+        // Store bytes in a temporary variable to avoid repeated evaluation
+        let tmp_var = format_ident!("{}_bytes", field.name);
+        pack_code.extend(quote! {
+            let #tmp_var = #bytes_expr;
+        });
+
         // Write bytes to inline_bytes array at the correct offset
         for i in 0..byte_size {
             let dst_idx = byte_offset + i;
             pack_code.extend(quote! {
-                inline_bytes[#dst_idx] = #bytes_expr[#i];
+                inline_bytes[#dst_idx] = #tmp_var[#i];
             });
         }
     }

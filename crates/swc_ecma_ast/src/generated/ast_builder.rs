@@ -2365,11 +2365,13 @@ impl Ast {
     #[inline]
     pub fn unary_expr(&mut self, span: Span, op: UnaryOp, arg: Expr) -> UnaryExpr {
         let mut inline_bytes = [0u8; 7];
-        inline_bytes[0usize] = [(op.to_extra_data() & 0xFF) as u8][0usize];
-        inline_bytes[1usize] = (arg.node_id().index() as u32).to_le_bytes()[0usize];
-        inline_bytes[2usize] = (arg.node_id().index() as u32).to_le_bytes()[1usize];
-        inline_bytes[3usize] = (arg.node_id().index() as u32).to_le_bytes()[2usize];
-        inline_bytes[4usize] = (arg.node_id().index() as u32).to_le_bytes()[3usize];
+        let op_bytes = [(op.to_extra_data() & 0xFF) as u8];
+        inline_bytes[0usize] = op_bytes[0usize];
+        let arg_bytes = (arg.node_id().index() as u32).to_le_bytes();
+        inline_bytes[1usize] = arg_bytes[0usize];
+        inline_bytes[2usize] = arg_bytes[1usize];
+        inline_bytes[3usize] = arg_bytes[2usize];
+        inline_bytes[4usize] = arg_bytes[3usize];
         UnaryExpr(self.add_node(AstNode {
             span,
             kind: NodeKind::UnaryExpr,
@@ -2387,12 +2389,15 @@ impl Ast {
     #[inline]
     pub fn update_expr(&mut self, span: Span, op: UpdateOp, prefix: bool, arg: Expr) -> UpdateExpr {
         let mut inline_bytes = [0u8; 7];
-        inline_bytes[0usize] = [(op.to_extra_data() & 0xFF) as u8][0usize];
-        inline_bytes[1usize] = [prefix as u8][0usize];
-        inline_bytes[2usize] = (arg.node_id().index() as u32).to_le_bytes()[0usize];
-        inline_bytes[3usize] = (arg.node_id().index() as u32).to_le_bytes()[1usize];
-        inline_bytes[4usize] = (arg.node_id().index() as u32).to_le_bytes()[2usize];
-        inline_bytes[5usize] = (arg.node_id().index() as u32).to_le_bytes()[3usize];
+        let op_bytes = [(op.to_extra_data() & 0xFF) as u8];
+        inline_bytes[0usize] = op_bytes[0usize];
+        let prefix_bytes = [prefix as u8];
+        inline_bytes[1usize] = prefix_bytes[0usize];
+        let arg_bytes = (arg.node_id().index() as u32).to_le_bytes();
+        inline_bytes[2usize] = arg_bytes[0usize];
+        inline_bytes[3usize] = arg_bytes[1usize];
+        inline_bytes[4usize] = arg_bytes[2usize];
+        inline_bytes[5usize] = arg_bytes[3usize];
         UpdateExpr(self.add_node(AstNode {
             span,
             kind: NodeKind::UpdateExpr,
@@ -2652,19 +2657,15 @@ impl Ast {
     #[inline]
     pub fn yield_expr(&mut self, span: Span, arg: Option<Expr>, delegate: bool) -> YieldExpr {
         let mut inline_bytes = [0u8; 7];
-        inline_bytes[0usize] = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
+        let arg_bytes = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
             .into_raw()
-            .to_le_bytes()[0usize];
-        inline_bytes[1usize] = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
-            .into_raw()
-            .to_le_bytes()[1usize];
-        inline_bytes[2usize] = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
-            .into_raw()
-            .to_le_bytes()[2usize];
-        inline_bytes[3usize] = crate::OptionalNodeId::from(arg.map(|n| n.node_id()))
-            .into_raw()
-            .to_le_bytes()[3usize];
-        inline_bytes[4usize] = [delegate as u8][0usize];
+            .to_le_bytes();
+        inline_bytes[0usize] = arg_bytes[0usize];
+        inline_bytes[1usize] = arg_bytes[1usize];
+        inline_bytes[2usize] = arg_bytes[2usize];
+        inline_bytes[3usize] = arg_bytes[3usize];
+        let delegate_bytes = [delegate as u8];
+        inline_bytes[4usize] = delegate_bytes[0usize];
         YieldExpr(self.add_node(AstNode {
             span,
             kind: NodeKind::YieldExpr,
@@ -3603,11 +3604,13 @@ impl Ast {
         base: OptChainBase,
     ) -> OptChainExpr {
         let mut inline_bytes = [0u8; 7];
-        inline_bytes[0usize] = [optional as u8][0usize];
-        inline_bytes[1usize] = (base.node_id().index() as u32).to_le_bytes()[0usize];
-        inline_bytes[2usize] = (base.node_id().index() as u32).to_le_bytes()[1usize];
-        inline_bytes[3usize] = (base.node_id().index() as u32).to_le_bytes()[2usize];
-        inline_bytes[4usize] = (base.node_id().index() as u32).to_le_bytes()[3usize];
+        let optional_bytes = [optional as u8];
+        inline_bytes[0usize] = optional_bytes[0usize];
+        let base_bytes = (base.node_id().index() as u32).to_le_bytes();
+        inline_bytes[1usize] = base_bytes[0usize];
+        inline_bytes[2usize] = base_bytes[1usize];
+        inline_bytes[3usize] = base_bytes[2usize];
+        inline_bytes[4usize] = base_bytes[3usize];
         OptChainExpr(self.add_node(AstNode {
             span,
             kind: NodeKind::OptChainExpr,
